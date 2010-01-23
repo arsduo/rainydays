@@ -1,0 +1,2329 @@
+<html>
+<head>
+    <title>mealImage.js test</title>
+    <script src="/javascripts/jquery.js"></script>
+    <script src="/javascripts/jquery-ui.js"></script>
+    <script type="text/javascript" src="/javascripts/jaml/Jaml-all.min.js"></script>
+    
+    <script language="JavaScript" src="/javascripts/jsunit/jsUnitCore.js"></script>
+    
+	  <script src="/javascripts/application/mealstrom-core.js"></script>
+	  <script src="/javascripts/application/pagemanager.js"></script>
+    <script src="/javascripts/application/mealImages.js"></script>
+</head>
+<body>
+
+<script>
+// our tests
+
+/* MEALIMAGE.INITIALIZE */
+function testMealImageInitializationNormal() {
+  // test MealImage initialization
+  MealImage._initialize();
+  // run standard initialization tests
+  assertTrue("Meal image did not initialize!", MealImage._initialized)
+  assertEvaluatesToTrue("MealImage did not initialize debug!", MealImage.prototype.debug)
+  assertEquals("MealImage.debug is not global debug!", MealImage.prototype.debug, debug);
+  assertIsObject("MealImage did not initialize image array!", MealImage._imagesForMeal);
+  assertIsObject("MealImage did not initialize image sort order node!", MealImage._imageSortOrderNode);
+  assertIsObject("MealImage did not initialize key image node!", MealImage._keyImageDataNode);
+  assertIsObject("MealImage did not initialize _mealImagesNode!", MealImage._mealImagesNode);
+	assertObjectEquals("MealImage did not initialize clearedObject to an empty hash!", MealImage.clearedObject, ({}));
+	for (var templateName in MealImage.internals._JAML_TEMPLATES) {
+		assertNotNull(Jaml.templates[templateName]);
+	}
+}
+
+function testMealImageInitializationNoImageSortNode() {
+  // make sure it throws an exception with the image sort order node missing
+  _removeMealImageSortOrder();
+  assertThrowsException("Meal image did not throw exception for no #imageSortOrder!", MealImage._initialize)
+}
+
+function testMealImageInitializationNoMealImageDiv() {
+  // make sure it throws an exception with the meal image parent node missing
+  _removeMealImageDiv();
+  assertThrowsException("Meal image did not throw exception for no #mealImages!", MealImage._initialize)
+}
+
+function testMealImageInitializationNoKeyImageDataDiv() {
+  // make sure it throws an exception with the meal image parent node missing
+  _removeKeyImageNode();
+  assertThrowsException("Meal image did not throw exception for no #keyImageStore!", MealImage._initialize)
+}
+
+function testMealImageInitializationNoKeyImageHolderDiv() {
+  // make sure it throws an exception with the meal image parent node missing
+  _removeKeyImageNode();
+  assertThrowsException("Meal image did not throw exception for no #keyPicHolder!", MealImage._initialize)
+}
+
+function testMealImageInitializationNoDebug() {
+  // test MealImage initialization without defined debug function
+  debug = null;
+  MealImage._initialize();
+  
+  assertEvaluatesToTrue("MealImage did not initialize debug to empty function!", MealImage.prototype.debug);
+  assertNotEquals("MealImage.debug was set to global debug, even though it was null!", MealImage.prototype.debug, debug);
+}
+
+function testMealImageInitializationAnArbitraryNumberOfTimes() {
+  // test MealImage initialization when run more than once
+  timesToTest = Math.round(100 * Math.random());
+  for (var i = 0; i < timesToTest; i++)
+    MealImage._initialize();
+  
+  testMealImageInitializationNormal();
+}
+
+/* NEW MEALIMAGE() */
+function testMealImageConstructorNormal() {
+  debug("Starting testMealImageConstructorNormal");
+  // gather preliminary data
+  var originalNodeCount = $("#mealImages").find("div").length;
+
+  // run the code
+  var outcome = new MealImage();
+  
+  // test MealImage was initialized -- assume it was done through initialization?
+  assertTrue("MealImage wasn't initialized when a new one was made!", MealImage._initialized);
+
+  // test returns mealImage
+  assertEquals("new MealImage() not constructed by MealImage", outcome.constructor, MealImage);
+  
+  // test that it can be found (e.g. it's in MealImage.images)
+  found = MealImage.findByLocalId(outcome.localID);
+  if (found != outcome)
+    debug("WARNING: Found: " + (found && found.toSource ? found.toSource() : null));
+  assertEquals("new MealImage() not in the images array! looked for " + outcome.localID, outcome, found);
+  
+  // test that it has a node
+  assertNotNull("new MealImage() doesn't have a node!", outcome.node);
+  
+  // that it's only created one
+  newNodeCount = $("#mealImages").find("div").length;
+  assertEquals("new MealImage() added more or less than one node to #mealImages (original " + originalNodeCount + ", now " + newNodeCount + ")!", originalNodeCount + 1, newNodeCount);
+  // and that it's in the right place
+  assertNotNull("new MealImage() didn't have a node in #mealImages!", $("#mealImages").find(outcome.node)[0]);
+  
+  // test the status
+  assertTrue("new MealImage() was not in created status!", outcome.isCreated());
+}
+
+function testMealImageConstructorNoJaml() {
+  debug("Starting testMealImageConstructorNoJaml");
+  
+  // knock out the Jaml template
+  _removeJaml("mealImageBlock");
+  
+  // make sure we get an exception
+  assertThrowsException("new MealImage() succeeded even with Jaml template mealImageBlock deleted!", function() {new MealImage()});
+}
+
+function testMealImageConstructorNoMealImagesNode() {
+  debug("Starting testMealImageConstructorNoMealImagesNode");
+  
+  // knock out the node
+  _removeMealImageDiv();
+  
+  // make sure we get an exception
+  assertThrowsException("new MealImage() succeeded even with Jaml template mealImageBlock deleted!", function() {new MealImage()});
+}
+
+function testMealImageConstructorAnArbitraryNumberOfTimes() {
+  // this mainly tests that multiple creations create unique nodes
+  timesToTest = Math.round(100 * Math.random());
+  for (var i = 0; i < timesToTest; i++)
+    testMealImageConstructorNormal();
+    
+  // test that all the nodes are unique
+  var uniqueNodes = [];
+  for (var miIndex in MealImage.images()) {
+    var mi = MealImage.images()[miIndex];
+    for (var i in uniqueNodes) {
+      storedNode = uniqueNodes[i];
+	  // we have to check the DOM nodes against each other, since we can't access the jQuery ID as of 1.4
+      assertNotEquals("Two meal images have the same node (ids " + storedNode.attr("id") + ", " + mi.node.attr("id") + ")!", storedNode[0], mi.node[0]);
+    }
+    uniqueNodes.push(mi.node);
+  }
+}
+
+/* INIT FROM DATABASE */
+/* 
+Other external outcomes / test cases:
+- links in node have bindings to this MealImage
+- if key, it's registered as key (MealImage.getKeyImage() === this)
+*/
+function testMealImageInitFromDatabaseNormal() {
+  // test against all good meal images
+  debug("Starting testMealImageInitFromDatabaseNormal");
+  
+  for (var testDataIndex in testData.goodDatabaseImages) {
+    // get the data passed by SWFUpload
+    var imageDetails = testData.goodDatabaseImages[testDataIndex];
+    
+	  protoOutcome = new MealImage();
+		assertInitializesFromDatabaseProperly(protoOutcome, imageDetails);
+  }
+}
+
+function assertInitializesFromDatabaseProperly(mealImage, imageDetails, initializationFunction) {
+	// check for key image state
+	var previousKeyImage = MealImage.getKeyPic();
+	var keyImageSet = MealImage.isMealImage(previousKeyImage);
+
+	// test that if there's no key image, it becomes one without firing the event
+	if (!keyImageSet) {
+		// set up the function that will fail if the event is triggered
+		debug("Key image not set, set up event checker for key image.");
+
+		var checkEvent = function(e) {
+      // only fire this for the specific meal image
+      // otherwise old event handlers will cause this test to fail
+      var forThis = e.mealImage && e.mealImage.localID === mealImage.localID;
+      
+      if (forThis) {
+        fail("Becoming default key pic on load fired global event!");
+      }
+		}
+		
+		Mealstrom.PageManager.registerGlobalEventListener(MealImage.KEY_PIC_EVENT, checkEvent);
+	}	
+	
+	// initializationFunction is, by default, initFromDatabase
+	// but it could be any function with the same signature that inside it initializes the mealImage from the database
+	// such as uploadCompleted
+	var fnName = (initializationFunction ? initializationFunction : "initFromDatabase");
+	//make sure we have a valid function
+	assertIsFunction("assertInitializesFromDatabaseProperly did not get a valid function, got " + fnName,   mealImage[fnName])
+
+	var originalSortOrder = MealImage.getSortOrder();
+
+  // init from database
+  outcome = mealImage[fnName](imageDetails);
+
+  // make sure they're the same
+  assertEquals("A different mealImage was returned from " + initializationFunction + " (via assertInitializesFromDatabaseProperly) than from new MealImage()!", mealImage.localID, outcome.localID);
+
+  // we know that new MealImage() works, so we just test initFromDatabase
+  // make sure we can find it by its new ID
+  assertEquals("MealImage init'd from database could not be found by its remote ID!", outcome, MealImage.findByRemoteId(imageDetails.id));
+  
+  // make sure all server data was saved into the meal image
+  for (var key in imageDetails) {
+    assertEquals("MealImage did not get attribute " + key + " copied from server data!", imageDetails[key], outcome[key]);
+  }
+  
+  // make sure it calculated whether the image was horizontal or not
+  assertNotNull("new Meal Image had isHorizontal null!", outcome.isHorizontal);
+  assertEquals("new Meal Image's horizontal disagreed with calculations!", outcome.isHorizontal, outcome.width > outcome.height);
+  
+  // check that it's set the class appropriately for its dimensions
+  horizFn = (outcome.isHorizontal ? assertEvaluatesToTrue : assertEvaluatesToFalse); 
+  horizFn("MealImage had improper isHorizontal state for class forHorizontalImage! (isHorizontal: " + outcome.isHorizontal + ", class: " + outcome.node.attr("class") + ")", outcome.node.attr("class").match(/forHorizontalImage/));
+  vertFn = (outcome.isHorizontal ? assertEvaluatesToFalse : assertEvaluatesToTrue);
+  vertFn("MealImage had improper isHorizontal state for class forVerticalImage! (isHorizontal: " + outcome.isHorizontal + ", class: " + outcome.node.attr("class") + ")", outcome.node.attr("class").match(/forVerticalImage/));    
+  
+  // ensure dialog exists
+  assertEvaluatesToTrue("MealImage after initFromDatabase does not have dialog!", outcome._zoomDialog);
+  // and that it's a dialog by checking an option we know was set
+  assertNotNull("MealImage's dialog is not a dialog!", outcome._zoomDialog.dialog("option", "autoOpen"));
+
+  // make sure the uploading and inactive classes are gone
+  className = outcome.node.attr("className");
+  assertEvaluatesToFalse("MealImage after initFromDatabase still has uploading class!", className.match(/uploading/));
+  assertEvaluatesToFalse("MealImage after initFromDatabase still has inactive class!", className.match(/inactive/));
+      
+
+  // see if we became the key image if appropriate (and not, if not appropriate)
+  var newKeyPic = MealImage.getKeyPic();
+  if (!keyImageSet) {
+    // if it wasn't set, assert this is the key image
+    debug("Key image wasn't set, so we expect this to become the key image.")
+    assertTrue("Key image was not set to a meal image when it was previously empty!", MealImage.isMealImage(newKeyPic));
+    assertEquals("Key pic was automatically set, but not to the right one!", newKeyPic.localID, outcome.localID)
+  }
+  else {
+    // assert nothing's changed
+    debug("Key image was set, so this should not have become key image.")
+    assertEquals("MealImage changed on initialization, even though it was previously not null!", previousKeyImage, newKeyPic);
+  }
+
+  // check for appropriate content (two links and an image)
+  // if the markup changes, this will fail and be rewritten
+  imageCount = outcome.node.find("img").length;
+  assertEquals("Meal Image did not have one images (had " + imageCount +")!", imageCount, 1);
+  linkCount = outcome.node.find("a").length;
+  assertEquals("Meal Image did not have two links (had " + linkCount +")!", linkCount, 3);
+
+  // status is visible
+  assertTrue("Meal Image after initFromDatabase did not have visible status!", outcome.isVisible());
+  
+  // make sure that the meal image is in the sort order now
+  // it may not be the first item, since it could have been from an upload
+  var currentSortOrder = MealImage.getSortOrder();
+  debug("Got sort order! " + currentSortOrder);
+  items = currentSortOrder.split(",");
+  var found = false;
+  for (var i in items) {
+    // test each remote ID in the sort order against the current MealImage
+    if (items[i] === outcome.id + "") {
+      found = true;
+      break;
+    }
+  }
+
+  // assert that we found it
+  assertTrue("Unable to find MealImage after initFromDatabase in the sort order! (MI remoteID: " + outcome.id + ", sortOrder: " + currentSortOrder + ")", found);
+	
+	// used to make sure it's the previous object
+	return outcome;
+}
+
+function testMealImageInitFromDatabaseWithDuplicates() {
+  // test against all good meal images
+  debug("Starting testMealImageInitFromDatabaseWithDuplicates");
+  
+  for (testDataIndex in testData.goodDatabaseImages) {
+    // get the data passed by SWFUpload
+    var imageDetails = testData.goodDatabaseImages[testDataIndex];
+    
+    // create the original
+    var original = new MealImage().initFromDatabase(imageDetails);
+
+    // gather some data
+    var mealImageArrayCount = MealImage.images().length;
+    var mealImageNodeCount = $("#mealImages").find("div.mealImageBlock").length;
+    var sortOrder = MealImage.getSortOrder();
+
+    // create a duplicate
+    var duplicate = new MealImage();
+    var duplicateNode = duplicate.node;
+    var duplicateLocalID = duplicate.localID;
+    var newLength = MealImage.images().length;
+    var initOutcome = duplicate.initFromDatabase(imageDetails);
+    
+    // assert the duplicate is removed completely
+    assertEquals("Duplicate initialization did not return the original version!", original, initOutcome);
+
+    // assert that it was cleared
+    assertCleared(duplicateLocalID);
+  }
+}
+
+function testMealImageInitFromDatabaseNoJaml() {
+  debug("Starting testMealImageInitFromDatabaseNoJaml");
+  
+  // knock out the Jaml template
+  _removeJaml("visible");
+  
+  // test a sets of image data to make sure everything works
+  for (var testDataIndex in testData.goodDatabaseImages) {
+    var imageDetails = testData.goodDatabaseImages[testDataIndex];
+    
+    // make sure it's an exception
+    assertThrowsException("MealImage.InitFromDatabase() succeeded even with Jaml template visible deleted!", function() { new MealImage().initFromDatabase(imageDetails); });
+  }
+}
+
+function testMealImageInitFromDatabaseBadData() {
+  // test against all good meal images
+  debug("Starting testMealImageInitFromDatabaseNormal");
+  
+  for (var testDataIndex in testData.badDatabaseImages) {
+    // get the data passed by SWFUpload
+    var imageDetails = testData.badDatabaseImages[testDataIndex];
+    
+    // init from database
+    protoOutcome = new MealImage();
+    outcome = protoOutcome.initFromDatabase(imageDetails);
+    
+    assertBadServeResponse(outcome);
+  }
+}
+
+function assertBadServeResponse(mealImage) {
+  // verify that the _badServerResponse has been triggered
+	// right now, it just verifies that it hit an unrecoverable error
+	// in the future, it may verify the text displayed
+	assertHitUnrecoverableError(mealImage);
+}
+
+
+/* INIT FROM UPLOAD */
+
+function testInitFromUpload() {
+  // get our class-level constants so we can get initial states
+  MealImage._initialize();
+  
+	var originalSortOrder = MealImage.getSortOrder();
+	
+	for (var dataIndex in testData.goodFileUploads) {
+		fileData = testData.goodFileUploads[dataIndex];
+		
+		// init from file upload
+    protoOutcome = new MealImage();
+    outcome = protoOutcome.initFromUpload(fileData);
+    
+    // make sure the same MealImage is returned
+    assertEquals("A different mealImage was returned from initFromUpload than from new MealImage()!", protoOutcome.localID, outcome.localID);
+    
+    // we know that new MealImage() works, so we just test initFromUpload
+
+    // make sure it has an object
+    assertEquals("MealImage init'd from upload does not have its file object!", outcome.fileObject, fileData);
+
+    // make sure we can find it by its object
+    assertEquals("MealImage init'd from upload could not be found by its fileObject!", outcome, MealImage.findByFileObject(fileData));
+
+		// make sure the filename is saved
+		assertEquals("MealImage init'd from upload does not have filename!", outcome.filename, fileData.name);
+		
+		// make sure it's queued
+		assertIsQueued(outcome);
+		
+		// make sure it has Jaml content
+		// in this case, just check for the presence of a filename
+		assertEvaluatesToTrue("MealImage node after initFromUpload doesn't have Jaml content (e.g. filename)!", outcome.node.html().match(new RegExp(outcome.filename)));
+
+		// make sure we have uploading class
+		assertTrue("MealImage node after initFromUpload doesn't have uploading class!", outcome.node.hasClass("uploading"));
+
+  	// make sure the meal images node is dirty
+  	// do it in the loop so that we can know as soon as the first one is done, rather than cumulatively
+  	assertTrue("Init from upload did not dirty the meal images field!", Mealstrom.PageManager.isFieldDirty(MealImage._mealImagesNode));
+	}
+		
+	// make sure there are no changes to the sort order
+	assertEquals("Sort order changed after initFromUpload, even though it shouldn't have!", originalSortOrder, MealImage.getSortOrder());
+}
+
+function testInitFromUploadNoJaml() {  
+	debug("Starting testMealImageInitFromDatabaseNoJaml");
+  
+  // knock out the Jaml template
+  _removeJaml("queued");
+  
+  // test a sets of image data to make sure everything works
+  for (var testDataIndex in testData.goodFileUploads) {
+    var uploadDetails = testData.goodFileUploads[testDataIndex];
+    
+    // make sure it's an exception
+    assertThrowsException("MealImage.initFromUpload() succeeded even with Jaml template queued deleted!", function() { new MealImage().initFromDatabase(uploadDetails); });
+  }
+}
+
+function testInitFromUploadWithDuplicates() {
+	// test against all good uploads
+ 	debug("Starting testMealImageInitFromDatabaseWithDuplicates");
+ 	
+	var originals = 0, duplicates = 0;
+	for (testDataIndex in testData.goodDatabaseImages) {
+    // get the data passed by SWFUpload
+    var imageDetails = testData.goodFileUploads[testDataIndex];
+
+    // create the original
+    var original = new MealImage();
+		originals++;
+		original.initFromUpload(imageDetails);
+
+    // gather some data
+    var mealImageArrayCount = MealImage.images().length;
+    var mealImageNodeCount = $("#mealImages").find("div.mealImageBlock").length;
+
+    // create a duplicate
+    var duplicate = new MealImage();
+		duplicates++;
+    var newLength = MealImage.images().length;
+    var initOutcome = duplicate.initFromUpload(imageDetails);
+
+    // the duplicate is distinct (as compared to initFromDatabase)
+    assertNotEquals("Duplicate initialization for file upload returned the original version!", original, initOutcome);
+		// there is one more node
+		assertEquals("Creating a duplicate upload did not create 1 new node!", mealImageNodeCount + 1, $("#mealImages").find("div.mealImageBlock").length);
+		// there is one more database entry
+		assertEquals("Creating a duplicate upload did not create 1 new array entry!", newLength, mealImageArrayCount + 1); 
+  }
+
+	// when all is said and done, we should have as many nodes as there are duplicates and originals
+	assertEquals("After creating file uploads and duplicates, total number != originals + dupes!", MealImage.images().length, originals + duplicates);
+}
+
+function testInitFromUploadBadData() {
+	  // test against all good meal images
+	  debug("Starting testMealImageInitFromDatabaseNormal");
+
+	  for (var testDataIndex in testData.badFileUploads) {
+	    // get the data passed by SWFUpload
+	    var imageDetails = testData.badFileUploads[testDataIndex];
+
+	    // init from database
+	    protoOutcome = new MealImage();
+	    outcome = protoOutcome.initFromDatabase(imageDetails);
+
+	    assertBadFileUpload(outcome);
+		}
+}
+
+function assertBadFileUpload(mealImage) {
+  // verify that the _badFileUpload has been triggered
+	// right now, it just verifies that it hit an unrecoverable error
+	// in the future, it may verify the text displayed
+	assertHitUnrecoverableError(mealImage);
+}
+
+/* UPLOAD STARTED (MealImage.prototype.uploadStarted) */
+
+function testUploadStarted() {
+  // get our class-level constants so we can get initial states
+  MealImage._initialize();
+  
+  var originalSortOrder = MealImage.getSortOrder();
+	
+	for (var dataIndex in testData.goodFileUploads) {
+		fileData = testData.goodFileUploads[dataIndex];
+		
+		// init from file upload
+    var protoOutcome = new MealImage();
+		mealImage = protoOutcome.initFromUpload(fileData).uploadStarted();
+
+		// verify we got back our same mealImage
+		assertEquals("uploadStarted did not return the same MealImage!", protoOutcome, mealImage);
+
+		// verify it's in upload state
+		assertIsUploading(mealImage);
+		
+		// verify it has the progressBar attribute
+		assertTrue("MealImage after uploadStarted does not have a progress bar!", mealImage.progressBar.length > 0);
+		// verify the progress bar is initialized and at 0
+		assertNotNull("MealImage progressbar after uploadStarted is not initialized (value === null)!", mealImage.progressBar.progressbar("option", "value"));
+		assertEquals("MealImage progressbar after uploadStarted is not set to 0 (value != 0)!", mealImage.progressBar.progressbar("option", "value"), 0);
+	}	
+}
+
+function testUploadStartedNoJaml() {  
+	debug("Starting testUploadStartedNoJaml");
+  
+  // knock out the Jaml template
+  _removeJaml("uploading");
+  
+  // test a sets of image data to make sure everything works
+  for (var testDataIndex in testData.goodFileUploads) {
+    var uploadDetails = testData.goodFileUploads[testDataIndex];
+    
+    // make sure it's an exception
+    assertThrowsException("MealImage.uploadStarted() succeeded even with Jaml template uploading deleted!", function() { new MealImage().initFromDatabase(uploadDetails).uploadStarted(); });
+  }
+}
+
+/*
+UPLOAD CANCELED (MealImage.prototype.uploadCanceled)
+*/
+
+function testUploadCanceled() {
+	
+	for (var dataIndex in testData.goodFileUploads) {
+		fileData = testData.goodFileUploads[dataIndex];
+		
+		// init from file upload
+    var protoOutcome = new MealImage();
+		mealImage = protoOutcome.initFromUpload(fileData).uploadStarted().uploadCanceled();
+
+		// verify we got back our same mealImage
+		assertEquals("uploadStarted did not return the same MealImage!", protoOutcome, mealImage);
+
+		// verify it's in canceled state
+		assertIsCanceled(mealImage);
+	}	
+}
+
+function testUploadCanceledNoJaml() {  
+	debug("Starting testUploadCanceledNoJaml");
+  
+  // knock out the Jaml template
+  _removeJaml("canceled");
+  
+  // test a sets of image data to make sure everything works
+  for (var testDataIndex in testData.goodFileUploads) {
+    var uploadDetails = testData.goodFileUploads[testDataIndex];
+    
+    // make sure it's an exception
+    assertThrowsException("MealImage.uploadCanceled() succeeded even with Jaml template canceled deleted!", function() { new MealImage().initFromDatabase(uploadDetails).uploadStarted().uploadCanceled(); });
+  }
+}
+
+
+/*
+UPLOAD PROGRESSED (MealImage.prototype.uploadProgressed)
+*/
+
+function testUploadProgressed() {
+	_runProgressBarTest(false);
+}
+
+function testUploadProgressedWithProgressBarRemovals() {
+	_runProgressBarTest(true);
+}
+
+function _runProgressBarTest(removeProgressBarAtRandom) {
+	// split the upload progress into a random set of intervals
+	var interval = Math.round(Math.random() * 10);
+	
+	for (var dataIndex in testData.goodFileUploads) {
+		fileData = testData.goodFileUploads[dataIndex];
+		
+		// init from file upload
+    	var protoOutcome = new MealImage().initFromUpload(fileData).uploadStarted();
+		for (var i = 0; i <= interval; i++) {
+			// if we want to test with removing the progress bar, do so randomly half the time
+			if (removeProgressBarAtRandom && Math.random() > 0.5)
+				delete protoOutcome.progressBar;
+				
+			// increment our original value further and further
+			var mealImage = protoOutcome.uploadProgressed((i === interval ? 1 : 1/(interval - i)));
+			// verify we get back our same mealImage each time
+			assertEquals("uploadProgressed did not return the same MealImage!", protoOutcome, mealImage);
+			// verify that the progress bar is indeed advanced (with a 0.1 tolerance to avoid rounding errors)
+			assertRoughlyEquals("uploadProgressed did not set progressBar = percentage * 100!", mealImage.progressBar.progressbar("option", "value"), (i === interval ? 100 : 100/(interval - i)), 0.1);
+			// assert the status hasn't changed
+			assertIsUploading(mealImage);
+
+			// if we're testing 100%
+			if (i === interval) {
+				var text = mealImage.node.find(".processingMessage").html();
+				assertEquals("MealImage progressed to 100% did not have processing text!", text, MealImage.text("processing_uploaded_file"));
+			}
+		}
+		
+		
+	}
+}
+
+/* 
+MEALIMAGE.PROTOTYPE.UPLOADERROR 
+*/
+
+function testUploadErrored() {
+	// make sure upload limit is defined
+	assertNotNull("MealImage does not have an upload error limit!", MealImage.RETRY_LIMIT);
+
+	// test recoverable errors
+	for (var goodData in testData.goodFileUploads) {
+		for (var recoverableError in errorData().recoverableUploadErrors) {
+			// set up a meal image
+			var datum = testData.goodFileUploads[goodData];
+			var mi = new MealImage().initFromUpload(datum);
+
+			// now error it using one of our errors
+			var error = errorData().recoverableUploadErrors[recoverableError];
+			mi.uploadErrored(error);
+
+			// now verify that it's been errored
+			assertHitRecoverableError(mi);
+			
+			// now try again up to the retry limit to make sure it ultimately unrecoverably errors
+			for (var i = 0; i <= MealImage.RETRY_LIMIT; i++) { mi.uploadErrored(error) }
+			// now verify we're in an unrecoverable state
+			assertHitUnrecoverableError(mi);
+		}
+	}	
+	
+	// now test for unrecoverable errors
+	for (var goodData in testData.goodFileUploads) {
+		for (var unrecoverableError in errorData().unrecoverableUploadErrors) {
+			// set up a meal image
+			var datum = testData.goodFileUploads[goodData];
+			var mi = new MealImage().initFromUpload(datum);
+
+			// now error it using one of our errors
+			var error = errorData().unrecoverableUploadErrors[unrecoverableError];
+			mi.uploadErrored(error);
+
+			// now verify that it's been errored
+			assertHitUnrecoverableError(mi);
+		}
+	}
+}
+
+// tests whether something has errored in a way that's not recoverable
+function assertHitUnrecoverableError(mi) {
+	// make sure it's errored
+	assertIsErrored(mi);
+	// should we assert it has the right content?
+}
+
+// tests whether something has errored in a way is not recoverable
+function assertHitRecoverableError(mi) {
+	// make sure it's re-queued
+	assertIsQueued(mi);
+	// make sure its error count is increased
+	assertTrue("Meal that hit recoverable error has error count not > 0!", mi.errorCount > 0);
+	// should we assert it has the right content?
+}
+
+function testUploadErrorNoJaml() {
+	debug("Starting testUploadErrorNoJaml");
+  
+  // knock out the Jaml template
+  _removeJaml("errored");
+  
+  // make sure we get an exception
+  assertThrowsException("uploadErroreds() succeeded even with Jaml template errored deleted!", function() {new MealImage().uploadErrored});
+}
+
+/*
+UPLOAD COMPLETED (MealImage.prototype.uploadCompleted)
+*/
+
+function testMealImageUploadCompleted() {
+	// test each of our good file uploads completing to each of our good database responses
+	debug("STARTING testMealImageUploadComplete");
+	for (var uploadDetails in testData.goodFileUploads) {
+		for (var serverDetails in testData.goodDatabaseImages) {
+			// set up the meal image
+			var mealImage = new MealImage().initFromUpload(testData.goodFileUploads[uploadDetails]);
+			// assert that it was properly (re)initialized 
+			var outcome = assertInitializesFromDatabaseProperly(mealImage, testData.goodDatabaseImages[serverDetails], "uploadCompleted");
+			// make sure they're the same
+		  assertEquals("A different mealImage was returned from initFromDatabase (via assertInitializesFromDatabaseProperly) than from new MealImage()!", mealImage.localID, outcome.localID);
+		
+			// now clear it, otherwise we'll hit duplicates
+			MealImage.clear(outcome.localID);
+		}
+	}
+}
+
+function testMealImageUploadCompletedBadData() {
+	debug("STARTING testMealImageUploadComplete");
+	for (var uploadDetails in testData.goodFileUploads) {
+		for (var serverDetails in testData.badDatabaseImages) {
+			// set up the meal image
+			var mealImage = new MealImage().initFromUpload(testData.goodFileUploads[uploadDetails]);
+			mealImage.uploadCompleted(testData.badDatabaseImages[serverDetails]);
+			
+			// assert it hit an error
+			assertHitUnrecoverableError(mealImage);
+					
+			// now clear it, otherwise we'll hit duplicates
+			MealImage.clear(mealImage.localID);
+		}
+	}
+}
+
+/* 
+TOGGLE DELETE (MealImage)
+toggleDeletion
+Sets the image to be deleted or not deleted.
+
+Other outcomes / test cases:
+- if it's not currently deleted, node gains the markedForDeletion class and status is DELETING
+- otherwise, status is VISIBLE and the class isn't present
+- executed an arbitrary number of times, the status and class are always in sync
+*/
+
+function testToggleDeletionNormal() {
+	// test a toggle on and then off, checking all meal image states for appropriate responses
+	forAllGoodUploadsAndDatabaseImages(function(uploadData, serverData) {
+		// test at each point in the life of the mealImage
+		var mealImage = new MealImage();
+		assertToggleDeleteHasNoEffect(mealImage);
+		mealImage.uploadStarted(uploadData);
+		assertToggleDeleteHasNoEffect(mealImage);
+		mealImage.uploadProgressed(0.7);
+		assertToggleDeleteHasNoEffect(mealImage);
+		
+		// now test either canceled, errored, or completed
+		if ((chance = Math.random()) < 0.25) {
+			mealImage.uploadCanceled();
+			assertToggleDeleteHasNoEffect(mealImage);
+		}
+		else if (chance < 0.5) {
+			// now error it out and make sure it doesn't work
+			// we only need to test one type of error data, I think
+			mealImage.uploadErrored(errorData().unrecoverableUploadErrors[0]);
+			assertToggleDeleteHasNoEffect(mealImage);			
+		}
+		else {
+			// now get to the point where it should work
+			mealImage.uploadCompleted(serverData);
+			assertToggleDeleteDoesHaveEffect(mealImage);
+			assertToggleDeleteDoesHaveEffect(mealImage);
+		}
+		// now clear it to prevent issues
+		MealImage.clear(mealImage.localID);
+	})
+}
+
+function testMealImageAnArbitraryNumberOfTimes() {
+	forAllGoodUploadsAndDatabaseImages(function(uploadData, serverData) {
+		var mealImage = new MealImage().uploadStarted(uploadData).uploadCompleted(serverData);
+		var toggleCount = 0;
+		
+		// test a random number of times to make sure the outcome matches
+		var numberToTest = Math.round(Math.random() * 100);
+		for (var i = 0; i < numberToTest; i++) { 
+			mealImage.toggleDeletion(); 
+			toggleCount++; 
+		}
+
+		// make sure we have the right final state
+		// since we start from not deleted, see if we have an odd number of toggles
+		var shouldBeDeleted = (toggleCount % 2 === 1);
+		if (shouldBeDeleted) {
+			assertEvaluatesToTrue("MealImage after " + toggleCount + " random delete toggles should have had deleted class but didn't!", mealImage.node.attr("class").match(/markedForDeletion/));
+			assertIsDeleting(mealImage);
+		}
+		else {
+			assertNull("MealImage after " + toggleCount + " random delete toggles should not have had deleted class but did!", mealImage.node.attr("class").match(/markedForDeletion/));
+			assertIsVisible(mealImage);
+		}
+		
+		MealImage.clear(mealImage.localID);
+	});
+}
+
+function assertToggleDeleteHasNoEffect(mealImage) {
+	var currentStatus = mealImage.status, currentClass = mealImage.node.attr("class");
+	mealImage.toggleDeletion();
+	assertEquals("MealImage in state " + currentClass + " had unexpected change in status with toggleDeletion!", currentStatus, mealImage.status);
+	assertEquals("MealImage in state " + currentClass + " had unexpected change in class with toggleDeletion!", currentClass, mealImage.node.attr("class"));
+}
+
+function assertToggleDeleteDoesHaveEffect(mealImage) {
+	var originalStatus = mealImage.status, originalClass = mealImage.node.attr("class");
+
+	// see which status we should end up at
+	var targetStatus = (originalStatus === MealImage._STATUS.deleting ? MealImage._STATUS.visible : MealImage._STATUS.deleting);
+	// see if we should match or not match the class
+	var targetMatchStatus = (targetStatus === MealImage._STATUS.visible ? false : true)
+
+	mealImage.toggleDeletion();
+	
+	assertEquals("MealImage in original state " + originalStatus + " did not change to the appropriate status!", mealImage.status, targetStatus);
+	var hasMatch = (!!mealImage.node.attr("class").match(/markedForDeletion/)); // need to cast to boolean
+	assertTrue("MealImage in state " + originalStatus + " did not have appropriate change in class with toggleDeletion! " + mealImage.node.attr("class"), hasMatch === targetMatchStatus);
+}
+
+/* 
+SHOWFULLIMAGE (MealImage.prototype.showFullImage)
+*/
+
+function testShowFullImageNormal() {
+	forAllGoodUploadsAndDatabaseImages(function(uploadData, serverData) {
+		// walk through each of the stages of a MealImages's life and verify that it has a meal image properly
+		var mealImage = new MealImage();
+		assertDoesNotGenerateImageDialog(mealImage);
+		mealImage.uploadStarted(uploadData);
+		assertDoesNotGenerateImageDialog(mealImage);
+		mealImage.uploadProgressed(0.7);
+		assertDoesNotGenerateImageDialog(mealImage);
+		
+		// init from database and make sure it exists
+		mealImage.uploadCompleted(serverData);
+		assertHasImageDialog(mealImage);
+		// now show it and make sure it's still visible
+		mealImage.showFullImage();
+		assertDialogIsOpen(mealImage);
+		// verify it's closed
+		mealImage.hideFullImage();
+		assertDialogIsClosed(mealImage);
+		
+		// now delete it, and make sure it's still present and visible
+		mealImage.toggleDeletion();
+		// assert the dialog still works
+		mealImage.showFullImage();
+		assertDialogIsOpen(mealImage);
+		mealImage.hideFullImage();
+		assertDialogIsClosed(mealImage);
+		
+		// now clear the image so we don't get duplicates later
+		MealImage.clear(mealImage.localID);
+
+		// now walk through each of possible errors and make sure erroring handles this appropriately
+		forEachUnrecoverableError(function(errorDetails) {
+			// recoverable errors just go back into queued state
+			mealImage = new MealImage().uploadStarted(serverData);
+			mealImage.uploadErrored(errorDetails);
+			assertDoesNotGenerateImageDialog(mealImage);
+			MealImage.clear(mealImage.localID);
+		});
+
+		// now, finally, test canceled
+		mealImage = new MealImage().uploadStarted(uploadData);
+		mealImage.uploadCanceled();
+		assertDoesNotGenerateImageDialog(mealImage);
+	});
+}
+
+function assertHasNoImageDialog(mealImage) {
+	// should this test that the object actually is a meal image?
+	assertUndefined("MealImage (state " + mealImage.status + " passed to assertHasNoImageDialog has ._zoomDialog value!", mealImage._zoomDialog);
+}
+
+function assertHasImageDialog(mealImage) {
+	// should this test that the object actually is a meal image?
+	assertNotNull("MealImage (state " + mealImage.status + "  passed to assertHasImageDialog does not have a ._zoomDialog value!", mealImage._zoomDialog);
+	assertNotNull("MealImage (state " + mealImage.status + "  dialog is not a valid dialog (e.g. dialogObject.dialog(\"isOpen\") === null)!", mealImage._zoomDialog.dialog("isOpen"));
+}
+
+function assertDialogIsOpen(mealImage) {
+	assertTrue("MealImage (state " + mealImage.status + "  valid dialog is not open after call to showFullImage (e.g. dialogObject.dialog(\"isOpen\") != true)!", mealImage._zoomDialog.dialog("isOpen"));
+}
+
+function assertDialogIsClosed(mealImage) {
+	assertFalse("MealImage (state " + mealImage.status + ") valid dialog is not closed after call to closeDialog (e.g. dialogObject.dialog(\"isOpen\") != false)!", mealImage._zoomDialog.dialog("isOpen"));
+}
+
+function assertDoesNotGenerateImageDialog(mealImage) {
+	// does this not have a meal image dialog, and will a call to showFullImage or hideFullImage not generate one?
+	assertHasNoImageDialog(mealImage);
+	mealImage.showFullImage()
+	assertHasNoImageDialog(mealImage);
+	mealImage.hideFullImage();
+	assertHasNoImageDialog(mealImage);
+}
+/*
+MEALIMAGE.CLEAR
+*/
+function testClear() {
+  // get our class-level constants so we can get initial states
+  MealImage._initialize();
+  
+  // preliminary data
+  var mealImageNodeCount = MealImage._mealImagesNode.find("div.mealImageBlock").length;
+  var sortOrder = MealImage.getSortOrder();
+
+	// make our meal image
+  mi = new MealImage();
+
+  // record some data
+  var node = mi.node;
+  var localID = mi.localID;
+  var startLength = MealImage.images().length;
+
+  // set this to be the key image
+  mi.becomeKeyPic();
+
+  // clear unless we're testing that a given mealImage was cleared
+  MealImage.clear(localID);
+  
+  // see if it's in the image array
+	assertCleared(localID); // test that its place was taken by MealImage.clearedObject
+  assertEquals("Cleared meal image was removed from the internal array (old and new array lengths not equal)!", startLength,  MealImage.images().length);
+  
+  // see if it's no longer the key pic
+  assertUndefined("MealImage was set to key pic, then cleared, but key pic accessor still returned a value!", MealImage.getKeyPic());
+  assertUndefined("MealImage was set to key pic, then cleared, but _keyPic still has a value!", MealImage._keyPic);
+  assertEquals("MealImage was set to key pic, then cleared, but _keyImageDataNode still has a value!", MealImage._keyImageDataNode.val(), "");
+  
+
+  // see if we can find the node or any remnant in the DOM
+  assertEquals("Cleared meal image left behind something in the DOM (#mealImages child counts not equal)!", mealImageNodeCount,  $("#mealImages").find("div.mealImageBlock").length);
+  assertUndefined("Able to find cleared meal image ID in the DOM!", $("#mealImageBlock").find(node)[0]);
+
+  // see if the sort order has been restored
+  assertEquals("Original sort order not restored after clear!", sortOrder, MealImage.getSortOrder());
+}
+
+function assertCleared(localID) {
+	// check the permanent marker of being cleared
+	// make sure that place in the meal object is set to the clearedObject
+	assertEquals("Cleared meal image's place was not set to clearedObject!", MealImage.images()[localID], MealImage.clearedObject);
+}
+
+function testClearWithInvalidID() {
+  // make a meal image to test changes with
+  mi = new MealImage();
+  // record some data
+  var startLength = MealImage.images().length;
+  var mealImageNodeCount =$("#mealImages").find("div.mealImageBlock").length;
+  var sortOrder = MealImage.getSortOrder();
+
+  // clear unless we're testing that a given mealImage was cleared
+  MealImage.clear(-999);
+  
+  // make sure nothing's changed
+  // see if it's in the dom list
+  assertEquals("Meal image length changed on clear for invalid localID!", startLength,  MealImage.images().length);
+
+  // make sure nothing's changed in the DOM
+  assertEquals("Clearing an invalid localID changed DOM content!", mealImageNodeCount,  $("#mealImages").find("div.mealImageBlock").length);
+}
+
+function testClearAnArbitraryNumberOfTimes() {
+  var timesToTest = Math.round(10 * Math.random());
+  var nodesCreated = [];
+  var nodesCleared = [];
+  var nodesNotCleared = [];
+  
+  for (var i = 0; i < timesToTest; i++){
+    var mi = new MealImage();
+    nodesCreated.push(mi);
+    var toDo = Math.random();
+    if (toDo < 0.4) {
+      // clear the node
+      nodesCleared.push(mi);
+      MealImage.clear(mi.localID);
+    }
+    else {
+      // initialize with random data for sort order
+      mi.initFromDatabase(databaseDataFromIndex(mi.localID));
+      // and note not cleared
+      nodesNotCleared.push(mi);
+
+      if (toDo > 0.9) {
+        // clear an invalid number just to test that
+        MealImage.clear(-999);
+      }
+    }
+  }
+  
+  // now see if everything matches up
+  // preliminary data
+  var imagesInArray = MealImage.images().length;
+  var mealImageNodeCount = $("#mealImages").find("div.mealImageBlock").length;
+  var sortOrder = MealImage.getSortOrder().split(",");
+  
+  // make sure all the numbers check out
+  assertEquals("After random creating and clearing, nodesCreated != nodesCleared + nodesNotCleared!", nodesCreated.length,  nodesCleared.length + nodesNotCleared.length);
+
+  // make sure images has everything
+  assertEquals("After random creating and clearing, image array list isn't equal to the total number created!", imagesInArray,  nodesCreated.length);
+
+  // make sure the DOM list has the right number of nodes
+  assertEquals("Nodes left in the DOM after clearing and creating are not what's expected!", nodesNotCleared.length,  $("#mealImages").find("div.mealImageBlock").length);
+  
+  // make sure all cleared nodes are set to the clearedObject placeholder
+  // and that their DOM node is gone
+  for (var i in nodesCleared) {
+    var mi = nodesCleared[i];
+    assertEquals("MealImage cleared at random was not set to clearedObject!", MealImage.clearedObject, MealImage.findByLocalId(mi.localID));
+    assertEquals("MealImage cleared at random still attached to a node!", 0, mi.node.parent().length);
+    // ensure it's not in the sorted list
+  }
+  
+  // make sure none of the nodesNotCleared are set to the clearedObject placeholder and all have localID's
+  for (var i in nodesNotCleared) {
+    var mi = nodesNotCleared[i];
+    assertNotEquals("MealImage not cleared at random was set to clearedObject!", MealImage.clearedObject, mi);
+    assertEvaluatesToTrue("MealImage not cleared at random could not be found by localID!", MealImage.findByLocalId(mi.localID));
+    assertEvaluatesToTrue("MealImage not cleared at random not attached to a node!", mi.node.parent().length > 0);
+
+    // make sure it's in the sort order, since it was initialized
+    foundInSortOrder = false;
+    for (var j in sortOrder) {
+      if (sortOrder[j] === mi.id + ""){ // convert type
+        foundInSortOrder = true;
+        break;
+      }
+    }
+    assertTrue("After random clearing and creating, unable to find uncleared node in sort order!", foundInSortOrder);
+  }
+
+  // see if the sort order has the right number of elements
+  assertEquals("Sort order after random creation and clearing not equal to the # of nodes left!", sortOrder.length, nodesNotCleared.length);
+}
+
+/* MEALIMAGE.ISMEALIMAGE */
+
+// this method tests both individual objects (for use in other functions)
+// as well as the generic test suite
+function testIsMealImage() {
+  // groups to test
+  var testSubjects = [];
+	// test the default good and bad suites of data
+  testSubjects.push({data: testData.goodDatabaseImages, shouldSucceed: true, initMethod: "initFromDatabase"});
+  testSubjects.push({data: testData.badDatabaseImages, shouldSucceed: false, initMethod: "initFromDatabase"});
+  testSubjects.push({data: testData.goodFileUploads, shouldSucceed: true, initMethod: "initFromUpload"});
+  testSubjects.push({data: testData.badFileUploads, shouldSucceed: false, initMethod: "initFromUpload"});
+  
+  // also test random objects
+  testSubjects.push({items: ["random object", 2, null, ([]), {id: 2}, {
+    thumbImageURL:"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/4865/DSC01152_thumb_vertical.JPG",
+    "width":3000,
+    "fullImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/4865/DSC01152.JPG",
+    "isKey":false,
+    "height":4000,
+    "id":4865,
+    localID: 0
+  }, Math, Array], shouldSucceed: false});
+
+  // now test the data
+  for (var testGroupIndex in testSubjects) {
+    var testingData = testSubjects[testGroupIndex];
+    var expectSuccess = testingData.shouldSucceed;
+    
+    if (!testingData.items) testingData.items = [];
+    if (testingData.data) {
+        // make sure we have the right information needed to run the tests
+      if (typeof(testingData.data) === "object" && !testingData.initMethod || typeof(MealImage.prototype[testingData.initMethod]) != "function")
+        throw("Data given to testIsMealImage did not come with an initMethod!");
+      
+      for (var datumIndex in testingData.data) {
+        var datum = testingData.data[datumIndex];
+
+        var mi = new MealImage();
+        // the new MealImage should always pass
+        assertTrue("new MealImage() is not a MealImage!", MealImage.isMealImage(mi));      
+        testingData.items.push(mi[testingData.initMethod](datum));
+      }      
+    }
+
+    for (var dataIndex in testData.items) {
+      var mealImage = testGroup[dataIndex];
+
+      // now see if this is what we expect
+      assertTrue("MealImage.isMealImage() did not return " + expectSuccess + " as expected!", MealImage.isMealImage(mealImage));
+    }
+  }  
+}
+
+/* MEALIMAGE STATUS ACCESSORS */
+
+function testStatusAccessors() {
+	var mi = new MealImage();
+	
+	// sets of assertions to test whether things are or are not in certain states
+	var assertions = [];
+	assertions["created"] = {up: assertIsCreated, down: assertIsNotCreated}; 
+	assertions["visible"] = {up: assertIsVisible, down: assertIsNotVisible};
+	assertions["queued"] = {up: assertIsQueued, down: assertIsNotQueued};
+	assertions["uploading"] = {up: assertIsUploading, down: assertIsNotUploading};
+	assertions["errored"] = {up: assertIsErrored, down: assertIsNotErrored};
+	assertions["deleting"] = {up: assertIsDeleting, down: assertIsNotDeleting};
+	assertions["canceled"] = {up: assertIsCanceled, down: assertIsNotCanceled};
+
+	// make sure the assertion tests match up with 
+	assertEquals("Discrepancy between assertions for status checking and actual statuses!", assertions.length, MealImage._STATUS.length);
+	
+	var assertionsTested = [];
+	
+	for (var status in MealImage._STATUS) {
+		mi.status = MealImage._STATUS[status];
+		var foundStatus = false;
+		
+		for (var testAgainstStatus in assertions) {
+			assertion = assertions[testAgainstStatus];
+			if (status === testAgainstStatus) {
+				// make sure the status' accessor returns true
+				assertion.up(mi);
+
+				// track that we used this accessor
+				assertionsTested[testAgainstStatus] = true;
+				// note that this status was found
+				foundStatus = true;
+			}
+			else
+				// make sure that other accessors than the appropriate one fail
+				assertion.down(mi);
+		}
+		
+		// make sure the status found an appropriate accessor
+		assertTrue("Status " + status + " did not have an accessor in testStatusAccessors!", foundStatus);
+	}
+	
+	// make sure all our accessors set up for testing were indeed tested
+	for (var assertionThatShouldHaveBeenTested in assertions) {
+		assertNotNull("Assertion " + assertionThatShouldHaveBeenTested + " not tested!", assertionsTested[assertionThatShouldHaveBeenTested]);
+	}
+	
+}
+
+// status checkers expecting true
+function assertIsCreated(mi) { assertTrue("MealImage expected to be in created status!", mi.isCreated()); }
+function assertIsVisible(mi) { assertTrue("MealImage expected to be in visible status!", mi.isVisible()); }
+function assertIsErrored(mi) { assertTrue("MealImage expected to be in errored status!", mi.isErrored()); }
+function assertIsQueued(mi) {	assertTrue("MealImage expected to be in queued status!", mi.isQueued()); }
+function assertIsCanceled(mi) { assertTrue("MealImage expected to be in canceled status!", mi.isCanceled()); }
+function assertIsDeleting(mi) { assertTrue("MealImage expected to be in deleting status!", mi.isDeleting()); }
+function assertIsUploading(mi) { assertTrue("MealImage expected to be in uploading status!", mi.isUploading()); }
+
+// status checkers expecting false
+function assertIsNotCreated(mi) { assertFalse("MealImage expected NOT to be in created status!", mi.isCreated()); }
+function assertIsNotVisible(mi) { assertFalse("MealImage expected NOT to be in visible status!", mi.isVisible()); }
+function assertIsNotErrored(mi) { assertFalse("MealImage expected NOT to be in errored status!", mi.isErrored()); }
+function assertIsNotQueued(mi) {	assertFalse("MealImage expected NOT to be in queued status!", mi.isQueued()); }
+function assertIsNotCanceled(mi) { assertFalse("MealImage expected NOT to be in canceled status!", mi.isCanceled()); }
+function assertIsNotDeleting(mi) { assertFalse("MealImage expected NOT to be in deleting status!", mi.isDeleting()); }
+function assertIsNotUploading(mi) { assertFalse("MealImage expected NOT to be in uploading status!", mi.isUploading()); }
+
+/*
+IS RETRYING (MealImage.prototype.isRetrying)
+*/
+
+function testIsRetrying() {
+	// test it in all the appropriate stages
+	var mealImage = new MealImage();
+
+	// go through all the statuses and make sure isRetrying responds appropriately
+	for (var statusName in MealImage._STATUS) {
+		mealImage.status = MealImage._STATUS[statusName];
+		delete mealImage.errorCount;
+
+		// test with no errorCount
+		assertFalse("MealImage with undefined retryCount and in status " + statusName + " returned true for isRetrying!", mealImage.isRetrying());
+
+		// test with null errorCount
+		mealImage.errorCount = null;
+		assertFalse("MealImage with null retryCount and in status " + statusName + " returned true for isRetrying!", mealImage.isRetrying());
+		
+		// test with 0 errorCount
+		mealImage.errorCount = 0;
+		assertFalse("MealImage with 0 retryCount and in status " + statusName + " returned true for isRetrying!", mealImage.isRetrying());
+
+		// test with 1 for error count 
+		mealImage.errorCount = 1;
+		if (statusName === "queued")
+			assertTrue("MealImage with 1 retryCount and in status " + statusName + " returned false for isRetrying!", mealImage.isRetrying());
+		else
+			assertFalse("MealImage with 1 retryCount and in status " + statusName + " returned true for isRetrying!", mealImage.isRetrying());
+		
+		// test random number > 0
+		mealImage.errorCount = Math.round(100 * Math.random()) + 1;
+		if (statusName === "queued")
+			assertTrue("MealImage with " + mealImage.errorCount + " retryCount and in status " + statusName + " returned false for isRetrying!", mealImage.isRetrying());
+		else
+			assertFalse("MealImage with " + mealImage.errorCount + " retryCount and in status " + statusName + " returned true for isRetrying!", mealImage.isRetrying());
+	}
+}
+
+/*
+SHOULD CANCEL UPLOAD (MealImage.prototype.shouldCancelUpload)
+*/
+
+function testShouldCancelUpload() {
+	// test it in all the appropriate stages
+	var mealImage = new MealImage();
+
+	// go through all the statuses and make sure isRetrying responds appropriately
+	for (var statusName in MealImage._STATUS) {
+		mealImage.status = MealImage._STATUS[statusName];
+		delete mealImage.errorCount;
+
+		// test with no errorCount
+		assertFalse("MealImage with undefined retryCount and in status " + statusName + " returned true for shouldCancelUpload!", mealImage.shouldCancelUpload());
+
+		// test with null errorCount
+		mealImage.errorCount = null;
+		assertFalse("MealImage with null retryCount and in status " + statusName + " returned true for shouldCancelUpload!", mealImage.shouldCancelUpload());
+		
+		// test with 0 errorCount
+		mealImage.errorCount = 0;
+		assertFalse("MealImage with 0 retryCount and in status " + statusName + " returned true for shouldCancelUpload!", mealImage.shouldCancelUpload());
+
+		// test with MealImage.RETRY_LIMIT for error count 
+		mealImage.errorCount = MealImage.RETRY_LIMIT;
+		assertFalse("MealImage with MealImage.RETRY_LIMIT retryCount and in status " + statusName + " returned true for shouldCancelUpload!", mealImage.shouldCancelUpload());
+
+		// test with MealImage.RETRY_LIMIT + some number for error count 
+		// add an extra 1 because Math.round(Math.random * 10) can sometimes be 0
+		mealImage.errorCount = MealImage.RETRY_LIMIT + Math.round(Math.random() * 10) + 1; 
+		assertTrue("MealImage with " + mealImage.errorCount + " retryCount and in status " + statusName + " returned true for shouldCancelUpload!", mealImage.shouldCancelUpload());
+	}
+}
+
+/*
+MealImage.prototype.images()
+Returns the images array.
+
+Assumptions:
+- MealImage._imagesForMeal exists (failure: re-initialize, which creates an empty array, and hence returns null)
+*/
+
+function testImages() {
+	// test that it returns an array, and subsequent calls return the same array
+	var result = MealImage.images();
+	// make sure it's the same object
+	assertEquals("MeaLImages called twice did not return the same images array!", result, MealImage.images());
+	// make sure it's an array
+	assertEquals("MealImage images() is not an array!", Array, MealImage.images().constructor);
+	
+	// now make sure it will create a new array if it's blank
+	delete MealImage._imagesForMeal;
+	assertNotNull("MealImage.images() failed to create a new image array when it was deleted!", MealImage.images());
+}
+
+/*
+MealImage.prototype.findByLocalId
+*/
+
+function testFindByLocalId() {
+	// test whether it works properly to start
+	assertUndefined("MealImage.testFindByLocalId didn't return null for undefined input!", MealImage.findByLocalId());
+	assertUndefined("MealImage.testFindByLocalId didn't return null for null input!", MealImage.findByLocalId(null));
+	assertUndefined("MealImage.testFindByLocalId didn't return null for string input!", MealImage.findByLocalId("abc"));
+	assertUndefined("MealImage.testFindByLocalId didn't return null for input 0 that doesn't exist!", MealImage.findByLocalId(0));
+	assertUndefined("MealImage.testFindByLocalId didn't return null for input (2) that doesn't exist!", MealImage.findByLocalId(2));
+
+	// create a bunch of meal images
+	var localIDs = [];
+	var mealImages = [];
+	forEachGoodUpload(function(uploadData) {
+		var mi = new MealImage();
+		localIDs.push(mi.localID);
+		mealImages.push(mi);
+		if (Math.random() > 0.5) mi.uploadStarted(uploadData);
+	});
+	
+	// now see if everything works both for bad inputs and good inputs
+	assertUndefined("After creating, MealImage.testFindByLocalId didn't return null for undefined input!", MealImage.findByLocalId());
+	assertUndefined("After creating, MealImage.testFindByLocalId didn't return null for null input!", MealImage.findByLocalId(null));
+	assertUndefined("After creating, MealImage.testFindByLocalId didn't return null for string input!", MealImage.findByLocalId("abc"));
+	
+	for (var idIndex in localIDs) {
+		var result = MealImage.findByLocalId(localIDs[idIndex]);
+		assertEvaluatesToTrue("Unable to find object from a created mealImage's local ID!", result);
+		assertTrue("Object found by local ID wasn't an actual MealImage!", MealImage.isMealImage(result));
+	}
+	
+	for (var objIndex in mealImages) {
+		var result = MealImage.findByLocalId(mealImages[objIndex].localID);
+		assertEvaluatesToTrue("Unable to find object from object's ID from a created mealImage's local ID!", result);
+		assertTrue("Object found by local ID from object's ID wasn't an actual MealImage!", MealImage.isMealImage(result));
+	}
+}
+
+/*
+MealImage.prototype.findByRemoteId
+*/
+
+function testFindByRemoteId() {
+	// test whether it works properly to start
+	assertUndefined("MealImage.testFindByRemoteId didn't return undefined for undefined input!", MealImage.findByRemoteId());
+	assertUndefined("MealImage.testFindByRemoteId didn't return undefined for null input!", MealImage.findByRemoteId(null));
+	assertUndefined("MealImage.testFindByRemoteId didn't return undefined for string input!", MealImage.findByRemoteId("abc"));
+	assertUndefined("MealImage.testFindByRemoteId didn't return undefined for input 0 that doesn't exist!", MealImage.findByRemoteId(0));
+	assertUndefined("MealImage.testFindByRemoteId didn't return undefined for input (2) that doesn't exist!", MealImage.findByRemoteId(2));
+
+	// create a bunch of meal images
+	var remoteIDs = [];
+	var mealImages = [];
+	
+	// for each set of server data, create some regular MealImages randomly
+	// stopping once we randomly assign the server data (we don't want duplicates!)
+	forEachGoodDatabaseImage(function(serverData) {
+		var set = false;
+		forEachGoodUpload(function(uploadData) {	
+			if (set) return;
+			
+			// create a new meal image	
+			var mi = new MealImage();
+						
+			// randomly choose what's to happen
+			var chance = Math.random();
+			if (chance < 0.75) {
+				mi.uploadStarted(uploadData);
+
+				if (chance < 0.5) {
+					// give us 50/50 chance to assign the unique server data, at which point we break the loop
+					mi.uploadCompleted(serverData);
+					remoteIDs.push(mi.id);
+					mealImages.push(mi);
+					
+					// mark us to stop
+					set = true;
+				}
+			}
+		})
+	});
+	
+	// now see if everything works both for bad inputs and good inputs
+	assertUndefined("After creating, MealImage.testFindByRemoteId didn't return undefined for undefined input!", MealImage.findByRemoteId());
+	assertUndefined("After creating, MealImage.testFindByRemoteId didn't return undefined for null input!", MealImage.findByRemoteId(null));
+	assertUndefined("After creating, MealImage.testFindByRemoteId didn't return undefined for string input!", MealImage.findByRemoteId("abc"));
+	
+	for (var idIndex in remoteIDs) {
+		var result = MealImage.findByRemoteId(remoteIDs[idIndex]);
+		assertEvaluatesToTrue("Unable to find object from a created mealImage's remote ID!", result);
+		assertTrue("Object found by remote ID wasn't an actual MealImage!", MealImage.isMealImage(result));
+	}
+	
+	for (var objIndex in mealImages) {
+		var result = MealImage.findByRemoteId(mealImages[objIndex].id);
+		assertEvaluatesToTrue("Unable to find object from object's remote ID from a created mealImage's remote ID!", result);
+		assertTrue("Object found by remote ID from object's ID wasn't an actual MealImage!", MealImage.isMealImage(result));
+	}
+}
+
+/*
+MealImage.prototype.findByFileObject
+*/
+
+function testFindByFileObject() {
+	// test whether it works properly to start
+	assertUndefined("MealImage.findByFileObject didn't return undefined for undefined input!", MealImage.findByFileObject());
+	assertUndefined("MealImage.findByFileObject didn't return undefined for null input!", MealImage.findByFileObject(null));
+	assertUndefined("MealImage.findByFileObject didn't return undefined for string input!", MealImage.findByFileObject("abc"));
+	assertUndefined("MealImage.findByFileObject didn't return undefined for input 0 that doesn't exist!", MealImage.findByFileObject({}));
+	assertUndefined("MealImage.findByFileObject didn't return undefined for input (2) that doesn't exist!", MealImage.findByFileObject({name: "abc"}));
+
+	// create a bunch of meal images
+	var fileObjects = [];
+	var mealImages = [];
+	
+	// for each set of server data, create some regular MealImages randomly
+	// stopping once we randomly assign the server data (we don't want duplicates!)
+	forEachGoodUpload(function(uploadData) {	
+		// create a new meal image	
+		var mi = new MealImage();
+		mi.initFromUpload(uploadData);
+
+		fileObjects.push(uploadData);
+		mealImages.push(mi);
+	});
+	
+	// now see if everything works both for bad inputs and good inputs
+	assertUndefined("After creating, MealImage.findByFileObject didn't return undefined for undefined input!", MealImage.findByFileObject());
+	assertUndefined("After creating, MealImage.findByFileObject didn't return undefined for null input!", MealImage.findByFileObject(null));
+	assertUndefined("After creating, MealImage.findByFileObject didn't return undefined for string input!", MealImage.findByFileObject("abc"));
+	assertUndefined("After creating, MealImage.findByFileObject didn't return undefined for object input!", MealImage.findByFileObject({name: "abc"}));
+	
+	for (var fileObjIndex in fileObjects) {
+		var result = MealImage.findByFileObject(fileObjects[fileObjIndex]);
+		assertEvaluatesToTrue("Unable to find object from a created mealImage's file object!", result);
+		assertTrue("Object found by file object wasn't an actual MealImage!", MealImage.isMealImage(result));
+	}
+	
+	for (var objIndex in mealImages) {
+		var result = MealImage.findByFileObject(mealImages[objIndex].fileObject);
+		assertEvaluatesToTrue("Unable to find object from object's file object from a created mealImage's file object!", result);
+		assertTrue("Object found by file object from object's ID wasn't an actual MealImage!", MealImage.isMealImage(result));
+	}
+}
+
+function testFindByFileObjectWithCanceledAndDeleted() {
+	// for each set of server data, create some regular MealImages randomly
+	// stopping once we randomly assign the server data (we don't want duplicates!)
+	var limit = Math.round(Math.random() * 100) + 10;
+	var uploadDatums = [], uncanceledObjects = [], canceledObjects = [], erroredObjects = [];
+	
+	for (var i = 0; i < limit; i++) {
+		// create a new meal image and set the upload started	
+		debug("here" + i);
+		var mi = new MealImage();
+
+		var datum = uploadDataFromIndex(i);
+		debug("Datum id: " + datum.id);
+		uploadDatums.push(datum);
+		
+		// start the upload
+		mi.initFromUpload(datum);
+		
+		// now randomly assign it to a state
+		if (i % 2 === 0) {
+			mi.uploadCanceled();
+			canceledObjects.push(datum);
+			debug("canceling " + i + ", state is " + mi.status);
+		}
+		else if (i % 3 === 0) {
+			mi.uploadErrored({});
+			erroredObjects.push(datum);
+		}
+		else {
+			uncanceledObjects.push(datum);
+		}
+	};
+	
+	debug("Length of canceled: " + canceledObjects.length + ", uncanceledObjects: " + uncanceledObjects.length + ", errored: " + erroredObjects.length);
+	
+	var withCanceled = {includeCanceled: true};
+	var withErrored = {includeErrored: true};
+	var withBoth = {includeErrored: true, includeCanceled: true};
+	
+	// now test that we find all the uncanceled, canceled, and errored ones with the appropriate options
+	for (var objIndex in uncanceledObjects) {
+		var result = MealImage.findByFileObject(uncanceledObjects[objIndex]);
+		assertIsMealImage(result);
+		result = MealImage.findByFileObject(uncanceledObjects[objIndex], withCanceled);
+		assertIsMealImage(result);
+		result = MealImage.findByFileObject(uncanceledObjects[objIndex], withErrored);
+		assertIsMealImage(result);
+		result = MealImage.findByFileObject(uncanceledObjects[objIndex], withBoth);
+		assertIsMealImage(result);
+	}
+	
+	for (var objIndex in canceledObjects) {
+		var result = MealImage.findByFileObject(canceledObjects[objIndex]);
+		assertUndefined("Canceled object found by findByFileObject with no params!", result);
+		result = MealImage.findByFileObject(canceledObjects[objIndex], withCanceled);
+		assertIsMealImage(result);
+		result = MealImage.findByFileObject(canceledObjects[objIndex], withErrored);
+		assertUndefined("Canceled object found by findByFileObject with only errored!", result);
+		if (result) debug("BAD RESULT is " + result.toSource());
+		result = MealImage.findByFileObject(canceledObjects[objIndex], withBoth);
+		assertIsMealImage(result);
+	}
+	
+	for (var objIndex in erroredObjects) {
+		var result = MealImage.findByFileObject(erroredObjects[objIndex]);
+		assertUndefined("Errored object found by findByFileObject with no params!", result);
+		result = MealImage.findByFileObject(erroredObjects[objIndex], withCanceled);
+		assertUndefined("Errored object found by findByFileObject with only canceled!", result);
+		result = MealImage.findByFileObject(erroredObjects[objIndex], withErrored);
+		assertIsMealImage(result);
+		result = MealImage.findByFileObject(erroredObjects[objIndex], withBoth);
+		assertIsMealImage(result);
+	}
+}
+
+function testFindByFileObjectDBTest() {
+	var dbObjects = [];
+	forEachGoodDatabaseImage(function(serverData) {
+		var mi = new MealImage().initFromDatabase(serverData);
+		assertUndefined("Able to find meal image init'd from database through file object!", MealImage.findByFileObject(mi.fileObject));
+	});
+}
+
+function testFindByFileName() {
+	// test whether it works properly to start
+	assertUndefined("MealImage.findByFilename didn't return undefined for undefined input!", MealImage.findByFilename());
+	assertUndefined("MealImage.findByFilename didn't return undefined for null input!", MealImage.findByFilename(null));
+	assertUndefined("MealImage.findByFilename didn't return undefined for string input!", MealImage.findByFilename("abc"));
+	assertUndefined("MealImage.findByFilename didn't return undefined for input 0 that doesn't exist!", MealImage.findByFilename({}));
+	assertUndefined("MealImage.findByFilename didn't return undefined for input (2) that doesn't exist!", MealImage.findByFilename({name: "abc"}));
+
+	// create a bunch of meal images
+	var fileNames = [];
+	var mealImages = [];
+	
+	// for each set of server data, create some regular MealImages randomly
+	// stopping once we randomly assign the server data (we don't want duplicates!)
+	forEachGoodUpload(function(uploadData) {	
+		// create a new meal image	
+		var mi = new MealImage();
+		mi.initFromUpload(uploadData);
+
+		fileNames.push(uploadData.name);
+		mealImages.push(mi);
+	});
+	
+	// now see if everything works both for bad inputs and good inputs
+	assertUndefined("After creating, MealImage.findByFilename didn't return undefined for undefined input!", MealImage.findByFilename());
+	assertUndefined("After creating, MealImage.findByFilename didn't return undefined for null input!", MealImage.findByFilename(null));
+	assertUndefined("After creating, MealImage.findByFilename didn't return undefined for string input!", MealImage.findByFilename("abc"));
+	assertUndefined("After creating, MealImage.findByFilename didn't return undefined for object input!", MealImage.findByFilename({name: "abc"}));
+	
+	for (var fileObjIndex in fileNames) {
+		var result = MealImage.findByFilename(fileNames[fileObjIndex]);
+		assertEvaluatesToTrue("Unable to find object from a created mealImage's file name!", result);
+		assertTrue("Object found by file object wasn't an actual MealImage!", MealImage.isMealImage(result));
+	}
+	
+	for (var objIndex in mealImages) {
+		var result = MealImage.findByFilename(mealImages[objIndex].filename);
+		assertEvaluatesToTrue("Unable to find object from object's file object from a created mealImage's file object!", result);
+		assertTrue("Object found by file object from object's ID wasn't an actual MealImage!", MealImage.isMealImage(result));
+	}
+}
+
+function testFindByFileNameWithCanceledAndDeleted() {
+	// for each set of server data, create some regular MealImages randomly
+	// stopping once we randomly assign the server data (we don't want duplicates!)
+	var limit = Math.round(Math.random() * 100) + 10;
+	var uploadDatums = [], uncanceledObjects = [], canceledObjects = [], erroredObjects = [];
+	
+	for (var i = 0; i < limit; i++) {
+		// create a new meal image and set the upload started	
+		debug("here" + i);
+		var mi = new MealImage();
+
+		var datum = uploadDataFromIndex(i);
+		var name = datum.name;
+		
+		debug("Datum id: " + datum.id);
+		uploadDatums.push(name);
+		
+		// start the upload
+		mi.initFromUpload(datum);
+		
+		// now randomly assign it to a state
+		if (i % 2 === 0) {
+			mi.uploadCanceled();
+			canceledObjects.push(name);
+			debug("canceling " + i + ", state is " + mi.status);
+		}
+		else if (i % 3 === 0) {
+			mi.uploadErrored({});
+			erroredObjects.push(name);
+		}
+		else {
+			uncanceledObjects.push(name);
+		}
+	};
+	
+	debug("Length of canceled: " + canceledObjects.length + ", uncanceledObjects: " + uncanceledObjects.length + ", errored: " + erroredObjects.length);
+	
+	var withCanceled = {includeCanceled: true};
+	var withErrored = {includeErrored: true};
+	var withBoth = {includeErrored: true, includeCanceled: true};
+	
+	// now test that we find all the uncanceled, canceled, and errored ones with the appropriate options
+	for (var objIndex in uncanceledObjects) {
+		var result = MealImage.findByFilename(uncanceledObjects[objIndex]);
+		assertIsMealImage(result);
+		result = MealImage.findByFilename(uncanceledObjects[objIndex], withCanceled);
+		assertIsMealImage(result);
+		result = MealImage.findByFilename(uncanceledObjects[objIndex], withErrored);
+		assertIsMealImage(result);
+		result = MealImage.findByFilename(uncanceledObjects[objIndex], withBoth);
+		assertIsMealImage(result);
+	}
+	
+	for (var objIndex in canceledObjects) {
+		var result = MealImage.findByFilename(canceledObjects[objIndex]);
+
+		assertUndefined("Canceled object found by findByFilename with no params!", result);
+		result = MealImage.findByFilename(canceledObjects[objIndex], withCanceled);
+		assertIsMealImage(result);
+		result = MealImage.findByFilename(canceledObjects[objIndex], withErrored);
+		assertUndefined("Canceled object found by findByFilename with only errored!", result);
+
+		result = MealImage.findByFilename(canceledObjects[objIndex], withBoth);
+		assertIsMealImage(result);
+	}
+	
+	for (var objIndex in erroredObjects) {
+		var result = MealImage.findByFilename(erroredObjects[objIndex]);
+		assertUndefined("Errored object found by findByFilename with no params!", result);
+		result = MealImage.findByFilename(erroredObjects[objIndex], withCanceled);
+		assertUndefined("Errored object found by findByFilename with only canceled!", result);
+		result = MealImage.findByFilename(erroredObjects[objIndex], withErrored);
+		assertIsMealImage(result);
+		result = MealImage.findByFilename(erroredObjects[objIndex], withBoth);
+		assertIsMealImage(result);
+	}
+}
+
+function testFindByFileNameDBTest() {
+	var dbObjects = [];
+	forEachGoodDatabaseImage(function(serverData) {
+		var mi = new MealImage().initFromDatabase(serverData);
+		assertUndefined("Able to find meal image init'd from database through file object!", MealImage.findByFilename(mi.fileName));
+	});
+}
+
+
+/* IS MEAL IMAGE */
+
+function testIsMealImage() {
+	assertFalse("isMealImage returned true for undefined!", MealImage.isMealImage());
+	assertFalse("isMealImage returned true for null!", MealImage.isMealImage(null));
+	assertFalse("isMealImage returned true for string!", MealImage.isMealImage("abc"));
+	assertFalse("isMealImage returned true for number!", MealImage.isMealImage(2));
+	assertFalse("isMealImage returned true for random array!", MealImage.isMealImage([1, 2]));
+	assertFalse("isMealImage returned true for random hash!", MealImage.isMealImage({a: 2, b: 3}));
+	
+	// now test a real MealImage
+	var mi = new MealImage();
+	assertTrue("Real MealImage didn't pass isMealImage!", MealImage.isMealImage(mi));
+	
+	// now test something fake like a MaelImage
+	var fakeMI = new Array();
+	assertFalse("isMealImage returned true for empty hash!", MealImage.isMealImage(fakeMI));
+	fakeMI.localID = mi.localID;
+	assertFalse("isMealImage returned true for fake MI with real MI's localID!", MealImage.isMealImage(fakeMI));
+	
+	// now break the MealImage and make sure it doesn't work
+	delete mi.localID;
+	assertFalse("isMealImage returned true for broken MI with no localID!", MealImage.isMealImage(mi));
+}
+
+function assertIsMealImage(mi) {
+	// not strictly necessary but makes it easier to debug
+	assertEvaluatesToTrue("MealImage passed to assertIsMealImage is not a valid object (e.g. evaluates to true)!", mi);
+	assertTrue("MealImage passed to assertIsMealImage is not MealImage.", MealImage.isMealImage(mi));
+}
+
+/*
+refreshSortable
+*/
+
+function testRefreshSortable() {
+	// we're testing this by manually creating nodes
+	// so we need to initialize ourselves
+	MealImage._initialize();
+	
+	// test that it picks up additional elements
+	var limit = Math.round(Math.random() * 100);
+	var ids = [];
+	var div;
+	
+	for (var i = 0; i < limit; i++) {
+		var orderBefore = MealImage._mealImagesNode.sortable("toArray");
+		
+		// now add a div to it
+		div = $(document.createElement("div"));
+		div.addClass("mealImageBlock");
+		div.attr("id", "foo" + i);
+		ids.push(div.attr("id"));
+		MealImage._mealImagesNode.append(div);
+	
+		// refresh the sortable
+		MealImage.refreshSortable();
+	
+		// now see if we've added that item
+		var currentOrder = MealImage._mealImagesNode.sortable("toArray");
+		assertEquals("RefreshSortable didn't pick up a new item!", orderBefore.length + 1, currentOrder.length);
+		
+		// make sure it's in the right place
+		assertEquals("New div was not put into appropriate place!", currentOrder.indexOf(div.attr("id")), currentOrder.length - 1);
+	}
+		
+	// now make sure that all the IDs are present
+	var idsToCheck = MealImage._mealImagesNode.sortable("toArray");
+	for (var i in ids) {
+		assertTrue("Unable to find id after adding and refreshing!", idsToCheck.indexOf(ids[i]) >= 0);
+	}
+	
+	// now try moving something and make sure it works
+	// div is the last div created, so let's move it to the front
+	var finalOrder = MealImage._mealImagesNode.sortable("toArray");
+	MealImage._mealImagesNode.prepend(div);
+	var ultimateOrder = MealImage._mealImagesNode.sortable("toArray");
+	assertNotEquals("After prepend, the order wasn't changed!", finalOrder, ultimateOrder)
+}
+
+function testUpdateOrder() {
+	// we're testing this by manually creating nodes
+	// so we need to initialize ourselves
+	MealImage._initialize();
+	
+	var ids = [];
+	var mi;
+	
+	forEachGoodDatabaseImage(function(serverData) {
+		// create a new meal mage
+		// this automatically refreshes the sortable
+		var orderBefore = MealImage.getSortOrder();
+
+		mi = new MealImage().initFromDatabase(serverData);
+
+		// make sure the now-stored order is updated to the new order
+		// calculate what the order should be based on what we just did
+		var orderShouldBe = (orderBefore.length > 0 ? orderBefore.split(",") : []); // compensate for "".split(",") === [""] 
+		orderShouldBe.push(mi.id); 
+		orderShouldBe = orderShouldBe.join(",");
+		assertEquals("After new div, stored order != actual order!", orderShouldBe, MealImage.getSortOrder());
+	});
+	
+	// get the individual IDs
+	var finalOrder = MealImage.getSortOrder().split(",");
+	
+	// now make sure that all the IDs are present
+	var idsToCheck = MealImage._mealImagesNode.sortable("toArray");
+	for (var i in ids) {
+		assertTrue("Unable to find id after adding and refreshing!", idsToCheck.indexOf(ids[i]));
+	}
+	
+	// now try moving something and make sure it works
+	// div is the last div created, so let's move it to the front
+	//MealImage._mealImagesNode.remove(mi.node);
+	MealImage._mealImagesNode.prepend(mi.node);
+	
+	// now move that last ID to the front to simulate the move
+	var ultimateOrder = finalOrder;
+	var lastID = parseInt(ultimateOrder.pop()); // parseInt because the value will be a strin from a split-string array
+	assertEquals("Last ID not equal to the last MI created!", lastID, mi.id);
+	ultimateOrder = [lastID].concat(ultimateOrder);
+	
+	assertNotEquals("After prepend, the order wasn't changed!", finalOrder, ultimateOrder)
+	assertEquals("Prepended meal node was not put into appropriate place in the order!  lastID: " + lastID + ", currentOrder: " + ultimateOrder.toSource(), ultimateOrder.indexOf(mi.id), 0);	
+}
+
+/*
+doUnfinishedUploadsExist
+*/
+
+function testDoUnfinishedUploadsExist() {
+	var queuedMeals = [], uploadingMeals = [];
+
+	var limit = Math.round(Math.random() * 100);
+			
+	forAllGoodUploadsAndDatabaseImages(function(uploadData, serverData) {
+		var mi = new MealImage();
+
+		// now randomly act on the 
+		var probability = Math.random();
+		
+		// if we haven't assigned this server ID, assign it
+		if (!MealImage.findByRemoteId(serverData.id)) {
+			// do upload first, or not
+			if (probability > 0.5)
+				mi.initFromUpload(uploadData).uploadStarted().uploadProgressed(0.5);
+			
+			// now init from database
+			mi.initFromDatabase(serverData);
+		}
+		else {
+			// do an init and maybe start upload
+			mi.initFromUpload(uploadData);
+			
+			// now it's queued -- so randomly start it to uploading
+			if (probability > 0.5) {
+				mi.uploadStarted();
+				uploadingMeals.push(mi);
+			}
+			else {
+				// just leave it queued
+				queuedMeals.push(mi);
+			}
+		}
+		
+		// make sure we're still working
+		var failureString = "doUnfinishedUploadsExist returned the wrong value after adding meals (queued: " + queuedMeals.length + ", uploading: " + uploadingMeals.length + ")!";
+		fn = (queuedMeals.length > 0 || uploadingMeals.length > 0 ? assertTrue : assertFalse);
+		fn(failureString, MealImage.doUnfinishedUploadsExist());	
+	});
+	
+	// now try removing items one by one, randomly clearing or canceling, until it should return false
+	var mi;
+	while (mi = queuedMeals.pop()) {		
+		var probability = Math.random();
+		if (probability > 0.5)
+			mi.uploadCanceled();
+		else
+			MealImage.clear(mi.localID);
+
+		// make sure we're still working
+		var failureString = "doUnfinishedUploadsExist returned the wrong value after removing a queued meal (queued: " + queuedMeals.length + ", uploading: " + uploadingMeals.length + ")!";
+		fn = (queuedMeals.length > 0 || uploadingMeals.length > 0 ? assertTrue : assertFalse);
+		fn(failureString, MealImage.doUnfinishedUploadsExist());	
+	}
+	
+	// the same for the uploading queue
+	while (mi = uploadingMeals.pop()) {
+		var probability = Math.random();
+		if (probability > 0.5)
+			mi.uploadCanceled();
+		else
+			MealImage.clear(mi.localID);
+		
+		// make sure we're still working
+		var failureString = "doUnfinishedUploadsExist returned the wrong value after removing a canceled meal (queued: " + queuedMeals.length + ", uploading: " + uploadingMeals.length + ")!";
+		fn = (queuedMeals.length > 0 || uploadingMeals.length > 0 ? assertTrue : assertFalse);
+		fn(failureString, MealImage.doUnfinishedUploadsExist());	
+	}
+	
+	// now we should be done
+	assertFalse("After removing all queued and uploading meals, doUnfinishedUploadsExist still returns true!", MealImage.doUnfinishedUploadsExist());
+}
+
+
+/*
+doDeletedItemsExist
+*/
+
+
+function testDoDeletedItemsExist() {
+	var deletedMeals = [];
+
+	forAllGoodUploadsAndDatabaseImages(function(uploadData, serverData) {
+		var mi = new MealImage();
+
+		// now randomly act on the 
+		var probability = Math.random();
+		
+		// if we haven't assigned this server ID, assign it
+		if (!MealImage.findByRemoteId(serverData.id)) {
+			// do upload first, or not
+			if (probability > 0.5)
+				mi.initFromUpload(uploadData).uploadStarted().uploadProgressed(0.5);
+			
+			// now init from database
+			mi.initFromDatabase(serverData);
+			
+			// now delete
+			mi.toggleDeletion();
+			if (probability > 0.75) {
+				mi.toggleDeletion(); // undelete
+			}
+			else {
+				deletedMeals.push(mi);
+			}
+		}
+		else {
+			// add some background noise
+			// do an init and maybe start upload
+			mi.initFromUpload(uploadData);
+			
+			// now it's queued -- so randomly start it to uploading
+			if (probability > 0.5) {
+				mi.uploadStarted();
+			}
+			else {
+				// just leave it queued
+			}
+		}
+		
+		// make sure we're still working
+		var failureString = "doDeletedMealsExist returned the wrong value after adding meals (deleted: " + deletedMeals.length + ")!";
+		fn = (deletedMeals.length > 0 ? assertTrue : assertFalse);
+		fn(failureString, MealImage.doDeletedItemsExist());	
+	});
+	
+	// now try removing deleted items one by one, randomly clearing or canceling, until it should return false
+	var mi;
+	while ((mi = deletedMeals.pop())) {		
+		MealImage.clear(mi.localID);
+
+		// make sure we're still working
+		var failureString = "doDeletedMealsExist returned the wrong value after removing a deleted meal (deleted: " + deletedMeals.length + ")!";
+		fn = (deletedMeals.length > 0 ? assertTrue : assertFalse);
+		fn(failureString, MealImage.doDeletedItemsExist());	
+	}
+	
+	
+	// now we should be done
+	assertFalse("After removing all deleted meals, doDeletedMealsExist still returns true!", MealImage.doDeletedItemsExist());
+}
+
+
+/*
+becomeKey
+Makes this meal image the key image.
+
+Outcomes:
+- afterward, the meal image node has class keyPic
+- afterward, no other image nodes have class keyPic
+*/
+function testBecomeKeyPic() {
+  forAllGoodUploadsAndDatabaseImages(function(uploadData, serverData) {
+    // set up a new meal image
+    var mi = new MealImage().initFromUpload(uploadData);
+    
+    // if it's the first one with this serverData, init it from that and test becomeKeyImage
+    if (!MealImage.findByRemoteId(serverData.id)) {
+      mi.initFromDatabase(serverData);
+      
+      // see if it automatically became the key pic
+      var wasAlreadyKeyPic = (MealImage.getKeyPic() && MealImage.getKeyPic().localID === mi.localID);
+
+      // if not, expect the event to fire
+      var eventFired = false;      
+      var eventShouldFire = (Math.random() > 0.5);
+      debug("Event should fire: " + eventShouldFire + ", was: " + wasAlreadyKeyPic);
+      var checkEvent = function(e) {
+        // make sure the event fired if it was supposed to
+        // unless it automagically became the key pic, in which case the event shouldn't have fired (tested elsewhere)
+        eventFired = true;
+
+        // only fire this for the specific meal image
+        // otherwise old event handlers will cause this test to fail
+        var forThis = e.mealImage && e.mealImage.localID === mi.localID;
+
+        if (forThis && (eventShouldFire === false || wasAlreadyKeyPic)) {
+          fail("Event fired when it shouldn't have!");
+        }
+      }
+    	Mealstrom.PageManager.registerGlobalEventListener(MealImage.KEY_PIC_EVENT, checkEvent);
+            
+      // now have it become the key pic
+      var result = mi.becomeKeyPic({surpressEvent: !eventShouldFire});
+      assertTrue("becomeKeyPic didn't return true!", result);
+      
+      // make sure the event fired if it should have
+      if (eventShouldFire && !wasAlreadyKeyPic) {
+        assertTrue("Event didn't fire when it should have!", eventFired);
+      }
+      
+      // make sure it's the key pic
+      var newKeyPic = MealImage.getKeyPic();
+      assertTrue("MealImage key pic was not a meal image even after explicit call! (MI._keyPic: " + MealImage._keyPic + ", node: " + MealImage._keyImageDataNode.val() + ")", MealImage.isMealImage(newKeyPic));
+      
+      assertEquals("Image did not become the key pic!", newKeyPic.localID, mi.localID);
+      assertEquals("MealImage._keyPic !== key pic!", MealImage._keyPic, mi.localID);
+
+      // make sure the DOM node has the right value
+      // remember node value is a string
+      assertEquals("keypic node did not store the right value!", MealImage._keyImageDataNode.val(), mi.id + ""); 
+      
+      // make sure the mi's node -- and only that one -- has class keyPic
+      var nodesWithKeyPic = MealImage._mealImagesNode.find(".keyPic");
+      assertEquals("More than one node had class .keyPic!", nodesWithKeyPic.length, 1);
+      assertEquals("The new key pic didn't have class key pic!", nodesWithKeyPic[0], mi.node[0]);
+    }
+  });
+}
+
+
+function testKeyPicWithSameValue() {
+  // test to make sure that subsequent calls for the same meal ID don't change the value
+  // also tests that clear removes the key pic, incidentally 
+  forEachGoodDatabaseImage(function(serverData) {
+    var mi = new MealImage().initFromDatabase(serverData);
+    var previousKeyPic = MealImage.getKeyPic();
+    assertTrue("MealImage key pic was not a meal image even after initFromDB! (MI._keyPic: " + MealImage._keyPic + ", node: " + MealImage._keyImageDataNode.val() + ")", MealImage.isMealImage(previousKeyPic));
+    assertEquals("MealImage did not become key pic on database initialization!", mi.localID, previousKeyPic.localID);
+    
+    // now call it again
+    var result = mi.becomeKeyPic();
+    var keyPic = MealImage.getKeyPic();
+    assertTrue("MealImage did not return true when called twice for the same MI!", result);
+    assertEquals("KeyPic changed after second call by same object!", mi.localID, keyPic.localID);
+  
+    MealImage.clear(mi.localID);
+  });
+}
+/*
+getKeyPic
+Gets the key pic object.
+
+Outcomes:
+- returns mealImage corresponding to the value of MealImage._keyPic (via findByLocalId, so the same results for invalid/undefined IDs)
+*/
+
+function testGetKeyPic() {
+  // test along several circumstances
+  
+  // 1. nothing done
+  assertUndefined("No key pic set, but value was returned!", MealImage.getKeyPic());
+  
+  // 2. improper value that doesn't map to any image
+  MealImage._keyPic = 2;
+  assertUndefined("Key pic set to invalid value, but getKeyPic returned a value!", MealImage.getKeyPic());
+  
+  // 3. an actual value
+  // get the key image set
+  var mi = new MealImage().initFromDatabase(testData.goodDatabaseImages[0]);
+  assertEquals("After creating a meal image with no key image, the key image wasn't properly set!", mi.localID, MealImage.getKeyPic().localID);
+}
+
+
+/* TEARDOWN TEST */
+
+function testMealImageShutdown() {
+  // make sure shutdown works properly, otherwise all our tests are iffy
+  MealImage._initialize(); // already tested
+  MealImage._shutdown(); // to test
+
+  assertUndefined("MealImage shutdown did not remove _initialized!", MealImage._initialized);
+  assertUndefined("MealImage shutdown did not remove debug!", MealImage.prototype.debug);
+  assertUndefined("MealImage shutdown did not remove _images!", MealImage._imagesForMeal);
+  assertUndefined("MealImage shutdown did not remove image sort order node!", MealImage._imageSortOrderNode);
+  assertUndefined("MealImage shutdown did not remove key image node!", MealImage._keyImageDataNode);
+  assertUndefined("MealImage shutdown did not remove _keyPic!", MealImage._keyPic);
+  assertUndefined("MealImage shutdown did not remove _mealImagesNode!", MealImage._mealImagesNode);
+	assertUndefined("MealImage shutdown did not remove clearedObject to an empty hash!", MealImage.clearedObject);
+  
+	for (var templateName in MealImage.internals._JAML_TEMPLATES) {
+		if (MealImage.internals._JAML_TEMPLATES.hasOwnProperty(templatesName)) {
+		  assertUndefined("MealImage shutdown did not remove Jaml templates!", Jaml.templates[templateName]);
+	  }
+	}
+}
+
+/* SETUP AND TEARDOWN */
+var debug;
+
+function setUp() {
+    // runs standard setup
+    debug = _debug;
+    
+    _addMealImageDiv();
+    _addMealImageSortOrder();
+	_addKeyImageNode();
+    _initTestData();
+}
+
+function tearDown() {
+    debug = null;
+    _removeMealImageDiv();
+    _removeMealImageSortOrder();
+	_removeKeyImageNode();
+    _destroyTestData();
+    MealImage._shutdown();
+
+	Mealstrom.PageManager.unbindAllEvents();
+}
+
+function _addMealImageDiv() {
+    if (!document.getElementById("mealImages")) {
+       div = document.createElement("div");
+       div.id = "mealImages";
+       document.getElementById("testHanger").appendChild(div); 
+    }    
+}
+
+function _addMealImageSortOrder() {
+    if (!document.getElementById("imageSortOrder")) {
+       input = document.createElement("input");
+       input.id = "imageSortOrder";
+       input.type = 'hidden';
+       document.getElementById("testHanger").appendChild(input); 
+    }    
+}
+
+function _addKeyImageNode() {
+    if (!document.getElementById("keyImageStore")) {
+       input = document.createElement("input");
+       input.id = "keyImageStore";
+       input.type = 'hidden';
+       document.getElementById("testHanger").appendChild(input); 
+    }
+}
+
+
+function _removeMealImageDiv() {
+    if (div = document.getElementById("mealImages"))
+        div.parentNode.removeChild(div);
+}
+
+function _removeMealImageSortOrder() {
+    if (input = document.getElementById("imageSortOrder"))
+        input.parentNode.removeChild(input);
+}
+
+function _removeKeyImageNode() {
+    if (input = document.getElementById("imageSortOrder"))
+        input.parentNode.removeChild(input);
+}
+
+function _removeJaml(template) {
+  delete Jaml.templates[template];
+}
+
+function _debug(args) {
+	try {
+		if (console)
+			console.log(args);
+	}
+	catch (ex) {}
+}
+
+/* TEST DATA HELPERS */
+var testData, _errorDataStore;
+
+function _initTestData() {
+  testData = {};
+  testData.goodFileUploads = [];
+  testData.goodFileUploads.push({
+    name:"DSC01152.JPG", 
+    creationdate:(new Date(1256834007000)), 
+    modificationdate:(new Date(1256834010000)), 
+    post:{}, 
+    type:"JPEG", 
+    index:0,  
+    filestatus:-1, 
+    size:3982465, 
+    id:"SWFUpload_0_0"
+  });
+  testData.goodFileUploads.push({
+    // make sure we pass when we get 0's, which Javascript accepts as false
+    name:"0", 
+    creationdate:(new Date(1256834007000)), 
+    modificationdate:(new Date(1256834010000)), 
+    post:{}, 
+    type:"JPEG", 
+    index:0,  
+    filestatus:-1, 
+    size:3982465, 
+    id: 0
+  });
+  testData.goodFileUploads.push({
+    name:"DSC01352.JPG", 
+    creationdate:(new Date(1256834007000)), 
+    modificationdate:(new Date(1256834010000)), 
+    post:{}, 
+    type:"JPEG", 
+    index:0,  
+    filestatus:-1, 
+    size:3982465, 
+    id:"SWFUpload_0_2"
+  });
+  testData.goodFileUploads.push({
+    name:"DSC0152.JPG", 
+    creationdate:(new Date(1256834007000)), 
+    modificationdate:(new Date(1256834010000)), 
+    post:{}, 
+    type:"JPEG", 
+    index:0,  
+    filestatus:-1, 
+    size:3982465, 
+    id:"SWFUpload_0_1"
+  });
+  
+  testData.badFileUploads = {};
+  testData.badFileUploads["null"] = null;
+  testData.badFileUploads["notObject"] = "foo and bar!";
+  testData.badFileUploads["noID"] = {
+    name:"DSC012452.JPG", 
+    creationdate:(new Date(1256834007000)), 
+    modificationdate:(new Date(1256834010000)), 
+    post:{}, 
+    type:"JPEG", 
+    index:0,  
+    filestatus:-1, 
+    size:3982465, 
+  };
+  testData.badFileUploads["noName"] = {
+    creationdate:(new Date(1256834007000)), 
+    modificationdate:(new Date(1256834010000)), 
+    post:{}, 
+    type:"JPEG", 
+    index:0,  
+    filestatus:-1, 
+    size:3982465, 
+    id:"SWFUpload_1_1"
+  };
+  
+  // good database info
+  testData.goodDatabaseImages = [];
+  testData.goodDatabaseImages.push({
+    thumbImageURL:"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/4865/DSC01152_thumb_vertical.JPG",
+    "width":3000,
+    "fullImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/4865/DSC01152.JPG",
+    "isKey":false,
+    "height":4000,
+    "id":4865
+  });
+  testData.goodDatabaseImages.push({
+    // make sure we can handle id === 0 -- should never happen, but in case
+    thumbImageURL: 0,
+    "width": 0,
+    "fullImageURL": 0,
+    "isKey":false,
+    "height": 0,
+    "id": 0
+  }); 
+  // equal width and height
+  testData.goodDatabaseImages.push({
+    thumbImageURL:"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/4865/DSC01152_thumb_vertical.JPG",
+    "width":4000,
+    "fullImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/4865/DSC01152.JPG",
+    "isKey":false,
+    "height":4000,
+    "id":4861125
+  });
+  testData.goodDatabaseImages.push({
+    thumbImageURL:"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/2342/DSC0112_thumb_vertical.JPG",
+    "width":4000,
+    "fullImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/2342/DSC0112.JPG",
+    "isKey":false,
+    "height":3000,
+    "id":1234
+  });
+  testData.goodDatabaseImages.push({   
+    "thumbImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/23423/DSC011332_thumb_vertical.JPG",
+    "fullImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/23423/DSC011332.JPG",
+    "isKey":false,
+    "id":12343
+  });
+  
+  // bad database info
+  testData.badDatabaseImages = {};
+  testData.badDatabaseImages["null"] = null;
+  testData.badDatabaseImages["notObject"] = "foo and bar!";
+  testData.badDatabaseImages["anotherObject"] = {};
+  testData.badDatabaseImages["noThumb"] = {
+    "width":4000,
+    "fullImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/2341/DSC012.JPG",
+    "isKey":false,
+    "height":3000,
+    "id":123
+  };
+  testData.badDatabaseImages["noFull"] = {
+    thumbImageURL:"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/2342/DSC0112_thumb_vertical.JPG",
+    "width":4000,
+    "isKey":false,
+    "height":3000,
+    "id":123
+  };
+  testData.badDatabaseImages["noId"] = {
+    thumbImageURL:"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/2342/DSC0112_thumb_vertical.JPG",
+    "width":4000,
+    "fullImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/2342/DSC0112.JPG",
+    "isKey":false,
+    "height":3000
+  };	
+}
+
+function errorData() {
+	if (!_errorDataStore) {
+		_errorDataStore = {}
+		_errorDataStore.recoverableUploadErrors = [];
+		for (var i in testData.goodFileUploads) {
+			mi = new MealImage().initFromUpload(testData.goodFileUploads[i]);
+			_errorDataStore.recoverableUploadErrors.push({
+				isRecoverable: true,
+				shortDescription: "Upload test " + mi.localID,
+			});
+		}
+	
+		_errorDataStore.unrecoverableUploadErrors = [];
+		for (var i in testData.goodFileUploads) {
+			mi = new MealImage().initFromUpload(testData.goodFileUploads[i]);
+			_errorDataStore.unrecoverableUploadErrors.push({
+				isRecoverable: false,
+				shortDescription: "Upload test " + mi.localID,
+			});
+		}
+	}
+	return _errorDataStore;
+}
+
+function databaseDataFromIndex(i) {
+  return {   
+    "thumbImageURL": "http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/23423/DSC011332_thumb_vertical.JPG",
+    "fullImageURL": "http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/23423/DSC011332.JPG",
+    "isKey": false,
+    "id": i
+  };
+}
+
+function uploadDataFromIndex(i) {
+	return {
+    name:"uploadFromIndex" + i + ".JPG", 
+    creationdate:(new Date(1256834007000)), 
+    modificationdate:(new Date(1256834010000)), 
+    post:{}, 
+    type:"JPEG", 
+    index:0,  
+    filestatus:-1, 
+    size:3982465, 
+    id:"SWFUpload_" + i + "_" + i
+  }
+}
+
+function _destroyTestData() {
+  delete testData;
+}
+
+function forEachGoodUpload(fn) {
+	assertIsFunction("forEachGoodUpload wasn't passed a function!", fn);
+	for (var goodFileIndex in testData.goodFileUploads) {
+		fn(testData.goodFileUploads[goodFileIndex]);
+	}
+}
+
+function forEachGoodDatabaseImage(fn) {
+	assertIsFunction("forEachGoodDatabaseImage wasn't passed a function!", fn);
+	for (var goodDataIndex in testData.goodDatabaseImages) {
+		fn(testData.goodDatabaseImages[goodDataIndex]);
+	}
+}
+
+function forAllGoodUploadsAndDatabaseImages(fn) {
+	assertIsFunction("forAllGoodUploadsAndDatabaseImages wasn't passed a function!", fn);
+	forEachGoodUpload(function(uploadData) {
+		forEachGoodDatabaseImage(function(serverData) {
+			fn(uploadData, serverData);
+		})
+	})
+}
+
+function forEachUnrecoverableError(fn) {
+	assertIsFunction("forEachUnrecoverableError wasn't passed a function!", fn);
+	for (var errorType in errorData().unrecoverableUploadErrors) {
+		fn(errorData().unrecoverableUploadErrors[errorType]);
+	}
+}
+// error data
+// since this invokes new MealImage() and other functions, it's called as needed rather than in setUp
+
+</script>
+
+<div id="testHanger">
+</div>
+</body>
+</html>
