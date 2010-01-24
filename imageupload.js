@@ -15,31 +15,41 @@ Other outcome / test cases:
 NOTE: by storing the meal in the array using the last index, we subsequently require that that index in the array 
 always be occupied.  hence, clear replaces it with a null, rather than erasing it
 */
-RD.ImageUpload = function() {
-	if (!RD.ImageUpload._initialized)
-		RD.ImageUpload._initialize();
+RD.ImageUpload = (function() {
+  var imageUploadObject = function() {
+  	if (!RD.ImageUpload._initialized)
+  		RD.ImageUpload._initialize();
 		
-    // store it in the list
-    this.localID = RD.ImageUpload.images().length;
-    RD.ImageUpload.images()[this.localID] = this;
+      // store it in the list
+      this.localID = RD.ImageUpload.images().length;
+      RD.ImageUpload.images()[this.localID] = this;
     
-    // remove the placeholder if it 's present
-    if (RD.ImageUpload._placeholderNode.parent().length > 0) {
-      RD.ImageUpload._placeholderNode.remove();
-    }
+      // remove the placeholder if it 's present
+      if (RD.ImageUpload._placeholderNode.parent().length > 0) {
+        RD.ImageUpload._placeholderNode.remove();
+      }
     
-		// create the node
-    this._replaceWithRender("imageUploadBlock");
+  		// create the node
+      this._replaceWithRender("imageUploadBlock");
 
-		// notify the sortable we've added a node
-		RD.ImageUpload.refreshSortable();
+  		// notify the sortable we've added a node
+  		RD.ImageUpload.refreshSortable();
 
-		this.status = RD.ImageUpload._STATUS["created"];
+  		this.status = RD.ImageUpload._STATUS["created"];
 	
-		RD.debug("Created meal w/ local ID " + this.localID);
+  		RD.debug("Created meal w/ local ID " + this.localID);
 
-    return this;
-}
+      return this;
+  };
+  
+  // fire some initializers that have to execute on evaluation, since they add methods other modules might call for page load
+  // and _init is (currently) not fired till the first image is added
+	// add tracking for new key images
+	RD.Utils.addEventManagement(imageUploadObject, "NewKeyImage");
+	
+	// return the constructor
+	return imageUploadObject;
+})();
 
 /* MEAL IMAGE STATUSES */
 // internal use only.  To verify a status, use the accessor methods below.
@@ -814,13 +824,11 @@ Other outputs:
 */
 RD.ImageUpload._initialize = function() {
 	if (!RD.ImageUpload._initialized) {
-		// add language support
-		RD.Utils.addLanguageSupport(RD.ImageUpload, RD.ImageUpload.internals)
-		// and tracking for new key images
-		RD.Utils.addEventManagement("NewKeyImage");
-		
 		// preinitialize images
 		RD.ImageUpload.images();
+		
+		// add language support
+  	RD.Utils.addLanguageSupport(RD.ImageUpload);
 		
 		// get the sort order node
 		RD.ImageUpload._imageSortOrderNode = $("#imageSortOrder");
@@ -866,6 +874,8 @@ RD.ImageUpload._shutdown = function() {
 	delete RD.ImageUpload._keyPic;
 	delete RD.ImageUpload._imageUploadsNode;
 	delete RD.ImageUpload.clearedObject;
+	
+	RD.ImageUpload._removeAllNewKeyImageHandlers();
 	
 	for (var templateName in RD.ImageUpload.internals._JAML_TEMPLATES) {
 		if (RD.ImageUpload.internals._JAML_TEMPLATES.hasOwnProperty(templatesName)) {

@@ -21,6 +21,7 @@
 function testImageUploadInitializationNormal() {
   // test RD.ImageUpload initialization
   RD.ImageUpload._initialize();
+  
   // run standard initialization tests
   assertTrue("Meal image did not initialize!", RD.ImageUpload._initialized)
   assertIsObject("RD.ImageUpload did not initialize image array!", RD.ImageUpload._imagesForMeal);
@@ -181,7 +182,7 @@ function assertInitializesFromDatabaseProperly(mealImage, imageDetails, initiali
       }
 		}
 		
-		RD.Page.subscribeToEvent(RD.ImageUpload.KEY_PIC_EVENT, checkEvent);
+		RD.ImageUpload.handleNewKeyImage(checkEvent);
 	}	
 	
 	// initializationFunction is, by default, initFromDatabase
@@ -1912,7 +1913,7 @@ function testBecomeKeyPic() {
           fail("Event fired when it shouldn't have!");
         }
       }
-    	RD.Page.subscribeToEvent(RD.ImageUpload.KEY_PIC_EVENT, checkEvent);
+    	RD.ImageUpload.handleNewKeyImage(checkEvent);
             
       // now have it become the key pic
       var result = mi.becomeKeyPic({surpressEvent: !eventShouldFire});
@@ -1990,7 +1991,6 @@ function testGetKeyPic() {
 
 function testImageUploadShutdown() {
   // make sure shutdown works properly, otherwise all our tests are iffy
-  RD.ImageUpload._initialize(); // already tested
   RD.ImageUpload._shutdown(); // to test
 
   assertUndefined("RD.ImageUpload shutdown did not remove _initialized!", RD.ImageUpload._initialized);
@@ -2031,8 +2031,6 @@ function tearDown() {
 	  _removeKeyImageNode();
     _destroyTestData();
     RD.ImageUpload._shutdown();
-
-	RD.Page.unbindAllEvents();
 }
 
 function _addImageUploadDiv() {

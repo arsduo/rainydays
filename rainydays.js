@@ -73,12 +73,17 @@ var RainyDays = RD = {
         }
       }
       
+      // mostly used for testing, but might be useful in other cases
+      recipient["_removeAll" + eventName + "Handlers"] = function() {
+        listeners = [];
+      }
+      
       // add a fire mechanism
       recipient["fire" + eventName] = function(eventData) {
         for (var i = 0; i < listeners.length; i++) {
           listeners[i](eventData);
         }
-      } 
+      }
     },
 
   	addModule: function(recipient, module) {
