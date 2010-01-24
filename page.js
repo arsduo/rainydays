@@ -107,44 +107,6 @@ RD.Page = (function() {
 	  internals.surpressExitDialog = false;
 	}
 	
-	/* global event management */
-	
-	// this allows many objects to listen for events without having to know jQuery or which DOM node we listen to
-	function subscribeToEvent(eventName, responseFunction) {
-		if (!(eventName && typeof(responseFunction) == "function")) {
-			return false;
-		}
-		
-		debug("registered event listener for " + eventName);
-		debug("Binding node: " + internals.bindingNode.length);
-		// bind to the body using jQuery with a custom namespace
-		internals.bindingNode.bind(eventName + internals.eventNamespace, responseFunction);
-
-		return true;
-	}
-	
-	function publishEvent(eventName, eventData) {
-		// don't do anything if we don't have a valid event name
-		if (!eventName) return false;
-
-		// make sure we have a data object
-		if (!eventData) eventData = {};
-		
-		// add the event name
-		eventData.type = eventName;
-		
-		debug("Firing event listener for event " + eventName + " with details " + RD.showSource(eventData));
-		
-		// trigger the event
-		internals.bindingNode.trigger(eventData);
-		debug("Event triggered.");
-	}
-
-	// unbind all of our events
-	// mainly used for testing
-	function unbindAllEvents() {
-		internals.bindingNode.unbind(internals.eventNamespace);
-	}
 	
 	/************************************************
  	 * PACKAGE AND INITIALIZE THE OBJECT            *
@@ -164,12 +126,7 @@ RD.Page = (function() {
    	removeDirtyField: removeDirtyField,
    	alertForDirtyPage: alertForDirtyPage,
    	allowIntentionalExit: allowIntentionalExit,
-   	cancelIntentionalExit: cancelIntentionalExit,
-   	
-    // event management
-    subscribeToEvent: subscribeToEvent,
-    publishEvent: publishEvent,
-    unbindAllEvents: unbindAllEvents
+   	cancelIntentionalExit: cancelIntentionalExit
  	};
 	
 

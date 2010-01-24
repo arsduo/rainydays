@@ -44,9 +44,46 @@ var RainyDays = RD = {
 			}
 		})(),
 
-  	addModule: function(target, recipient) {
+    addEventManagement: function(recipient, eventName) {
+      // allows an object to manage a specific event (subscriptions, publishing, etc.)
+      // can be called multiple times on the same object
+      RD.debug("Adding " + eventName + " handlers to an object.");
+      
+      // first, validate the event name
+      if (eventName.match(/\W/)) {
+        // if isn't a valid Javascript name, throw an error
+        throw({name: "ArgumentError", message: "Event name " + eventName + " is not valid!  Can only be alphanumeric and _!"});
+      }
+      
+      // set up the listeners
+      var listeners = [];
+      
+      // give an add handler event
+      recipient["handle" + eventName] = function(fn) {
+        if ($.isFunction(fn) && listeners.indexOf(fn) === -1) {
+          listeners.push(fn);
+        }
+      }
+      
+      // give a remove handler event
+      recipient["abandon" + eventName] = function(fn) {
+        var index = listeners.indexOf(fn);
+        if (index > -1) {
+          listeners.splice(index, -1);
+        }
+      }
+      
+      // add a fire mechanism
+      recipient["fire" + eventName] = function(eventData) {
+        for (var i = 0; i < listeners.length; i++) {
+          listeners[i](eventData);
+        }
+      } 
+    },
+
+  	addModule: function(recipient, module) {
       // run the jQuery extend method but box this up 
-  	  $.extend(true, target, recipient);
+  	  $.extend(true, recipient, module);
   	}
 	},
 	

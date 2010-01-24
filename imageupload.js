@@ -679,7 +679,7 @@ RD.ImageUpload.prototype.becomeKeyPic = function(options) {
 	// eventually this might be a call to a global Mealstrom
 	// is it dangerous to pass the meal image?
 	if (options.surpressEvent !== true) {
-		RD.Page.publishEvent(RD.ImageUpload.KEY_PIC_EVENT, {imageUpload: this});
+		RD.ImageUpload.fireNewKeyImage({imageUpload: this});
 	}
 	
   return true;
@@ -816,6 +816,8 @@ RD.ImageUpload._initialize = function() {
 	if (!RD.ImageUpload._initialized) {
 		// add language support
 		RD.Utils.addLanguageSupport(RD.ImageUpload, RD.ImageUpload.internals)
+		// and tracking for new key images
+		RD.Utils.addEventManagement("NewKeyImage");
 		
 		// preinitialize images
 		RD.ImageUpload.images();
