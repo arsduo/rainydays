@@ -61,6 +61,13 @@ RD.Forms = {
 	  })
 	},
   
+  scanPage: function() {
+    // register every form on the page
+    $("form").each(function() {
+      RD.Forms.register(this);
+    })
+  }
+  
   // methods for each individual form
   _formPrototype: {
     // since arrays are passed by reference
