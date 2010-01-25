@@ -108,6 +108,12 @@ var RainyDays = RD = {
     }
     
     return debugFunction;
-  })()
+  })(),
+  
+  createObject: function(object) {
+    var F = function() {};
+    F.prototype = object;
+    return new F();
+  }
 };
 
