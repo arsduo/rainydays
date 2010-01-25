@@ -141,12 +141,10 @@ RD.Page = (function() {
   	$(window).bind("beforeunload" + internals.eventNamespace, function(event) { RD.Page.alertForDirtyPage(event) });
 
     // initialize any forms
-    //RD.Forms.scanPage();	  
+    RD.Forms.scanPage();	  
 	}
 	$(document).ready(onReadyTasks);
 	
-
-
 	/************************************************
  	 * RETURNING THE OBJECT                         *
    ************************************************/
