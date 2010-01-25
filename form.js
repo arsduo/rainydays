@@ -49,24 +49,28 @@ RD.Forms = {
   // proxy function for adding placeholder
   // finds the appropriate form object, and tells it to register the placeholder
   addPlaceholder: function(node, placeholderText) {
-      // add this to the appropriate form
-      var containingFormNode = node.closest("form");
-      if (containingFormNode.length > 0) {
-        // make sure we have this form registered
-        var containingFormObject = RD.Forms.getOrRegisterFormNode();
-        containingFormObject.registerPlaceholder(node, placeholderText);
-      }
+    // add this to the appropriate form
+    var containingFormNode = node.closest("form");
+    if (containingFormNode.length > 0) {
+      // make sure we have this form registered
+      var containingFormObject = RD.Forms.getOrRegisterFormNode();
+      containingFormObject.registerPlaceholder(node, placeholderText);
+    }
 
-	    debug("Done!");
-	  })
+    debug("Done!");
 	},
   
   scanPage: function() {
     // register every form on the page
+    RD.debug("Scanning the page for forms.");
+    
     $("form").each(function() {
       RD.Forms.register(this);
     })
-  }
+  },
+  
+  // class used for placeholders
+  placeholderClass: "rd-placeholder",
   
   // methods for each individual form
   _formPrototype: {
@@ -81,64 +85,75 @@ RD.Forms = {
       // allow the form object to be used in the each functions
       var formObject = this;
       
-      // for each element with a placeholder set, initialize the placeholder
-      this.node.find("input[placeholder]").each(function() {
+      // create named functions, rather than anonymous ones
+      // no easy way to avoid closures since we need to know the form object
+      function enablePlaceholder() {
         inputWithPlaceholder = $(this);
         formObject.registerPlaceholder(inputWithPlaceholder, inputWithPlaceholder.attr("placeholder"));
-      });
+      }
       
-      // for each element required, enforce the requirement
-      this.node.find("input[required]").each(function() {
+      function enableRequired() {
         //formObject.registerRequiredField(this);
-      })
-    },
+      }
+        
+      // for each element with a placeholder set, initialize the placeholder
+      this.node.find("input[placeholder]").each(enablePlaceholder);
+      this.node.find("textarea[placeholder]").each(enablePlaceholder);
     
-    placeholderClass: "rd-placeholder",
-    registerPlaceholder: function(node, placeholderText) {
- 	    // first, get the actual node 
-	    if (typeof(node) === "string"){
-	      node = "#" + node;
-	    }
-	    node = $(node);
+      // for each element required, enforce the requirement
+      this.node.find("input[required]").each(enableRequired);
+    },
+
+    registerPlaceholder: (function() {
+      var eventNamespace = ".rd_placeholder";
+      
+      return function(node, placeholderText) {
+   	    // first, get the actual node 
+  	    if (typeof(node) === "string"){
+  	      node = "#" + node;
+  	    }
+  	    node = $(node);
 	    
-	    // add it to the placeholder list
-	    if (placeholders.indexOf(node) === -1) {
-	      placeholders.push(node);
-	    }
+  	    // add it to the placeholder list
+  	    if (this.placeholders.indexOf(node) === -1) {
+  	      this.placeholders.push(node);
+  	    }
 
-	    RD.debug("Enabling placeholder for node " + node.attr("id"));
+  	    RD.debug("Enabling placeholder for node " + node.attr("id"));
 
-	    // don't do anything if we don't have a node or text, but don't continue either
-	    if (node.length === 0 || placeholderText.length === 0) {
-	      RD.debug("Found no node for addPlaceholder!")
-	      return false;
-	    }
+  	    // don't do anything if we don't have a node or text, but don't continue either
+  	    if (node.length === 0 || placeholderText.length === 0) {
+  	      RD.debug("Found no node for addPlaceholder!")
+  	      return false;
+  	    }
 
-	    // define that node's specific bindings for being in and out of focus 
-	    function onInFocus() {
-	      // act if the node's value is the placeholder
-	      if (node.val() === placeholderText) {
-          // clear the placeholder text and remove the placeholder class
-	        node.val("").removeClass(RD.Forms.placeholderClass);
-	      }
-	    }
+  	    // define that node's specific bindings for being in and out of focus 
+  	    function onInFocus() {
+  	      // act if the node's value is the placeholder
+  	      if (node.val() === placeholderText) {
+            // clear the placeholder text and remove the placeholder class
+  	        node.val("").removeClass(RD.Forms.placeholderClass);
+  	      }
+  	    }
 
-	    function onOutFocus() {
-        // act if the node contains nothing but white space
-	      if (node.val().replace(/[\ \n\t]*/, "") === "") {
-          // add the placeholder text and remove the placeholder class
-	        node.val(placeholderText).addClass(RD.Forms.placeholderClass);
-	      }		      
-	    }
+  	    function onOutFocus() {
+          // act if the node contains nothing but white space
+  	      if (node.val().replace(/[\ \n\t]*/, "") === "") {
+            // add the placeholder text and remove the placeholder class
+  	        node.val(placeholderText).addClass(RD.Forms.placeholderClass);
+  	      }		      
+  	    }
 
-	    // now, bind to the node
-      node.bind("focus" + eventNamespace, onInFocus);
-      node.bind("blur" + eventNamespace, onOutFocus);
+  	    // now, bind to the node
+        node.bind("focus" + eventNamespace, onInFocus);
+        node.bind("blur" + eventNamespace, onOutFocus);
 
-      // bind our functions to it
-      // when the user focuses, clear the text area if the value === placeholderText
+        // bind our functions to it
+        // when the user focuses, clear the text area if the value === placeholderText
 
-      // trigger focus to get things started properly
-      onOutFocus();
+        // trigger focus to get things started properly
+        onOutFocus();
+      }
+    })()
   }
 }
