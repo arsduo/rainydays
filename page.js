@@ -20,7 +20,7 @@ RD.Page = (function() {
 
 	internals.eventNamespace = ".rainydays";
 	internals.bindingNode = $(window);
-  internals.surpressExitDialog = false;
+    internals.surpressExitDialog = false;
 
 	/************************************************
  	 * PRIVATE CLASS FUNCTIONS                      *

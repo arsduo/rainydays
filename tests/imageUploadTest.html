@@ -71,7 +71,7 @@ function testImageUploadInitializationAnArbitraryNumberOfTimes() {
 function testImageUploadConstructorNormal() {
   debug("Starting testImageUploadConstructorNormal");
   // gather preliminary data
-  var originalNodeCount = $("#mealImages").find("div").length;
+  var originalNodeCount = $("#imageUploads").find("div").length;
 
   // run the code
   var outcome = new RD.ImageUpload();
@@ -95,10 +95,10 @@ function testImageUploadConstructorNormal() {
   assertNotNull("new RD.ImageUpload() doesn't have a node!", outcome.node);
   
   // that it's only created one
-  newNodeCount = $("#mealImages").find("div").length;
+  newNodeCount = RD.ImageUpload._imageUploadsNode.find("div").length;
   assertEquals("new RD.ImageUpload() added more or less than one node to #mealImages (original " + originalNodeCount + ", now " + newNodeCount + ")!", originalNodeCount + 1, newNodeCount);
   // and that it's in the right place
-  assertNotNull("new RD.ImageUpload() didn't have a node in #mealImages!", $("#mealImages").find(outcome.node)[0]);
+  assertNotNull("new RD.ImageUpload() didn't have a node in #mealImages!", RD.ImageUpload._imageUploadsNode.find(outcome.node)[0]);
   
   // test the status
   assertTrue("new RD.ImageUpload() was not in created status!", outcome.isCreated());
@@ -108,10 +108,10 @@ function testImageUploadConstructorNoJaml() {
   debug("Starting testImageUploadConstructorNoJaml");
   
   // knock out the Jaml template
-  _removeJaml("mealImageBlock");
+  _removeJaml("imageUploadBlock");
   
   // make sure we get an exception
-  assertThrowsException("new RD.ImageUpload() succeeded even with Jaml template mealImageBlock deleted!", function() {new RD.ImageUpload()});
+  assertThrowsException("new RD.ImageUpload() succeeded even with Jaml template imageUploadBlock deleted!", function() {new RD.ImageUpload()});
 }
 
 function testImageUploadConstructorNoImageUploadsNode() {
@@ -121,7 +121,7 @@ function testImageUploadConstructorNoImageUploadsNode() {
   _removeImageUploadDiv();
   
   // make sure we get an exception
-  assertThrowsException("new RD.ImageUpload() succeeded even with Jaml template mealImageBlock deleted!", function() {new RD.ImageUpload()});
+  assertThrowsException("new RD.ImageUpload() succeeded even no image upload node!", function() {new RD.ImageUpload()});
 }
 
 function testImageUploadConstructorAnArbitraryNumberOfTimes() {
@@ -288,7 +288,7 @@ function testImageUploadInitFromDatabaseWithDuplicates() {
 
     // gather some data
     var mealImageArrayCount = RD.ImageUpload.images().length;
-    var mealImageNodeCount = $("#mealImages").find("div.mealImageBlock").length;
+    var mealImageNodeCount = RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length;
     var sortOrder = RD.ImageUpload.getSortOrder();
 
     // create a duplicate
@@ -424,7 +424,7 @@ function testInitFromUploadWithDuplicates() {
 
     // gather some data
     var mealImageArrayCount = RD.ImageUpload.images().length;
-    var mealImageNodeCount = $("#mealImages").find("div.mealImageBlock").length;
+    var mealImageNodeCount = RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length;
 
     // create a duplicate
     var duplicate = new RD.ImageUpload();
@@ -435,7 +435,7 @@ function testInitFromUploadWithDuplicates() {
     // the duplicate is distinct (as compared to initFromDatabase)
     assertNotEquals("Duplicate initialization for file upload returned the original version!", original, initOutcome);
 		// there is one more node
-		assertEquals("Creating a duplicate upload did not create 1 new node!", mealImageNodeCount + 1, $("#mealImages").find("div.mealImageBlock").length);
+		assertEquals("Creating a duplicate upload did not create 1 new node!", mealImageNodeCount + 1, RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length);
 		// there is one more database entry
 		assertEquals("Creating a duplicate upload did not create 1 new array entry!", newLength, mealImageArrayCount + 1); 
   }
@@ -885,7 +885,7 @@ function testClear() {
   RD.ImageUpload._initialize();
   
   // preliminary data
-  var mealImageNodeCount = RD.ImageUpload._imageUploadsNode.find("div.mealImageBlock").length;
+  var mealImageNodeCount = RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length;
   var sortOrder = RD.ImageUpload.getSortOrder();
 
 	// make our meal image
@@ -913,8 +913,8 @@ function testClear() {
   
 
   // see if we can find the node or any remnant in the DOM
-  assertEquals("Cleared meal image left behind something in the DOM (#mealImages child counts not equal)!", mealImageNodeCount,  $("#mealImages").find("div.mealImageBlock").length);
-  assertUndefined("Able to find cleared meal image ID in the DOM!", $("#mealImageBlock").find(node)[0]);
+  assertEquals("Cleared meal image left behind something in the DOM (#mealImages child counts not equal)!", mealImageNodeCount,  RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length);
+  assertUndefined("Able to find cleared meal image ID in the DOM!", $("#" + RD.ImageUpload.uploadNodeClass).find(node)[0]);
 
   // see if the sort order has been restored
   assertEquals("Original sort order not restored after clear!", sortOrder, RD.ImageUpload.getSortOrder());
@@ -934,7 +934,7 @@ function testClearWithInvalidID() {
   mi = new RD.ImageUpload();
   // record some data
   var startLength = RD.ImageUpload.images().length;
-  var mealImageNodeCount =$("#mealImages").find("div.mealImageBlock").length;
+  var mealImageNodeCount =RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length;
   var sortOrder = RD.ImageUpload.getSortOrder();
 
   // clear unless we're testing that a given mealImage was cleared
@@ -945,7 +945,7 @@ function testClearWithInvalidID() {
   assertEquals("Meal image length changed on clear for invalid localID!", startLength,  RD.ImageUpload.images().length);
 
   // make sure nothing's changed in the DOM
-  assertEquals("Clearing an invalid localID changed DOM content!", mealImageNodeCount,  $("#mealImages").find("div.mealImageBlock").length);
+  assertEquals("Clearing an invalid localID changed DOM content!", mealImageNodeCount,  RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length);
 }
 
 function testClearAnArbitraryNumberOfTimes() {
@@ -979,7 +979,7 @@ function testClearAnArbitraryNumberOfTimes() {
   // now see if everything matches up
   // preliminary data
   var imagesInArray = RD.ImageUpload.images().length;
-  var mealImageNodeCount = $("#mealImages").find("div.mealImageBlock").length;
+  var mealImageNodeCount = RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length;
   var sortOrder = RD.ImageUpload.getSortOrder().split(",");
   
   // make sure all the numbers check out
@@ -989,7 +989,7 @@ function testClearAnArbitraryNumberOfTimes() {
   assertEquals("After random creating and clearing, image array list isn't equal to the total number created!", imagesInArray,  nodesCreated.length);
 
   // make sure the DOM list has the right number of nodes
-  assertEquals("Nodes left in the DOM after clearing and creating are not what's expected!", nodesNotCleared.length,  $("#mealImages").find("div.mealImageBlock").length);
+  assertEquals("Nodes left in the DOM after clearing and creating are not what's expected!", nodesNotCleared.length,  RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length);
   
   // make sure all cleared nodes are set to the clearedObject placeholder
   // and that their DOM node is gone
@@ -1651,7 +1651,7 @@ function testRefreshSortable() {
 		
 		// now add a div to it
 		div = $(document.createElement("div"));
-		div.addClass("mealImageBlock");
+		div.addClass(RD.ImageUpload.uploadNodeClass);
 		div.attr("id", "foo" + i);
 		ids.push(div.attr("id"));
 		RD.ImageUpload._imageUploadsNode.append(div);

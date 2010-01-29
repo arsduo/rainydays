@@ -1,8 +1,8 @@
 /* 
-RainyDays object
+Rainydays object
 Namespace for other classes and container for modules.
 */
-var RainyDays = RD = {
+var Rainydays = RD = {
 	Utils: {
 		addLanguageSupport: (function() {
 			// define the methods to be added to the prototype
@@ -38,86 +38,106 @@ var RainyDays = RD = {
 				}
 
 				// finally, add our methods to class prototype
-        RD.Utils.addModule(recipient, languageModule);
+                RD.Utils.addModule(recipient, languageModule);
 			}
 		})(),
 
-    addEventManagement: function(recipient, eventName) {
-      // allows an object to manage a specific event (subscriptions, publishing, etc.)
-      // can be called multiple times on the same object
-      RD.debug("Adding " + eventName + " handlers to an object.");
+        addEventManagement: function(recipient, eventName) {
+          // allows an object to manage a specific event (subscriptions, publishing, etc.)
+          // can be called multiple times on the same object
+          RD.debug("Adding " + eventName + " handlers to an object.");
       
-      // first, validate the event name
-      if (eventName.match(/\W/)) {
-        // if isn't a valid Javascript name, throw an error
-        throw({name: "ArgumentError", message: "Event name " + eventName + " is not valid!  Can only be alphanumeric and _!"});
-      }
+          // first, validate the event name
+          if (eventName.match(/\W/)) {
+            // if isn't a valid Javascript name, throw an error
+            throw({name: "ArgumentError", message: "Event name " + eventName + " is not valid!  Can only be alphanumeric and _!"});
+          }
       
-      // set up the listeners
-      var listeners = [];
+          // set up the listeners
+          var listeners = [];
       
-      // give an add handler event
-      recipient["handle" + eventName] = function(fn) {
-        if ($.isFunction(fn) && listeners.indexOf(fn) === -1) {
-          listeners.push(fn);
-        }
-      }
+          // give an add handler event
+          recipient["handle" + eventName] = function(fn) {
+            if ($.isFunction(fn) && listeners.indexOf(fn) === -1) {
+              listeners.push(fn);
+            }
+          }
       
-      // give a remove handler event
-      recipient["abandon" + eventName] = function(fn) {
-        var index = listeners.indexOf(fn);
-        if (index > -1) {
-          listeners.splice(index, -1);
-        }
-      }
+          // give a remove handler event
+          recipient["abandon" + eventName] = function(fn) {
+            var index = listeners.indexOf(fn);
+            if (index > -1) {
+              listeners.splice(index, -1);
+            }
+          }
       
-      // mostly used for testing, but might be useful in other cases
-      recipient["_removeAll" + eventName + "Handlers"] = function() {
-        listeners = [];
-      }
+          // mostly used for testing, but might be useful in other cases
+          recipient["_removeAll" + eventName + "Handlers"] = function() {
+            listeners = [];
+          }
       
-      // add a fire mechanism
-      recipient["fire" + eventName] = function(eventData) {
-        for (var i = 0; i < listeners.length; i++) {
-          listeners[i](eventData);
-        }
-      }
-    },
+          // add a fire mechanism
+          recipient["fire" + eventName] = function(eventData) {
+            for (var i = 0; i < listeners.length; i++) {
+              listeners[i](eventData, recipient);
+            }
+          }
+        },
 
-  	addModule: function(recipient, module) {
-      // run the jQuery extend method but box this up 
-  	  $.extend(true, recipient, module);
-  	}
-	},
+      	addModule: function(recipient, module) {
+          // run the jQuery extend method but box this up 
+      	  $.extend(true, recipient, module);
+      	},
+      	
+      	randomID: function randomID() {
+            id = "element" + Math.floor(Math.random() * 100);
+            // make sure it's unique
+            if ($("#" + id).length > 0) {
+              randomID(formNode);
+            }
+            else {
+              return id;
+            }
+        }
+    },
 	
 	// some methods very commonly used
 	showSource: function(object) {
-  	// use toSource when supported
-  	// conveniently this throws an error for null just as toSource woulds
-  	return object.toSource ? object.toSource() : (object.toString ? object.toString() : "[unable to show object source]")
-  },
-
-  // determine once whether we can use console.log, and go with it
-  debug: (function() {
-    var debugFunction;
-    
-    try {
-		  if (console)
-			  console.log("Setting debug function.");
-			  debugFunction = function(string) { console.log(string) };
-	  }
-    catch (ex) {
-      debugFunction = function() {};
-    }
-    
-    return debugFunction;
-  })(),
+    	// use toSource when supported
+    	// conveniently this throws an error for null just as toSource woulds
+    	return object.toSource ? object.toSource() : (object.toString ? object.toString() : "[unable to show object source]")
+    },
   
-  createObject: function(object) {
-    var F = function() {};
-    F.prototype = object;
-    return new F();
-  }
+    nodify: function(possibleNode) {
+        if (typeof possibleNode === "string") {
+            return $("#" + possibleNode);
+        }
+        else {
+            return $(possibleNode);
+        }
+    },
+
+    // determine once whether we can use console.log, and go with it
+    debug: (function() {
+        var debugFunction;
+
+        try {
+            if (console)
+            console.log("Setting debug function.");
+            debugFunction = function(string) { console.log(string) };
+        }
+        catch (ex) {
+            debugFunction = function() {};
+        }
+
+        return debugFunction;
+    })(),
+
+    createObject: function(object) {
+        var F = function() {};
+        F.prototype = object;
+        return new F();
+    }
 };
 
 /* 
