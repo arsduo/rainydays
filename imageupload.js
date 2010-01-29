@@ -644,7 +644,7 @@ RD.ImageUpload.refreshSortable = function() {
                                 placeholder: "beingSorted inlineBlock",
                                 tolerance: "pointer",
                                 cursor: "move",
-                                items: "div.imageUploadBlock"
+                                items: "div." + RD.ImageUpload.uploadNodeClass
                                 });
 
 	RD.ImageUpload.updateImageUploadsOrder();
@@ -828,7 +828,7 @@ RD.ImageUpload._initialize = function() {
 		RD.ImageUpload.images();
 		
 		// add language support
-  	RD.Utils.addLanguageSupport(RD.ImageUpload);
+  	    RD.Utils.addLanguageSupport(RD.ImageUpload);
 		
 		// get the sort order node
 		RD.ImageUpload._imageSortOrderNode = $("#imageSortOrder");
@@ -844,9 +844,9 @@ RD.ImageUpload._initialize = function() {
 		RD.ImageUpload._keyImageDataNode = $("#meal_key_picture_id");
 		if (RD.ImageUpload._keyImageDataNode.length === 0)
 			throw("RD.ImageUpload._initialize could not find input #meal_key_picture_id! Cannot continue.");		
-
-    // get the placeholder node
-    RD.ImageUpload._placeholderNode = RD.ImageUpload._imageUploadsNode.find("#imageUploadsPlaceholder");
+            
+            // get the placeholder node
+        RD.ImageUpload._placeholderNode = RD.ImageUpload._imageUploadsNode.find("#imageUploadsPlaceholder");
 		if (RD.ImageUpload._placeholderNode.length === 0)
 			throw("RD.ImageUpload._initialize could not find input #imageUploadsPlaceholder! Cannot continue.");		    
 
@@ -991,7 +991,9 @@ RD.ImageUpload.TEXT = {
 	// since these are required in the RD.ImageUpload class for view work, they're stored here
 	// not really MVC, but this is Javascript
 	// http://github.com/edspencer/jaml
+RD.ImageUpload.uploadNodeClass = "imageUploadBlock";
 RD.ImageUpload.internals = {
+    
 	JAML_TEMPLATES: {
 		"imageUploadBlock": function(mealImage) {
 		    div({cls: "imageUploadBlock", id: "imageUpload" + mealImage.localID});
