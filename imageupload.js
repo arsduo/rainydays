@@ -748,11 +748,11 @@ RD.ImageUpload.clear = function(localId) {
 		  }
 		}
 		if (!otherActiveImages) {
-      RD.ImageUpload._imageUploadsNode.append(RD.ImageUpload._placeholderNode)
-	  }
+            RD.ImageUpload._imageUploadsNode.append(RD.ImageUpload._placeholderNode)
+	    }
 	}
 	else
-		RD.debug("\Unable to find meal to clear.");
+		RD.debug("Unable to find meal to clear.");
 }
 
 /*
