@@ -3,39 +3,42 @@ RD.Forms = {
   // among other things, it adds a submit handler that disables the global dirty check
   // list of forms on page
     forms: {},
-
-    register: function(formNode) {
-      // make sure the form has an ID
-      formNode = $(formNode);
-      if (!formNode.attr("id")) {
-          formNode.attr("id", RD.Utils.randomID());
-      }
-  
-      // if we haven't already stored the form, register it
-      if (!this.forms[formNode.attr("id")]) {
-        // create a new form class object
-        var formObject = RD.createObject(RD.Forms._formPrototype);
-        // store its DOM node
-        formObject.node = formNode;
-
-        // add it to the list
-        this.forms[formNode.attr("id")] = formObject;
-  
-        // add the required fields checker
-        formNode.bind("submit", formObject.submissionCheck);
     
-    	// add the submission event handler so we can submit the form
-    	formNode.bind("submit", RD.Page.allowIntentionalExit);
+    register: (function() {    
+        return function(formNode) {
+          // make sure the form has an ID
+          formNode = $(formNode);
+          if (!formNode.attr("id")) {
+              formNode.attr("id", RD.Utils.randomID());
+          }
+  
+          // if we haven't already stored the form, register it
+          if (!this.forms[formNode.attr("id")]) {
+            // create a new form class object
+            var formObject = RD.createObject(RD.Forms._formPrototype);
+            // store its DOM node
+            formObject.node = formNode;
 
-        // give it management attributes for failed required fields
-        RD.Utils.addEventManagement(formObject, "RequiredFields");
-        // add default event handler
-        formObject.handleRequiredFields(formObject.requiredFieldsProcessed);
+            // add it to the list
+            this.forms[formNode.attr("id")] = formObject;
+  
+            // add the required fields checker
+            formNode.bind("submit", formObject.submissionCheck);
     
-        // now scan the form for any placeholders and required fields
-        formObject.scan();
-      }
-    },
+        	// add the submission event handler so we can submit the form
+        	formNode.bind("submit", RD.Page.allowIntentionalExit);
+
+            // give it management attributes for failed required fields
+            RD.Utils.addEventManagement(formObject, "RequiredFields");
+            // add default event handler
+            formObject.handleRequiredFields(formObject.requiredFieldsProcessed);
+    
+            // now scan the form for any placeholders and required fields
+            formObject.scan();
+          }
+        }
+    })(),
+  
   
     // proxy function for adding placeholder
     // finds the appropriate form object, and tells it to register the placeholder
@@ -100,7 +103,7 @@ RD.Forms = {
         // check all required fields
         var allowSubmission = true;
         var goodFields = [], badFields = [];
-        
+        RD.debug("This is: " + this.toSource());
         RD.debug("Checking on " + this.requiredFields.length + " fields.");  
         for (var i = 0; i < this.requiredFields.length; i++) {
             var field = this.requiredFields[i];
