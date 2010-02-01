@@ -1,0 +1,12 @@
+CSS Rules: here are some recommended default values for the CSS classes used in Rainydays.
+
+/* placeholder fields showing the placeholder text */
+.ui-placeholder {
+	color: gray;
+    font-style: italic;
+}
+
+/* required form fields that need a user's attention */
+.rd-invalidfield {
+	border: 1px solid red;
+}
