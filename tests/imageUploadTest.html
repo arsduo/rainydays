@@ -43,7 +43,7 @@ function testImageUploadInitializationNoImageSortNode() {
 function testImageUploadInitializationNoImageUploadDiv() {
   // make sure it throws an exception with the meal image parent node missing
   _removeImageUploadDiv();
-  assertThrowsException("Meal image did not throw exception for no #mealImages!", RD.ImageUpload._initialize)
+  assertThrowsException("Meal image did not throw exception for no #imageUploads!", RD.ImageUpload._initialize)
 }
 
 function testImageUploadInitializationNoKeyImageDataDiv() {
@@ -71,7 +71,7 @@ function testImageUploadInitializationAnArbitraryNumberOfTimes() {
 function testImageUploadConstructorNormal() {
   debug("Starting testImageUploadConstructorNormal");
   // gather preliminary data
-  var originalNodeCount = $("#imageUploads").find("div").length;
+  var originalNodeCount = $("#imageUploads").find("div." + RD.ImageUpload.uploadNodeClass).length;
 
   // run the code
   var outcome = new RD.ImageUpload();
@@ -82,8 +82,8 @@ function testImageUploadConstructorNormal() {
   // test returns mealImage
   assertEquals("new RD.ImageUpload() not constructed by RD.ImageUpload", outcome.constructor, RD.ImageUpload);
   
-  // test removal of placeholder div
-  fail("need to remove placeholder div");
+  // test removal of placeholder div once there are active images
+  assertUndefined("Placeholder div did not get removed!", RD.ImageUpload._placeholderNode.parent()[0]);
   
   // test that it can be found (e.g. it's in RD.ImageUpload.images)
   found = RD.ImageUpload.findByLocalId(outcome.localID);
@@ -95,10 +95,10 @@ function testImageUploadConstructorNormal() {
   assertNotNull("new RD.ImageUpload() doesn't have a node!", outcome.node);
   
   // that it's only created one
-  newNodeCount = RD.ImageUpload._imageUploadsNode.find("div").length;
-  assertEquals("new RD.ImageUpload() added more or less than one node to #mealImages (original " + originalNodeCount + ", now " + newNodeCount + ")!", originalNodeCount + 1, newNodeCount);
+  newNodeCount = RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length;
+  assertEquals("new RD.ImageUpload() added more or less than one node to #imageUploads (original " + originalNodeCount + ", now " + newNodeCount + ")!", originalNodeCount + 1, newNodeCount);
   // and that it's in the right place
-  assertNotNull("new RD.ImageUpload() didn't have a node in #mealImages!", RD.ImageUpload._imageUploadsNode.find(outcome.node)[0]);
+  assertNotNull("new RD.ImageUpload() didn't have a node in #imageUploads!", RD.ImageUpload._imageUploadsNode.find(outcome.node)[0]);
   
   // test the status
   assertTrue("new RD.ImageUpload() was not in created status!", outcome.isCreated());
@@ -913,14 +913,14 @@ function testClear() {
   
 
   // see if we can find the node or any remnant in the DOM
-  assertEquals("Cleared meal image left behind something in the DOM (#mealImages child counts not equal)!", mealImageNodeCount,  RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length);
+  assertEquals("Cleared meal image left behind something in the DOM (#imageUploads child counts not equal)!", mealImageNodeCount,  RD.ImageUpload._imageUploadsNode.find("div." + RD.ImageUpload.uploadNodeClass).length);
   assertUndefined("Able to find cleared meal image ID in the DOM!", $("#" + RD.ImageUpload.uploadNodeClass).find(node)[0]);
 
   // see if the sort order has been restored
   assertEquals("Original sort order not restored after clear!", sortOrder, RD.ImageUpload.getSortOrder());
 
   // test return of placeholder div if there are no more active images
-  fail("need to return placeholder div");
+  assertNotNull("Placeholder div did not get returned!", RD.ImageUpload._placeholderNode.parent()[0]);
 }
 
 function assertCleared(localID) {
@@ -1255,11 +1255,11 @@ function testFindByLocalId() {
 
 	// create a bunch of meal images
 	var localIDs = [];
-	var mealImages = [];
+	var imageUploads = [];
 	forEachGoodUpload(function(uploadData) {
 		var mi = new RD.ImageUpload();
 		localIDs.push(mi.localID);
-		mealImages.push(mi);
+		imageUploads.push(mi);
 		if (Math.random() > 0.5) mi.uploadStarted(uploadData);
 	});
 	
@@ -1274,8 +1274,8 @@ function testFindByLocalId() {
 		assertTrue("Object found by local ID wasn't an actual RD.ImageUpload!", RD.ImageUpload.isImageUpload(result));
 	}
 	
-	for (var objIndex in mealImages) {
-		var result = RD.ImageUpload.findByLocalId(mealImages[objIndex].localID);
+	for (var objIndex in imageUploads) {
+		var result = RD.ImageUpload.findByLocalId(imageUploads[objIndex].localID);
 		assertEvaluatesToTrue("Unable to find object from object's ID from a created mealImage's local ID!", result);
 		assertTrue("Object found by local ID from object's ID wasn't an actual RD.ImageUpload!", RD.ImageUpload.isImageUpload(result));
 	}
@@ -1295,7 +1295,7 @@ function testFindByRemoteId() {
 
 	// create a bunch of meal images
 	var remoteIDs = [];
-	var mealImages = [];
+	var imageUploads = [];
 	
 	// for each set of server data, create some regular RD.ImageUploads randomly
 	// stopping once we randomly assign the server data (we don't want duplicates!)
@@ -1316,7 +1316,7 @@ function testFindByRemoteId() {
 					// give us 50/50 chance to assign the unique server data, at which point we break the loop
 					mi.uploadCompleted(serverData);
 					remoteIDs.push(mi.id);
-					mealImages.push(mi);
+					imageUploads.push(mi);
 					
 					// mark us to stop
 					set = true;
@@ -1336,8 +1336,8 @@ function testFindByRemoteId() {
 		assertTrue("Object found by remote ID wasn't an actual RD.ImageUpload!", RD.ImageUpload.isImageUpload(result));
 	}
 	
-	for (var objIndex in mealImages) {
-		var result = RD.ImageUpload.findByRemoteId(mealImages[objIndex].id);
+	for (var objIndex in imageUploads) {
+		var result = RD.ImageUpload.findByRemoteId(imageUploads[objIndex].id);
 		assertEvaluatesToTrue("Unable to find object from object's remote ID from a created mealImage's remote ID!", result);
 		assertTrue("Object found by remote ID from object's ID wasn't an actual RD.ImageUpload!", RD.ImageUpload.isImageUpload(result));
 	}
@@ -1357,7 +1357,7 @@ function testFindByFileObject() {
 
 	// create a bunch of meal images
 	var fileObjects = [];
-	var mealImages = [];
+	var imageUploads = [];
 	
 	// for each set of server data, create some regular RD.ImageUploads randomly
 	// stopping once we randomly assign the server data (we don't want duplicates!)
@@ -1367,7 +1367,7 @@ function testFindByFileObject() {
 		mi.initFromUpload(uploadData);
 
 		fileObjects.push(uploadData);
-		mealImages.push(mi);
+		imageUploads.push(mi);
 	});
 	
 	// now see if everything works both for bad inputs and good inputs
@@ -1382,8 +1382,8 @@ function testFindByFileObject() {
 		assertTrue("Object found by file object wasn't an actual RD.ImageUpload!", RD.ImageUpload.isImageUpload(result));
 	}
 	
-	for (var objIndex in mealImages) {
-		var result = RD.ImageUpload.findByFileObject(mealImages[objIndex].fileObject);
+	for (var objIndex in imageUploads) {
+		var result = RD.ImageUpload.findByFileObject(imageUploads[objIndex].fileObject);
 		assertEvaluatesToTrue("Unable to find object from object's file object from a created mealImage's file object!", result);
 		assertTrue("Object found by file object from object's ID wasn't an actual RD.ImageUpload!", RD.ImageUpload.isImageUpload(result));
 	}
@@ -1482,7 +1482,7 @@ function testFindByFileName() {
 
 	// create a bunch of meal images
 	var fileNames = [];
-	var mealImages = [];
+	var imageUploads = [];
 	
 	// for each set of server data, create some regular RD.ImageUploads randomly
 	// stopping once we randomly assign the server data (we don't want duplicates!)
@@ -1492,7 +1492,7 @@ function testFindByFileName() {
 		mi.initFromUpload(uploadData);
 
 		fileNames.push(uploadData.name);
-		mealImages.push(mi);
+		imageUploads.push(mi);
 	});
 	
 	// now see if everything works both for bad inputs and good inputs
@@ -1507,8 +1507,8 @@ function testFindByFileName() {
 		assertTrue("Object found by file object wasn't an actual RD.ImageUpload!", RD.ImageUpload.isImageUpload(result));
 	}
 	
-	for (var objIndex in mealImages) {
-		var result = RD.ImageUpload.findByFilename(mealImages[objIndex].filename);
+	for (var objIndex in imageUploads) {
+		var result = RD.ImageUpload.findByFilename(imageUploads[objIndex].filename);
 		assertEvaluatesToTrue("Unable to find object from object's file object from a created mealImage's file object!", result);
 		assertTrue("Object found by file object from object's ID wasn't an actual RD.ImageUpload!", RD.ImageUpload.isImageUpload(result));
 	}
@@ -2068,8 +2068,8 @@ function _removeImageUploadPlaceholder() {
 }
 
 function _removeImageUploadDiv() {
-    if (div = document.getElementById("mealImages"))
-        div.parentNode.removeChild(div);
+    if (RD.ImageUpload._imageUploadsNode)
+        RD.ImageUpload._imageUploadsNode.remove();
 }
 
 function _removeImageUploadSortOrder() {
