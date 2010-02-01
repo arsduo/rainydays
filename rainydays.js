@@ -1,6 +1,6 @@
 /* 
 Rainydays object
-Namespace for other classes and container for modules.
+Namespace for other classes and container for key utilities.
 */
 var Rainydays = RD = {
 	Utils: {
