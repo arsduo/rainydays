@@ -118,11 +118,28 @@ $.widget( "ui.autocompeteWithFilter", {
 		if ( $.isArray(this.options.source) ) {
 			var array = this.options.source;
 			this.source = function( request, response ) {
-				// escape regex characters
-				var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
-				response( $.grep( array, function(value) {
-    				return matcher.test( value.value || value.label || value );
-				}) );
+				// check each potential source against all of the individual terms entered
+				// by splitting the terms by spaces, we let "buz ald" and "ald buz" both match "buzz aldrin"
+				var terms = request.term.split(" ");
+				var matchers = [];
+				for (var i = 0; i < terms.length; i++) {
+					// escape regex characters
+					matchers.push(new RegExp( $.ui.autocomplete.escapeRegex(terms[i]), "i" ))
+				}
+				
+				var result = $.grep( array, function(value) {
+    			var isMatch = true;
+					for (var i = 0; i < matchers.length; i++) {
+						//console.log("Testing value against " + terms[i] + ", result: " + matchers[i].test( value.value || value.label || value ))
+						isMatch = isMatch && matchers[i].test( value.value || value.label || value );
+					}
+					console.log("Match for value " + value + " is " + isMatch);
+					return isMatch;
+				});
+				console.log("Result has " + result.length + " elements.");
+				
+				// run the match
+				response(result);
 			};
 		} else if ( typeof this.options.source == "string" ) {
 			var url = this.options.source;
