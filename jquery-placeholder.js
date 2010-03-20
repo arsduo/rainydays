@@ -1,8 +1,18 @@
+/* 
+Copyright 2010 Alex Koppel.
+Part of the Rainydays project (http://github.com/arsduo/rainydays)
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) licenses.
+*/
+
 $.widget("ui.placeholder", {
+	options: {
+			placeholderText: "Enter text here",
+			placeholderClass: "ui-placeholder",
+			eventNamespace: ".ui-placeholder",
+			clearOnSubmit: true
+	},
 	_init: function() {
-		// add in default options
-		this.options = $.extend({}, this.defaults, this.options);
-		
 		// bind focus and blur to achieve the placeholder effect
 		this._bindPlaceholder();
 		
@@ -90,12 +100,6 @@ $.widget("ui.placeholder", {
 		$.Widget.prototype.destroy.call( this );
 	},
 	
-	getter: "placeholderText placeholderClass",
-	
-	defaults: {
-		placeholderText: "Enter text here",
-		placeholderClass: "ui-placeholder",
-		eventNamespace: ".ui-placeholder",
-		clearOnSubmit: true
-	}
+	getter: "placeholderText placeholderClass"
+
 });

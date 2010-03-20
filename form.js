@@ -3,7 +3,7 @@ RD.Forms = {
 	// among other things, it adds a submit handler that disables the global dirty check
 	// list of forms on page
 	forms: {},
-
+	
 	register: (function() {    
 		return function(formNode) {
 			// make sure the form has an ID
@@ -38,7 +38,6 @@ RD.Forms = {
 			}
 		}
 	})(),
-
 
 	// proxy function for adding placeholder
 	// finds the appropriate form object, and tells it to register the placeholder
@@ -186,4 +185,4 @@ RD.Forms = {
 			this.abandonRequiredFields(this.requiredFieldsProcessed);
 		}
 	}
-}
+};

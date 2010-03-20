@@ -94,7 +94,7 @@ RD.Page = (function() {
 
 		  // For Safari
 		  return pageManagerObject.text("page_dirty_confirmation");
-		}	
+		}
 	};
 	
 	// stops the beforeunload dialog from displaying
@@ -107,26 +107,46 @@ RD.Page = (function() {
 	  internals.surpressExitDialog = false;
 	}
 	
+	/* other utility functions */
+	// this function lets you capture the next global click for a one-off event
+	// once the handler fires, the binding is removed unless the handler returns false
+	// you can also pass it an exception zone, events triggered inside which won't fire or unbind the handler
+	// this is often used for modal dialogs or login dropdowns, etc.
+	var globalClickCount = 0;
+	function nextGlobalClick(handler, exceptionZoneSelector) {
+		var body = $("body"); namespace = "click" + internals.eventNamespace + ".globalClick" + globalClickCount;
+		body.bind(namespace, function(e) {
+			// fire the handler
+			var inExceptionZone = exceptionZoneSelector && $(e.target).closest(exceptionZoneSelector).length !== 0
+			// if we're not in the exception zone and the handler doesn't return false, unbind this event
+			if (!inExceptionZone && handler(e) !== false) {
+				// remove this global handler
+				body.unbind(namespace);
+			}
+		});
+		globalClickCount++;
+	}
 	
 	/************************************************
  	 * PACKAGE AND INITIALIZE THE OBJECT            *
    ************************************************/
 	var pageManagerObject = {
- 	  // text we might use
-   	TEXT: {
-   		en: {
-   			page_dirty_confirmation: "You have unsaved changes on this page.\n\Do you want to abandon your work?"
-   		}
-   	},
-   	// page dirty/clean status
-   	isPageDirty: isPageDirty,
-   	numberOfDirtyFields: numberOfDirtyFields,
-   	addDirtyField: addDirtyField,
-   	isFieldDirty: isFieldDirty,
-   	removeDirtyField: removeDirtyField,
-   	alertForDirtyPage: alertForDirtyPage,
-   	allowIntentionalExit: allowIntentionalExit,
-   	cancelIntentionalExit: cancelIntentionalExit
+ 	  	// text we might use
+	   	TEXT: {
+	   		en: {
+	   			page_dirty_confirmation: "You have unsaved changes on this page.\n\Do you want to abandon your work?"
+	   		}
+	   	},
+	   	// page dirty/clean status
+	   	isPageDirty: isPageDirty,
+	   	numberOfDirtyFields: numberOfDirtyFields,
+	   	addDirtyField: addDirtyField,
+	   	isFieldDirty: isFieldDirty,
+	   	removeDirtyField: removeDirtyField,
+	   	alertForDirtyPage: alertForDirtyPage,
+	   	allowIntentionalExit: allowIntentionalExit,
+	   	cancelIntentionalExit: cancelIntentionalExit,
+		nextGlobalClick: nextGlobalClick
  	};
 	
 
@@ -136,12 +156,12 @@ RD.Page = (function() {
 	
 	// tasks to run when the page is loaded
 	function onReadyTasks() {
-  	// bind the dirty page alert to window onunload
-  	// use the global object rather than private internals so it can be tested
-  	$(window).bind("beforeunload" + internals.eventNamespace, function(event) { RD.Page.alertForDirtyPage(event) });
+	  	// bind the dirty page alert to window onunload
+	  	// use the global object rather than private internals so it can be tested
+	  	$(window).bind("beforeunload" + internals.eventNamespace, function(event) { RD.Page.alertForDirtyPage(event) });
 
-    // initialize any forms
-    RD.Forms.scanPage();	  
+	    // initialize any forms
+	    RD.Forms.scanPage();	  
 	}
 	$(document).ready(onReadyTasks);
 	
