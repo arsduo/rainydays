@@ -37,14 +37,22 @@ $.widget("ui.requiredfields", {
 	// runs the validation method on each field and returns the result
 	// which will dis/allow the form submission
 	_validateForm: function(event, ui) {
-		var fields = $(this).data("requiredFields"), valid = true, i;
+		var form = $(this), fields = form.data("requiredFields"), valid = true, i, fieldResult, validFields = [], invalidFields = [];
 		if (fields) {
 			for (i = 0; i < fields.length; i++) {
 				// validate the field
 				// this action triggers the isValid or isNotValid event on each field
-				valid = valid && $(fields[i]).requiredfields("validate");
+				fieldResult = $(fields[i]).requiredfields("validate");
+				valid = valid && fieldResult;
+
+				// add the element to the appropriate array
+				(fieldResult ? validFields : invalidFields).push(fields[i]);
 			}
 		}
+		
+		// fire a form-level custom event to handle the whole validation
+		// useful if, for instance, you want to show a high-level message or a dialog box
+		form.trigger(this._formEventName, {result: valid, validFields: validFields, invalidFields: invalidFields});
 		
 		return valid;
 	},
@@ -52,10 +60,18 @@ $.widget("ui.requiredfields", {
 	// validates the field by calling its validator 
 	// also triggers an event based on valid status, which can be used to highlight/erase formatting, etc.
 	validate: function(event) {
-		var result = this.options.validator(event), callbackResult;
-		callbackResult = result ? this._trigger("foundValid", event) : this._trigger("foundInvalid", event) 
-
-		// currently, we don't use callbackResult, but maybe we should
+		var result;
+		
+		if (!this.options.disabled) {
+			result = this.options.validator(event), callbackResult;
+			// currently, we don't use callbackResult, but maybe we should
+			callbackResult = this._trigger((result ? "foundValid" : "foundInvalid"), event); 
+		}
+		else {
+			// disabled, so always return true
+			result = true;
+		}
+		
 		return result;
 	},
 
@@ -83,7 +99,26 @@ $.widget("ui.requiredfields", {
 				return true;
 			}
 		}
-	}
+	},
+	
+	_formEventName: "formValidated",
+
+	destroy: function() {
+		// now do other stuff particular to this widget
+		var form = $(this.element.form), requiredFields = form.data("requiredFields"), index = requiredFields.indexOf(this.element);
+		if (index > -1) {
+			requiredFields.splice(index, 1);
+			form.data("requiredFields", requiredFields)
+		}
+		if (requiredFields.length === 0) {
+			// if we hvae no more required fields, unbind the event
+			form.unbind(this._formEventName);
+		}
+
+		// default destroy
+		$.Widget.prototype.destroy.call( this );
+	},
+	
 	
 	options: {
 	}
