@@ -12,6 +12,7 @@ $.widget("ui.placeholder", {
 			eventNamespace: ".ui-placeholder",
 			clearOnSubmit: true
 	},
+	
 	_init: function() {
 		// bind focus and blur to achieve the placeholder effect
 		this._bindPlaceholder();
@@ -19,32 +20,52 @@ $.widget("ui.placeholder", {
 		// tell the nearest form to clear this on submission
 		// so placeholder data isn't sent back to the server
 		if (this.options.clearOnSubmit) {
-			this._setClearOnSubmit();
+			this._setSubmitHandlers();
 		}
 		
 		// now trigger it, so the default state is right
 		this._outFocus();
 	},
 	
-	_setClearOnSubmit: function() {
-		var nearestForm = this.element.closest("form");
-		if (nearestForm.length > 0) {
+	_setSubmitHandlers: function() {
+		var element = this.element, form = $(this.element.attr("form")), clearFn, submitFailFn;
+		if (form) {
 			// make this an anonymous event specific to this instsance
-			var clearFn = $.proxy(function() { this._inFocus() }, this);
+			clearFn = $.proxy(this._inFocus, this);
+			submitFailFn = $.proxy(this._outFocus, this);
 			
-			$.data(this.element, "onSubmitFunction", clearFn);
+			element.data("onSubmitFunction", clearFn);
+			element.data("submitFailFunction", submitFailFn);
+
 			// tell the nearest form to clear this on submission
-			nearestForm.bind("submit" + this.options.eventNamespace, clearFn);
+			form.bind("submit" + this.options.eventNamespace, clearFn);
+			// also listen to a submission failed event
+			// which will restore the text (e.g. for unsatisfied required fields)
+
+			form.bind("submitfailed.placeholder", submitFailFn);
+			// also tell this element to listen to beforesubmit events
+			// which can be triggered by other handlers to clear this element
+			element.bind("beforesubmit.placeholder", clearFn);
 		}
 	},
 	
-	_removeClearOnSubmit: function() {
-		var nearestForm = this.element.closest("form");
-		if (nearestForm.length > 0) {
-			var clearFn = $.data(this.element, "onSubmitFunction");
+	_removeSubmitHandlers: function() {
+		var element = this.element, form = $(this.element.attr("form")), clearFn, submitFailFn;
+		if (form) {
+			clearFn = element.data("onSubmitFunction");
+			submitFailFn = element.data("submitFailFunction");
+			
 			if (clearFn) {
-				nearestForm.bind("submit" + this.options.eventNamespace, clearFn);
+				// unbind this from the form and from the element
+				form.unbind("submit" + this.options.eventNamespace, clearFn);
+				form.unbind("beforesubmit.placeholder", clearFn);
 			}
+			if (submitFailFn) {
+				element.unbind("submitfailed.placeholder", submitFailFn)
+			}
+			
+			element.data("onSubmitFunction", undefined);
+			element.data("submitFailFunction", undefined);
 		}		
 	},
 	
@@ -96,7 +117,7 @@ $.widget("ui.placeholder", {
 		this._unbindPlaceholder();
 		
 		// remove clear on submit
-		this._removeClearOnSubmit();
+		this._removeSubmitHandlers();
 		
 		// default destroy
 		$.Widget.prototype.destroy.call( this );
