@@ -41,8 +41,8 @@ $.widget("ui.placeholder", {
 			form.bind("submit" + this.options.eventNamespace, clearFn);
 			// also listen to a submission failed event
 			// which will restore the text (e.g. for unsatisfied required fields)
-
 			form.bind("submitfailed.placeholder", submitFailFn);
+			
 			// also tell this element to listen to beforesubmit events
 			// which can be triggered by other handlers to clear this element
 			element.bind("beforesubmit.placeholder", clearFn);
@@ -81,7 +81,7 @@ $.widget("ui.placeholder", {
 		if (!this.options.disabled && (this.element.val().replace(/[\ \n\t]*/, "") === "" || this.element.val() === this.options.placeholderText)) {
 			// add the placeholder text and remove the placeholder class
 			this.element.val(this.options.placeholderText).addClass(this.options.placeholderClass);
-		}		      
+		}
 	},
 	
 	_bindPlaceholder: function() {		

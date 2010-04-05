@@ -4,6 +4,27 @@ RD.Forms = {
 	// list of forms on page
 	forms: [],
 	
+	scanPage: function() {
+		// register every form on the page
+		RD.debug("Scanning the page for forms.");
+
+		$("form").each(function() {
+			RD.Forms.register(this);
+		})
+	},
+
+	// this function scans a form for placeholders and required fields
+	scanForm: function(form) {
+		form = $(form);
+		
+		// for each element required, enforce the requirement
+		form.find("input[required], textarea[required]").each(this.enableRequired);
+
+		// for each element with a placeholder set, initialize the placeholder
+		form.find("input[placeholder], textarea[placeholder]").each(this.enablePlaceholder)
+
+	},
+	
 	register: function(formNode) {
 		// make sure the form has an ID
 		var formArray  = this.forms;
@@ -16,24 +37,38 @@ RD.Forms = {
 
 			// add the submission event handler so we can submit the form
 			formNode.bind("submit", RD.Page.allowIntentionalExit);
-			formNode.bind("submitfailed", RD.Page.cancelIntentionalExit);
 
 			// finally, listen for form validation
 			formNode.bind("formValidated", $.proxy(this.handleFormValidation, formNode));
 			
 			// now scan the form for any placeholders and required fields
-			formObject.scan();
+			this.scanForm(formNode);
 		}
 	},
 
 	handleFormValidation: function(validationResult) {
 		// if the form is successfully validated, we do nothing -- just let it go
+		var that = this, i, goodFields = validationResult.validFields || [], badFields = validationResult.invalidFields || [];
 		if (!validationResult.result) {
 			// but if it's not, we send it an event to tell it it failed
-			// for instance, to replace any placeholders
 			// this is somewhat duplicative with the validation event
-			// but we want to allow other functions to cancel form submission and trigger this event
-			form.trigger("submitfailed");
+			// but other functions may also cancel submission and should be able to use the same event
+
+			// we use a timeout to let any other submithandlers finish first
+			// (necessary because placeholder has its own submit listener, which otherwise gets called after this)
+			setTimeout(function() { that.trigger("submitfailed"); }, 0)
+			
+			// restart the page exit warning
+			RD.Page.cancelIntentionalExit()
+			
+			for (var i = 0; i < goodFields.length; i++) {
+          goodFields[i].removeClass(this.invalidFieldClass);
+      }
+
+      // default for bad fields: add invalid class and pulse out yellow slowly
+      for (var i = 0; i < badFields.length; i++) {
+          badFields[i].addClass(this.invalidFieldClass).effect("highlight", {color: "#FF0"}, 3000)
+      }
 		}
 	},
 
@@ -66,28 +101,8 @@ RD.Forms = {
 		var inputWithPlaceholder = $(this);
 		inputWithPlaceholder.placeholder({placeholderText: inputWithPlaceholder.attr("placeholder")})
 	},
-
-	scanPage: function() {
-		// register every form on the page
-		RD.debug("Scanning the page for forms.");
-
-		$("form").each(function() {
-			RD.Forms.scanForm(this);
-		})
-	},
-
+	
 	// class for invalid fields
-	invalidFieldClass: "rd-invalidfield",
-
-	// this function scans a form for placeholders and required fields
-	scanForm: function(form) {
-		form = $(form);
-		
-		// for each element required, enforce the requirement
-		form.find("input[required], textarea[required]").each(this.enableRequired);
-
-		// for each element with a placeholder set, initialize the placeholder
-		form.find("input[placeholder], textarea[placeholder]").each(this.enablePlaceholder)
-
-	}
+	invalidFieldClass: "rd-invalidfield"
+	
 };
