@@ -89,7 +89,7 @@ $.widget("ui.requiredfield", {
 
 		if (this.type !== "checkbox") {
 			// if it's not a checkbox, just see if it has a non-empty value
-			value = $(this).value;
+			value = $(this).val();
 			if (!value || value.match(/^[\ \t]*$/)) {
 				return false;
 			}

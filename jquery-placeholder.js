@@ -16,7 +16,6 @@ $.widget("ui.placeholder", {
 	_init: function() {
 		// bind focus and blur to achieve the placeholder effect
 		this._bindPlaceholder();
-		
 		// tell the nearest form to clear this on submission
 		// so placeholder data isn't sent back to the server
 		if (this.options.clearOnSubmit) {
