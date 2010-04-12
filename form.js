@@ -74,7 +74,6 @@ RD.Forms = {
 
 	enableRequired: function() {
 		var requiredInput = $(this), requirement = requiredInput.attr("required"), method;
-
 		if (requirement) {
 			// look for a matching function
 			// by tracing the .'s in the attribute string, we let any function be specified without having to use eval
@@ -99,6 +98,7 @@ RD.Forms = {
 	
 	enablePlaceholder: function() {
 		var inputWithPlaceholder = $(this);
+		console.log("Enabling placeholder for " + inputWithPlaceholder.attr("id") + ": " + inputWithPlaceholder.attr("placeholder"))
 		inputWithPlaceholder.placeholder({placeholderText: inputWithPlaceholder.attr("placeholder")})
 	},
 	

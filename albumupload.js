@@ -80,7 +80,7 @@ RD.AlbumUpload.initialize = function(options) {
 		RD.AlbumUpload.images();
 		
 		// add language support
-  		RD.Utils.addLanguageSupport(RD.AlbumUpload);
+  	RD.Utils.addLanguageSupport(RD.AlbumUpload);
 		
 		// get the sort order node
 		RD.AlbumUpload._imageSortOrderNode = $("#" + options.sortOrderStorageID);
@@ -221,6 +221,10 @@ RD.AlbumUpload.prototype.initFromDatabase = function(imageDetails){
 
 	// mark this as active
 	this.node.find(".actions").removeClass("inactive");
+
+	// create deletion marker
+	// this gets inserted when the image is marked for deletion, removed otherwise
+	this.deletionFlag = $("<input type='hidden' name='picsToDelete[]' id='deletedPic" + this.id + "' value='" + this.id + "'>");
 
 	// update the sort order
 	RD.AlbumUpload.updateAlbumUploadsOrder();
@@ -425,12 +429,19 @@ Other outcomes / test cases:
 */
 
 RD.AlbumUpload.prototype.uploadCompleted = function(imageDetails) {
+	var result;
 	debug("Received results! " + imageDetails);
-	if (!imageDetails || typeof(imageDetails) != "object")
+	if (!imageDetails || typeof(imageDetails) != "object") {
 		return this._badServerResponse(imageDetails);
-    
-    // re-initialize this node from the image details
-    return this.initFromDatabase(imageDetails);  
+  }
+  
+	result = this.initFromDatabase(imageDetails);
+	
+	// trigger an event
+	this.node.trigger("fileUploadCompleted", result);
+	
+	// re-initialize this node from the image details
+  return result;
 }
 
 /*
@@ -453,9 +464,17 @@ RD.AlbumUpload.prototype.toggleDeletion = function() {
 		return;
 	}
 	 
-    // gets the dialog object for the meal deletion option
-    this.node.toggleClass("markedForDeletion");
-	this.status = (this.status === RD.AlbumUpload._STATUS["deleting"] ? RD.AlbumUpload._STATUS["visible"] : RD.AlbumUpload._STATUS["deleting"]);
+  // gets the dialog object for the meal deletion option
+	if (this.status === RD.AlbumUpload._STATUS["deleting"]) {
+	  this.node.removeClass("markedForDeletion");
+		this.status = RD.AlbumUpload._STATUS["visible"];
+		this.deletionFlag.remove();
+	}
+	else {
+	  this.node.addClass("markedForDeletion");
+		this.status = RD.AlbumUpload._STATUS["deleting"];
+		this.node.append(this.deletionFlag);
+	}
 }
 
 /*
@@ -763,7 +782,8 @@ RD.AlbumUpload.prototype.becomeKeyPic = function(options) {
 		// eventually this might be a call to a global Mealstrom
 		// is it dangerous to pass the meal image?
 		if (options.surpressEvent !== true) {
-			RD.AlbumUpload.fireNewKeyImage({albumUpload: this});
+			console.log("Triggering event");
+			this.node.trigger("keyImageChange", {albumUpload: this});
 		}
 	}
 		
@@ -1050,7 +1070,7 @@ RD.AlbumUpload.internals = {
 	            a({href: "#", cls: "keyPicLink"}, RD.AlbumUpload.text("make_album_pic"))
 		        ),
 		        div({cls: "image"},
-		            img({cls: "mealImage", id: "image" + mealImage.localID, src: mealImage.thumbImageURL}),
+		            img({cls: "thumbnail", id: "image" + mealImage.localID, src: mealImage.thumbImageURL}),
 		            span({cls: "deleteText"}, RD.AlbumUpload.text("will_be_deleted"))
 		        ),
 		        div({cls: "actions inactive"}, 

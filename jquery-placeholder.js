@@ -97,7 +97,7 @@ $.widget("ui.placeholder", {
 
 	disable: function() {
 		// call outfocus to get rid of the class and any placeholder text
-		this._outFocus();
+		this._inFocus();
 		// then disable it (if order were reversed, outfocus would do nothing)
 		// default disable
 		$.Widget.prototype.disable.call( this );
@@ -105,7 +105,7 @@ $.widget("ui.placeholder", {
 	
 	enable: function() {
 		// call infocus to add placeholder text if appropriate
-		this._inFocus();
+		this._outFocus();
 		// default enable
 		$.Widget.prototype.enable.call( this );
 	},

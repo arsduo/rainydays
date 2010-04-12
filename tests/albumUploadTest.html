@@ -307,6 +307,9 @@ function assertInitializesFromDatabaseProperly(mealImage, imageDetails, initiali
   linkCount = outcome.node.find("a").length;
   assertEquals("Meal Image did not have two links (had " + linkCount +")!", linkCount, 3);
 
+	// test the deletion flag
+	fail("Need to test deletion flag");
+
   // status is visible
   assertTrue("Meal Image after initFromDatabase did not have visible status!", outcome.isVisible());
  
@@ -879,6 +882,10 @@ function assertToggleDeleteDoesHaveEffect(mealImage) {
 	var targetMatchStatus = (targetStatus === RD.AlbumUpload._STATUS.visible ? false : true)
 
 	mealImage.toggleDeletion();
+	
+	// test the deletion flag
+	fail("Need to test deletion flag is inserted or removed properly");
+	
 	
 	assertEquals("RD.AlbumUpload in original state " + originalStatus + " did not change to the appropriate status!", mealImage.status, targetStatus);
 	var hasMatch = (!!mealImage.node.attr("class").match(/markedForDeletion/)); // need to cast to boolean
@@ -2044,6 +2051,7 @@ function testBecomeKeyPic() {
 		          fail("Event fired when it shouldn't have!");
 		        }
 		      }
+					fail("need to update event");
 		    	RD.AlbumUpload.handleNewKeyImage(checkEvent);
             
 		      // now have it become the key pic

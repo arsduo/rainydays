@@ -4,7 +4,7 @@ $.widget("ui.requiredfield", {
 		
 		// make sure this is an input element in a form
 		type = element.attr("tagName");
-		if ((type !== "SELECT" && type !== "INPUT" && type !== "textarea") || !form) {
+		if ((type !== "SELECT" && type !== "INPUT" && type !== "TEXTAREA") || !form) {
 			// nothing to do
 			return;
 		}
@@ -60,7 +60,8 @@ $.widget("ui.requiredfield", {
 		// useful if, for instance, you want to show a high-level message or a dialog box
 		// this isn't bound to the widget, so we can't use this._formEventName
 		form.trigger("formValidated", {result: valid, validFields: validFields, invalidFields: invalidFields});
-		
+		x = invalidFields;
+		console.log("result: " + valid + ", " + invalidFields.toSource())
 		return valid;
 	},
 	
