@@ -448,7 +448,8 @@ function testInitFromUpload() {
 
 	  	// make sure the meal images node is dirty
 	  	// do it in the loop so that we can know as soon as the first one is done, rather than cumulatively
-	  	assertTrue("Init from upload did not dirty the meal images field!", RD.Page.isFieldDirty(RD.AlbumUpload._albumUploadsNode));
+	  	//assertTrue("Init from upload did not dirty the meal images field!", RD.Page.isFieldDirty(RD.AlbumUpload._albumUploadsNode));
+			fail("Need to check for fileUploadStarted event with proper data!")
 		}
 		
 		// make sure there are no changes to the sort order

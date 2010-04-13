@@ -1,229 +1,407 @@
-var swfu;
+/*
+RD.FileUpload.initialize
+Assumptions:
+- gets an options hash that contains certain required nodes and certain optional nodes (failure: throws exception)
+- #imageSortOrder exists (failure: throws exception, since we cannot continue)
+- #fileUploads exists (failure: throws exception, since we cannot continue)
+- if options.keyImageId is provided, the corresponding node exists (failure: throws exception, since we cannot continue)
+- if options.placeholderNodeID is provided, the corresponding node exists (failure: throws exception, since we cannot continue)
 
-var RD.FileUploader = {
+Other outputs:
+- if initialized is already true, does nothing
+- pre-initializes images array
+- sets sort order node
+- sets _FileUploadsNode
+- sets clearedObject
+- sets up Jaml templates
+- sets initialized to true
+*/
+RD.FileUpload = {
 	uploaders: [],
 	
-  create: function(options, handler) {
-		var instance;
-		handler = handler || RD.AlbumUpload;
-		instance = Object.create(this.instance);
-		instance.options = $.extend({}, this.defaultOptions, options, this.makeHandlers(instance));
-    instance.swfu = new SWFUpload(instance.options);
-  },
-
-	instancePrototype: {		
-	  swfUploadReady: function() {
-	    debug("SWFUpload ready.");
-	  },
-
-	  fileQueued: function(file) {
-	  	debug("File queued!");
-	  	// create the image and initialize it from the upload
-	  	new RD.AlbumUpload().initFromUpload(file);
-
-	  	// add the file type to the upload
-	      swfu.addFileParam(file.id, 'Filetype', file.type);
-	      debug("File type is " + file.type);
-	  }
-
-	  fileQueueError: function(file, errorCode, message) {
-	  	debug("File queue error!");
-	  	if (errorCode === SWFUpload.QUEUE_ERROR.QUEUE_LIMIT_EXCEEDED) {
-	  		alert("You have attempted to queue too many files.\n" + (message === 0 ? "You have reached the upload limit." : "You may select " + (message > 1 ? "up to " + message + " files." : "one file.")));
-	  		return;
-	    }
-
-	  	errorText = "";
-	  	// most queue errors are unrecoverable
-	  	isRecoverable = false;
-
-	  	switch (errorCode) {
-	  	case SWFUpload.QUEUE_ERROR.FILE_EXCEEDS_SIZE_LIMIT:
-	  		errorText = "File too big";
-	  		this.debug("Error Code: File too big, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.QUEUE_ERROR.ZERO_BYTE_FILE:
-	  		errorText = "Empty file";
-	  		this.debug("Error Code: Zero byte file, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.QUEUE_ERROR.INVALID_FILETYPE:
-	  		errorText = "Invalid type";
-	  		this.debug("Error Code: Invalid File Type, File name: " + file.name + ", File type: " + file.type + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	default:
-	  		if (file !== null) {
-	  		}
-	  		errorText = "Other error";
-	  		this.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	}
-	  	mi = RD.AlbumUpload.findByFileObject(file);
-	  	if (mi) {
-	  	    debug("In fileDialogError, setting uploadError.");
-	  	    mi.uploadErrored({
-	  	        isRecoverable: isRecoverable,
-	  	        shortDescription: errorText
-	  	    })
-	  	}
-	  }
-
-	  fileDialogComplete: function(numFilesSelected, numFilesQueued, totalQueued) {
-	      // we don't need to do anything specific here -- everything is handled in the fileQueued event
-	  	debug("File dialog complete, starting upload.");
-	  	this.startUpload();
-	  }
-
-	  uploadStart: function(file) {
-	      // tell the file it's uploading
-	  	debug("uploadStart called");
-	      mi = RD.AlbumUpload.findByFileObject(file);
-	      if (mi) {
-	          mi.uploadStarted();
-	          return true;
-	      }
-	      else
-	          debug("Unable to find meal image " + file.name);
-	  }
-
-	  uploadProgress: function(file, bytesLoaded, bytesTotal) {
-	      // update the progress
-	      debug("Upload progress! " + bytesLoaded + " / " + bytesTotal);
-	  	var percent = bytesLoaded / bytesTotal;
-	      mi = RD.AlbumUpload.findByFileObject(file);
-	      if (mi) {
-	          mi.uploadProgressed(percent);
-	          return true;
-	      }
-	  }
-
-	  uploadSuccess: function(file, serverData) {
-	  	debug("Upload success!  Server responded: " + (serverData.toSource ? serverData.toSource() : serverData));
-
-	      mi = RD.AlbumUpload.findByFileObject(file);
-	      if (mi) {
-	          // parse the server data
-	      	results = null;
-	          try {
-	      		if (typeof(JSON) != "undefined" && typeof(JSON.parse) == "function"){
-	      	        // try to parse the quicker and safer way
-	      	        results = JSON.parse(serverData);
-	      	    }
-	      	    else {
-	      	        // use eval
-	      	        debug("Parsing using eval :(");
-	      	        results = eval(serverData);
-	      			if (typeof(results) != "object") {
-	      				debug("Server response did not parse to JSON!");
-	                      results = null;
-	  				}
-	          	}
-	      	}
-	          catch(e) {
-	      		// if we have an error, hand off to the bad server content department
-	      		results = null;
-	      	}
-
-	          mi.uploadCompleted(results);
-	          return true;
-	      }
-	  }
-
-	  uploadError: function(file, errorCode, message) {
-	  	debug("Upload error!");
-
-	  	errorText = "Upload Error";
-	  	isRecoverable = true;
-
-	  	switch (errorCode) {
-	  	case SWFUpload.UPLOAD_ERROR.HTTP_ERROR:
-	  		this.debug("Error Code: HTTP Error, File name: " + file.name + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.UPLOAD_FAILED:
-	  		this.debug("Error Code: Upload Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.IO_ERROR:
-	  		this.debug("Error Code: IO Error, File name: " + file.name + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.SECURITY_ERROR:
-	          isRecoverable = false;
-	  		this.debug("Error Code: Security Error, File name: " + file.name + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.UPLOAD_LIMIT_EXCEEDED:
-	          isRecoverable = false;
-	  		this.debug("Error Code: Upload Limit Exceeded, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.FILE_VALIDATION_FAILED:
-	          isRecoverable = false;
-	  		this.debug("Error Code: File Validation Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.FILE_CANCELLED:
-	  	    // if we have additional images to upload, upload them
-	  	    if (RD.AlbumUpload.doUnfinishedUploadsExist()){
-	              debug("File was canceled, starting any additional uploads.");
-	              swfu.startUpload();
-	          }
-	          isRecoverable = false;
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.UPLOAD_STOPPED:
-	  		isRecoverable = false;
-	  		break;
-	  	default:
-	          isRecoverable = true;
-	  		this.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	}
-
-	  	mi = RD.AlbumUpload.findByFileObject(file);
-	  	if (mi) {
-	  	    // let it know it errored
-	  	    debug("In uploadError, setting uploadError.");
-
-	  	    mi.uploadErrored({
-	  	        shortDescription: errorText,
-	  	        isRecoverable: isRecoverable,
-	  	    })
-
-	  	    // if it says it's done, cancel it
-	  	    if (mi.shouldCancelUpload())
-	  	        this.cancelUpload(mi.fileObject.id);
-	  	}
-	  }
-
-	  uploadComplete: function(file) {
-	  	debug("File upload complete for " + file.name);
-
-	      // make sure uploadComplete was fired
-	  	mi = RD.AlbumUpload.findByFileObject(file);
-	      if (mi && mi.isUploading()) {
-	          // we have a problem here
-	          throw("Problem!  RD.AlbumUpload hit uploadComplete without UploadSuccess!")
-	      }
-
-	  	if (swfu.getStats().files_queued === 0) {
-	  		debug("All files uploaded!");
-	  	}
-
-	  	return true;
-	  }
-
-	  // This event comes from the Queue Plugin
-	  queueComplete: function(numFilesUploaded) {
-	  	debug("Queue completion happening!");
-	  }
+	initialize: function() {
+		if (!this._initialized) {
+			// add language support
+	  	RD.Utils.addLanguageSupport(RD.FileUpload);
+		}
+	},
 	
-};
+	create: function(options) {
+		this.initialize();
+		
+		if (!options || typeof(options) !== "object") {
+			throw("RD.FileUpload was not passed an options hash!")
+		}
+	
+		if (!options.swfuploadOptions) {
+			throw("RD.FileUpload._initialize was not passed swfuploadOptions!");
+		}
+	
+		// limit the queue to one file at a time
+		options.swfuploadOptions.file_queue_limit = 1
+				
+		var instance = Object.create(this.instancePrototype).init(options);	
+		// ensure we know what to expect from the server
+		instance.fileFieldName = options.fileFieldName || "fullImageURL";
+		
+		this.uploaders.push(instance);
+	},
+	
+	instancePrototype: {
+		init: function(options) {
+			this.uploadManager = RD.UploadManager.create(options.swfuploadOptions, this);
+			
+			if (!options.inputNodeID) {
+				throw("A new FileUpload was not given an input node!")
+			}
+			this.inputNode = $("#" + options.inputNodeID);
 
-// defined separately because it points to functions defined in the main definition
-// which aren't resolved until the hash is closed
-RD.FileUploader.defaultOptions = { 
-	// file types
-	file_types: "*.jpg; *.jpeg; *.png; *.gif",
-	file_types_description: "JPG, GIF, and PNG files only.",
+			if (options.progressBarID) {
+				this.progressBar = $("#" + options.progressBarID);
+				if (this.progressBar.length === 0) {
+					throw("New Fileupload could not find progressBar #" + options.progressBarID + "! Cannot continue.");		    
+				}		
+			}
 
-	// button settings
-	button_placeholder_id: "uploadButton",
-	button_cursor: SWFUpload.CURSOR.HAND,
+			if (options.percentageID) {
+				this.percentage = $("#" + options.percentageID);
+				if (this.percentage.length === 0) {
+					throw("New Fileupload could not find percentage #" + options.percentageID + "! Cannot continue.");		    
+				}		
+			}
 
-	// requeue on error
-	requeue_on_error: true
+			return this;
+		},
+		
+		/* 
+		newUploadObject
+		The object that handles actions generated by the file upload.  Always returns this; exists for compatibility
+		with multi-file uploads (where this would generate a new object).
+		*/
+		newUploadObject: function() {
+			return this;
+		},
+		
+		/*
+		initFromUpload
+		This initializes a new RD.FileUpload using information provided by the SWF uploader.  
+
+		Assumptions:
+		- uploadDetails is not null and is a valid file object per SWF documentation (failure: triggers and returns _badFileUpload)
+			- see http://demo.swfupload.org/Documentation/#fileobject
+
+		Other outcomes / test cases:
+		- this fileUpload is findable by the fileObject (uploadDetails)
+		- has a fileObject === uploadDetails
+		- has .filename === uploadDetails.name
+		- has queued status
+		- makes the overall page node
+		- returns this RD.FileUpload
+		*/
+
+		initFromUpload: function(uploadDetails) {
+			RD.debug("Initializing file " + this.localID + " from upload.");
+
+		  // error check
+		  if (!(uploadDetails && uploadDetails.id && uploadDetails.name)) {
+		   	RD.debug("ERROR: Uploading file must exist (" + uploadDetails + ") and have an id (" + (uploadDetails ? uploadDetails.id : "obj is null") + ") and a name (" + (uploadDetails ? uploadDetails.name : "obj is null") + ")");
+				return this._badFileUpload(uploadDetails); // which prints out the details
+		  }
+
+		  // save details
+		  this.filename = uploadDetails.name;
+		  this.fileObject = uploadDetails;
+
+		  // set status
+		  this.status = RD.FileUpload._STATUS["queued"];
+
+			// trigger an event so the page can be dirtied, etc.
+			this.inputNode.trigger("fileUploadStarted", {fileHandler: this, details: uploadDetails});
+
+		  // return
+		  RD.debug("Initialization done -- image has filename  " + this.filename);
+		  return this;
+		},
+		
+		/*
+		uploadStarted
+		This marks when an upload starts, updating status and visuals.
+
+		Other outcomes / test cases:
+		- has uploading status
+		- progressBar returns 0 for .progressbar("option", "value") (returns null if no progressbar set)
+		- if there's a percentage, it's set to 0 (returns null if no percentage set)
+		- returns this RD.FileUpload
+		*/
+
+		uploadStarted: function() {
+		    RD.debug("Upload started for fileUpload " + this.localID);
+
+		    // generate the progress bar
+				if (this.progressBar) {
+					RD.debug("Found progress bar " + RD.showSource(this.progressBar));
+					this.progressBar.progressbar({value: 0});
+				}
+				
+		    // generate the percentage
+				if (this.percentage) {
+					RD.debug("Found percentage bar " + RD.showSource(this.progressBar));
+					this.progressBar.progressbar({value: 0});
+				}
+
+		    // set the status
+		    this.status = RD.FileUpload._STATUS["uploading"];
+
+		    return this;
+		},
+		
+		/*
+		uploadCanceled
+		This marks when an upload starts, updating status and visuals.
+
+		Assumptions:
+		- Jaml template "canceled" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
+
+		Other outcomes / test cases:
+		- has canceled status
+		- content replaced by canceled content
+		- returns this RD.FileUpload
+		*/
+
+		uploadCanceled: function() {
+			// set the status
+			this.status = RD.FileUpload._STATUS["canceled"];
+
+			// fire a canceled event
+						
+			return this;
+		},
+
+		/*
+		uploadProgressed
+		This is triggered when an upload has made progress, updating status and visuals.
+
+		Assumptions:
+		- Nothing external has removed the progressbar element (failure: reruns this.uploadStarted) 
+
+		Other outcomes / test cases:
+		- this.progressBar.progressbar("option", "value") is equal to percentage * 100
+		- when we hit 100%, throw up a processing message while the server thinks, 
+		- returns this RD.FileUpload
+		*/
+
+		uploadProgressed: function(percentage) {
+		    RD.debug("Upload progressed to " + percentage + "% for fileUpload " + this.localID);
+
+		    // update the progressbar
+				if (this.progressBar) {
+		    	this.progressBar.progressbar("option", "value", percentage * 100);
+					// if percentage is 100%, say processing
+					if (percentage > 0.99) {
+						// should we have something say processing?
+						//.html(RD.FileUpload.text("processing_uploaded_file"));
+					}
+    		}
+				
+				// update the percentage
+				if (this.percentage) {
+					this.percentage.html(Math.round(percentage * 100));
+				}
+		
+		    // return the item
+		    return this;
+		},
+
+		/*
+		uploadErrored
+		This is triggered when an upload encounters an error, and either aborts or gets queued again.
+
+		Other outcomes / test cases:
+		- errorCount is incremented (or set to 1 if it was null)
+		- if the error is recoverable and it hasn't over-errored, it's set to queued again
+		- if not, the status is set to errored
+		- returns this RD.FileUpload
+		*/
+
+		uploadErrored: function(errorDetails) {
+			errorDetails.fileUpload = this;
+			this.status = RD.FileUpload._STATUS["errored"];
+
+			// add an error count
+			if (!this.errorCount)
+				this.errorCount = 1;
+			else
+				this.errorCount++;
+
+			if (errorDetails.isRecoverable && this.errorCount <= RD.FileUpload.RETRY_LIMIT) {
+				RD.debug("Retrying upload.");
+				this.status = RD.FileUpload._STATUS["queued"]; // if we're retrying it
+			}	
+			else {
+				// update visible fields
+				if (this.progressBar) {
+					this.progressBar.html(RD.FileUpload.text("error"));
+				}
+				if (this.percentage) {
+					this.percentage.html(RD.FileUpload.text("error"));
+				}
+			}
+			
+			RD.debug("Error details shortDescription: " + errorDetails.shortDescription);
+
+			return this;
+		},
+
+		/*
+		uploadCompleted
+		Fired when the fileUpload has finished uploading; triggers initialization from the database.
+
+		Assumptions:
+		- fileDetails is a valid object (failure: turns the file image to an error)
+
+		Other outcomes / test cases:
+		- returns the same output as initFromDatabase
+		*/
+
+		uploadCompleted: function(fileDetails) {
+			RD.debug("Received results! " + fileDetails);
+			if (!fileDetails || typeof(fileDetails) != "object") {
+				return this._badServerResponse(fileDetails);
+		  }
+  
+			this.status = RD.FileUpload._STATUS.visible;
+
+			// ensure our progress is shown complete -- for small files there may not be progress events
+			//this.uploadProgressed(100);
+
+			// validate server details
+			if (!(fileDetails && fileDetails[this.fileFieldName])) {
+				throw("Completed file upload did not exist and have field " + this.fileFieldName);
+			}
+
+			// save the data
+			RD.debug("Getting " + this.fileFieldName + ": " + fileDetails[this.fileFieldName])
+			this.inputNode.val(fileDetails[this.fileFieldName]);
+			this.inputNode.trigger("fileUploadCompleted", fileDetails);
+
+		  return this;
+		},
+
+		/* STATUS ACCESSORS */
+
+		/*
+		isRetrying
+		Accessor to see if the file image is being reuploaded after an error.
+
+		Outcomes / test cases:
+		- returns true if the file is queued but has an errorCount
+		*/
+
+		isRetrying: function() {
+			return (this.status === RD.FileUpload._STATUS["queued"] && this.errorCount > 0);
+		},
+
+		/*
+		shouldCancelUpload
+		Accessor to see if the file image should be canceled because it's been tried too many times.
+
+		Outcomes / test cases:
+		- returns true if the file has errored more than the retry limit
+		*/
+
+		shouldCancelUpload: function() {
+			return (this.errorCount > RD.FileUpload.RETRY_LIMIT);
+		},
+
+
+		/*
+		Status Accessors
+		Accessors to check the state of the file.
+
+		Outcomes / test cases:
+		- returns true if the appropriate status is set
+		*/
+
+		isCreated: function() { return this.status === RD.FileUpload._STATUS["created"]; },
+		isVisible: function() { return this.status === RD.FileUpload._STATUS["visible"]; },
+		isErrored: function() { return this.status === RD.FileUpload._STATUS["errored"]; },
+		isCanceled: function() { return this.status === RD.FileUpload._STATUS["canceled"]; },
+		isQueued: function() { return this.status === RD.FileUpload._STATUS["queued"]; },
+		isUploading: function() { return this.status === RD.FileUpload._STATUS["uploading"]; },
+		isDeleting: function() { return this.status === RD.FileUpload._STATUS["deleting"]; },
+
+		/*
+		findByFileObject
+		This method always returns this object; it exists for compatibility with multi-file uploads.
+
+		Outcomes:
+		- returns this
+		*/
+
+		findByFileObject: function(fileObject, findOptions) {
+			return this;
+		},
+		
+		
+		/*
+		doUnfinishedUploadsExist
+		Returns false -- exists for compatibility.  All uploads start immediately and the queue is limited to one item.
+		*/
+
+		doUnfinishedUploadsExist: function() {
+		  return false;
+		},
+		
+		_badServerResponse: function(response) {
+			// used when the server responds successfully, but the content isn't what we expect
+			// notify the console of the error, then render the error view
+			// unfortunately, we can't recover since SWFUpload interpreted this as a successful upload and hence won't let it be requeued
+			RD.debug("Bad server response! " + (response ? RD.showSource(response) : " null!"));
+			return this.uploadErrored({isRecoverable: false, shortDescription: "Invalid server response"});
+		},
+
+		_badFileUpload: function(data) {
+			// used when the SWFUploader adds a file, but that file is missing essential content
+			// I expect this never to fire, but better to be secure than sorry
+			// notify the console of the error, then render the error view
+			// we can't recover, since SWFUpload doesn't requeue on file errors
+			RD.debug("Bad file upload! " + (data ? RD.showSource(data) : "null!"));
+			return this.uploadErrored({isRecoverable: false, shortDescription: "Problem uploading file!"});	
+		}
+		
+
+
+	},
+	
+	/* CONSTANTS */
+	// internal use only.  To verify a status, use the accessor methods above.
+	_STATUS: (function() {
+		// we use .length somewhere, hence the array rather than a hash
+		var status = [];
+		status.created = -1;
+		status.queued = 0;
+		status.uploading = 1;
+		status.errored = 2;
+		status.deleting = 3;
+		status.canceled = 4;
+		status.visible = 5;
+		
+		return status;
+	}()),
+	
+	RETRY_LIMIT: 1,
+
+	/* PRIVATE FUNCTIONS */
+	_shutdown: function() {
+		// used for testing
+		// reset all initialized variables to nothing
+	},
+
+	// internal data
+	TEXT: {
+		en: {
+			error: "Error!",
+			processing_uploaded_file: "Processing...",
+		}
+	}
 };

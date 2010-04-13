@@ -111,6 +111,12 @@ RD.AlbumUpload.initialize = function(options) {
 			}
 		}
 		
+		if (!options.swfuploadOptions) {
+			throw("RD.AlbumUpload._initialize was not passed swfuploadOptions!");
+		}
+		RD.AlbumUpload.uploadManager = UploadManager.create(options.swfuploadOptions);
+		
+		
 		// set up the sortable
 		RD.AlbumUpload.refreshSortable();
 			
@@ -285,7 +291,7 @@ RD.AlbumUpload.prototype.initFromUpload = function(uploadDetails) {
   this.node.addClass("uploading");
    
 	// make the meal images node dirty since we've added an image
-	RD.Page.addDirtyField(RD.AlbumUpload._albumUploadsNode);
+	RD.AlbumUpload._albumUploadsNode.trigger("fileUploadStarted", {fileHandler: this, details: uploadDetails});
 
   // return
   RD.debug("Initialization done -- image has filename  " + this.filename);
