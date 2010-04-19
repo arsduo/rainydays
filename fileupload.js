@@ -140,7 +140,10 @@ RD.FileUpload = {
 		    // generate the progress bar
 				if (this.progressBar) {
 					RD.debug("Found progress bar " + RD.showSource(this.progressBar));
-					this.progressBar.progressbar({value: 0});
+					this.progressBar.progressbar({value: 0})
+					if (this.progressBar.css("display") === "none") {
+						this.progressBar.css("display", "block");
+					}
 				}
 				
 		    // generate the percentage
@@ -271,9 +274,6 @@ RD.FileUpload = {
   
 			this.status = RD.FileUpload._STATUS.visible;
 
-			// ensure our progress is shown complete -- for small files there may not be progress events
-			//this.uploadProgressed(100);
-
 			// validate server details
 			if (!(fileDetails && fileDetails[this.fileFieldName])) {
 				throw("Completed file upload did not exist and have field " + this.fileFieldName);
@@ -281,8 +281,12 @@ RD.FileUpload = {
 
 			// save the data
 			RD.debug("Getting " + this.fileFieldName + ": " + fileDetails[this.fileFieldName])
-			this.inputNode.val(fileDetails[this.fileFieldName]);
+			this.inputNode.val(fileDetails[this.fileFieldName]).trigger("change");
 			this.inputNode.trigger("fileUploadCompleted", fileDetails);
+
+			if (this.progressBar) {
+				setTimeout($.proxy(function() { this.progressBar.fade(400); }, this), 3000)
+			}
 
 		  return this;
 		},

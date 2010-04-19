@@ -98,7 +98,6 @@ RD.Forms = {
 	
 	enablePlaceholder: function() {
 		var inputWithPlaceholder = $(this);
-		console.log("Enabling placeholder for " + inputWithPlaceholder.attr("id") + ": " + inputWithPlaceholder.attr("placeholder"))
 		inputWithPlaceholder.placeholder({placeholderText: inputWithPlaceholder.attr("placeholder")})
 	},
 	

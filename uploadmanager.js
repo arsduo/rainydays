@@ -10,6 +10,8 @@ RD.UploadManager = {
 		instance.handler = handler;
 		
 		this.uploaders.push(instance);
+		
+		return instance;
   },
 
 	defaultOptions: { 
