@@ -74,7 +74,7 @@ RD.Forms = {
 
 	enableRequired: function() {
 		var requiredInput = $(this), requirement = requiredInput.attr("required"), method;
-		if (requirement) {
+		if (typeof(requirement) === "string") {
 			// look for a matching function
 			// by tracing the .'s in the attribute string, we let any function be specified without having to use eval
 			method = window;
