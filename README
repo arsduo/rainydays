@@ -1,12 +1,3 @@
-CSS Rules: here are some recommended default values for the CSS classes used in Rainydays.
+An early stage Javascript image-uploading library design to work with SWFUpload.  Rainydays will flexibly handle individual file uploads as well as uploading and manipulating albums, and will provide unit tests.  
 
-/* placeholder fields showing the placeholder text */
-.ui-placeholder {
-	color: gray;
-    font-style: italic;
-}
-
-/* required form fields that need a user's attention */
-.rd-invalidfield {
-	border: 1px solid red;
-}
+Note: while the individual scripts do work (we're using them in several sites), I need to do a lot of work to clean up unnecessary files (placeholder, requiredfield, and autocomplete will be factored out) and provide a consistent and documented interface.
