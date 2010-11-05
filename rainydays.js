@@ -3,7 +3,8 @@ Rainydays object
 Namespace for other classes and container for key utilities.
 */
 var Rainydays = RD = {
-	// some methods very commonly used
+	
+	// some very common methods
 	showSource: function(object) {
     	// use toSource when supported
     	// conveniently this throws an error for null just as toSource woulds
