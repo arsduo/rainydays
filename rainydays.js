@@ -2,7 +2,9 @@
 Rainydays object
 Namespace for other classes and container for key utilities.
 */
-var Rainydays = RD = {
+var RD = {
+	// track the jQuery object
+	jQuery: jQuery,
 	
 	// some very common methods
 	showSource: function(object) {
@@ -11,37 +13,151 @@ var Rainydays = RD = {
     	return object.toSource ? object.toSource() : (object.toString ? object.toString() : "[unable to show object source]")
     },
   
-    nodify: function(possibleNode) {
-        if (typeof possibleNode === "string") {
-            return $("#" + possibleNode);
-        }
-        else {
-            return $(possibleNode);
-        }
-    },
-
     // determine once whether we can use console.log, and go with it
     debug: (function() {
         var debugFunction;
 
         try {
-            if (console)
             console.log("Setting debug function.");
-            debugFunction = function(string) { console.log(string) };
+            debugFunction = function() { console.log.apply(this, arguments) };
         }
         catch (ex) {
             debugFunction = function() {};
         }
 
         return debugFunction;
-    })(),
+    }()),
 
     createObject: function(object) {
         var F = function() {};
         F.prototype = object;
         return new F();
     }
-};
+}
+
+/* 
+Mealstrom.Page class
+Handles managing page dirty/clean status to prevent users from accidentally leaving a dirty page.
+
+Built according to the Javascript: The Good Parts paradigm.
+*/
+RD.Page = (function() {
+	/************************************************
+ 	 * PRIVATE CLASS VARIABLES                      *
+   ************************************************/
+	// list of dirty fields
+	// allows us to push/remove specific fields 
+	var dirtyFields = [];
+	// whether we're allowing for exit now
+    var surpressExitDialog = false;
+
+	/************************************************
+ 	 * PRIVATE CLASS FUNCTIONS                      *
+   ************************************************/
+
+	// get a standard field name from anything we might be passed
+	function getIDFromParameter(fieldParam) {
+		// if we're passed a jQuery object or a DOM node, get its ID
+		if (typeof field == "object") {
+			fieldParam = (typeof field.attr === "function" ? field.attr("id") : field.id);
+		}
+		return fieldParam;
+	}
+
+	/************************************************
+ 	 * PUBLIC CLASS FUNCTIONS                       *
+   ************************************************/ 	
+	var pageManger = {
+		/* manage dirty status */
+		isPageDirty: function(){
+			return dirtyFields.length > 0;
+		},
+
+		numberOfDirtyFields: function() {
+			return dirtyFields.length;
+		},
+
+		addDirtyField: function(field) {
+			// add the field if it's valid and not already in the index 
+			field = getIDFromParameter(field);
+			if (field && dirtyFields.indexOf(field) === -1) {
+				dirtyFields.push(field);
+			}
+		},
+
+		isFieldDirty: function(field) {
+			return (dirtyFields.indexOf(getIDFromParameter(field)) > -1);
+		},
+
+		removeDirtyField: function(field) {
+			// if it's in the list, remove it; if not, do nothing 
+			var fieldID = getIDFromParameter(field), index = dirtyFields.indexOf(fieldID);
+			if (index > -1) {
+				dirtyFields.splice(index, 1);
+			}
+		},
+
+		/* browser interaction/exit management */
+		
+		// default text for the alert
+		text: "You have unsaved changes on this page.\n\Do you want to abandon your work?",
+		// you can set this to a function that takes a list of IDs
+		// if you want to compose a more elaborate text 
+		composeText: null,
+		// namespacing for jQuery events
+		eventNamespace: ".rainydays",
+				
+		// this function gets bound to beforeunload to fire the dialog
+		alertForDirtyPage: function(e) {
+			// if the page is dirty, fires an alert to make sure the user intends to leave
+			if (isPageDirty() && !surpressExitDialog) {
+			  var text = typeof(pageManger.composeText === "function" ? pageManger.composeText(dirtyFields) : pageManger.text);
+
+			  var e = e || window.event;
+			  if (e) { // For IE and Firefox
+			    e.returnValue = text;
+			  }
+
+			  // For Safari
+			  return text;
+			}
+		},
+		
+		allowIntentionalExit: function() {
+		  surpressExitDialog = true;
+		},
+
+		cancelIntentionalExit: function() {
+		  surpressExitDialog = false;
+		},
+		
+		/* initialization */
+		initialize: function() {
+			// tasks to run when the page is loaded
+			// we expose this to allow users whose jQuery variable isn't available under jQuery to still use this
+			var jQuery = RD.jQuery;
+			jQuery(document).ready(function() {
+			  	// bind the dirty page alert to window beforeunload
+				jQuery(window).bind("beforeunload" + RD.Page.eventNamespace, function(event) { 
+				  	// use the global object rather than private internals so it can be tested
+					RD.Page.alertForDirtyPage(event) 
+				});
+			});
+		}
+	}
+
+	/************************************************
+ 	 * INITIALIZATION AND RETURN                    *
+     ************************************************/
+	// if we can, initialize the pageManager
+	if (typeof(RD.jQuery) === "function") {
+		try { pageManger.initialize() } catch(e) {};
+	}
+
+	// finally, return our public interface
+	return pageManger;	
+	// execute immediately, creating our singleton object
+}()) 
 
 /* 
 RainyDays core extensions

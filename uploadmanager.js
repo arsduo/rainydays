@@ -6,7 +6,7 @@ RD.UploadManager = {
 		
 		instance = Object.create(this.instancePrototype);
 		instance.options = $.extend({}, this.defaultOptions, options, instance.getHandlers());
-    instance.swfu = new SWFUpload(instance.options);
+    	instance.swfu = new SWFUpload(instance.options);
 		instance.handler = handler;
 		
 		this.uploaders.push(instance);
@@ -61,8 +61,8 @@ RD.UploadManager = {
 	  	this.handler.newUploadObject().initFromUpload(file);
 
 	  	// add the file type to the upload
-			// this == SWFU object, not the FileUpload object
-			this.swfu.addFileParam(file.id, 'Filetype', file.type);
+		// this == SWFU object, not the FileUpload object
+		this.swfu.addFileParam(file.id, 'Filetype', file.type);
 	    RD.debug("File type is " + file.type);
 	  },
 
