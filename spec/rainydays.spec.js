@@ -3,6 +3,10 @@ describe("RD global object", function() {
 		expect(RD.jQuery).toBe(jQuery)
 	})
 	
+	it("should expose the event namespace used", function() {
+		expect(typeof(RD.eventNamespace)).toBe("string");
+	})
+	
 	describe("debug function", function() {
 		// make sure there's a console object available, native or not
 		var console = window.console || {}; 

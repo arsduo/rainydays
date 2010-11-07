@@ -6,6 +6,9 @@ var RD = {
 	// track the jQuery object
 	jQuery: jQuery,
 	
+	// namespacing for jQuery events
+	eventNamespace: ".rainydays",
+	
 	// some very common methods
 	showSource: function(object) {
     	// use toSource when supported
@@ -56,12 +59,13 @@ RD.Page = (function() {
    ************************************************/
 
 	// get a standard field name from anything we might be passed
-	function getIDFromParameter(fieldParam) {
+	function getIDFromParameter(field) {
 		// if we're passed a jQuery object or a DOM node, get its ID
+		// if a string, just return it
 		if (typeof field == "object") {
-			fieldParam = (typeof field.attr === "function" ? field.attr("id") : field.id);
+			field = (typeof field.attr === "function" ? field.attr("id") : field.id);
 		}
-		return fieldParam;
+		return field;
 	}
 
 	/************************************************
@@ -75,6 +79,10 @@ RD.Page = (function() {
 
 		numberOfDirtyFields: function() {
 			return dirtyFields.length;
+		},
+		
+		getDirtyFields: function() {
+			return ([]).concat(dirtyFields);
 		},
 
 		addDirtyField: function(field) {
@@ -104,8 +112,6 @@ RD.Page = (function() {
 		// you can set this to a function that takes a list of IDs
 		// if you want to compose a more elaborate text 
 		composeText: null,
-		// namespacing for jQuery events
-		eventNamespace: ".rainydays",
 				
 		// this function gets bound to beforeunload to fire the dialog
 		alertForDirtyPage: function(e) {
@@ -138,7 +144,7 @@ RD.Page = (function() {
 			var jQuery = RD.jQuery;
 			jQuery(document).ready(function() {
 			  	// bind the dirty page alert to window beforeunload
-				jQuery(window).bind("beforeunload" + RD.Page.eventNamespace, function(event) { 
+				jQuery(window).bind("beforeunload" + RD.eventNamespace, function(event) { 
 				  	// use the global object rather than private internals so it can be tested
 					RD.Page.alertForDirtyPage(event) 
 				});
@@ -147,12 +153,8 @@ RD.Page = (function() {
 	}
 
 	/************************************************
- 	 * INITIALIZATION AND RETURN                    *
+ 	 * RETURN                                       *
      ************************************************/
-	// if we can, initialize the pageManager
-	if (typeof(RD.jQuery) === "function") {
-		try { pageManger.initialize() } catch(e) {};
-	}
 
 	// finally, return our public interface
 	return pageManger;	
