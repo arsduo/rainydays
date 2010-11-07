@@ -145,5 +145,174 @@ describe("RD.Page", function() {
 		
 			
 		})
+
+		describe("addDirtyField", function() {
+			it("should add a field when provided with a string ID", function() {
+				var id = makeID();
+				RD.Page.addDirtyField(id);
+				expect(RD.Page.numberOfDirtyFields()).toBe(1);
+				expect(RD.Page.getDirtyFields()).toContain(id);
+			})
+			
+			it("should add a field when provided with a DOM node", function() {
+				var id = makeID();
+				RD.Page.addDirtyField({id: id}); // mock DOM node
+				expect(RD.Page.numberOfDirtyFields()).toBe(1);
+				expect(RD.Page.getDirtyFields()).toContain(id);
+			})
+			
+			it("should add a field when provided with a jQuery node", function() {
+				var id = makeID();
+				RD.Page.addDirtyField({attr: function() { return id; }}); // fake jQuery node
+				expect(RD.Page.numberOfDirtyFields()).toBe(1);
+				expect(RD.Page.getDirtyFields()).toContain(id);
+			})
+			
+			it("should not add a field when provided with a ID-less value", function() {
+				RD.Page.addDirtyField(null);
+				RD.Page.addDirtyField("");
+				RD.Page.addDirtyField();
+				expect(RD.Page.numberOfDirtyFields()).toBe(0);
+			})
+			
+			it("should not add a duplicate field when provided with a string ID", function() {
+				var id = makeID();
+				RD.Page.addDirtyField(id);
+				RD.Page.addDirtyField({attr: function() { return id; }}); // fake jQuery node
+				expect(RD.Page.numberOfDirtyFields()).toBe(1);
+			})
+			
+			it("should not add a duplicate field when provided with a DOM node", function() {
+				var id = makeID();
+				RD.Page.addDirtyField({id: id}); // mock DOM node
+				RD.Page.addDirtyField(id); // fake jQuery node
+				expect(RD.Page.numberOfDirtyFields()).toBe(1);
+			})
+			
+			it("should not add a duplicate field when provided with a jQuery node", function() {
+				var id = makeID();
+				RD.Page.addDirtyField({attr: function() { return id; }}); // fake jQuery node
+				RD.Page.addDirtyField(id); // fake jQuery node
+				expect(RD.Page.numberOfDirtyFields()).toBe(1);
+			})
+			
+			
+		})
+
+		describe("isFieldDirty", function() {
+			describe("if the field is dirty", function() {
+				it("should answer true if a DOM node is provided", function() {
+					var id = makeID();
+					RD.Page.addDirtyField(id); // mock DOM node
+					expect(RD.Page.isFieldDirty({id: id})).toBe(true);
+				})
+			
+				it("should answer true if a jQuery node is provided", function() {
+					var id = makeID();
+					RD.Page.addDirtyField(id);
+					expect(RD.Page.isFieldDirty({attr: function() { return id; }})).toBe(true);
+				})
+			
+				it("should answer true if a string ID is provided", function() {
+					var id = makeID();
+					RD.Page.addDirtyField(id); // fake jQuery node
+					expect(RD.Page.isFieldDirty(id)).toBe(true);
+				})
+			})
+			
+			describe("if the field was never added", function() {
+				it("should answer true if a DOM node is provided", function() {
+					var id = makeID();
+					expect(RD.Page.isFieldDirty({id: id})).toBe(false);
+				})
+			
+				it("should answer true if a jQuery node is provided", function() {
+					var id = makeID();
+					expect(RD.Page.isFieldDirty({attr: function() { return id; }})).toBe(false);
+				})
+			
+				it("should answer true if a string ID is provided", function() {
+					var id = makeID();
+					expect(RD.Page.isFieldDirty(id)).toBe(false);
+				})
+			})
+			
+			describe("if the field was removed", function() {			
+				it("should answer true if a DOM node is provided", function() {
+					var id = makeID();
+					RD.Page.addDirtyField({id: id}); // mock DOM node
+					RD.Page.removeDirtyField(id);
+					expect(RD.Page.isFieldDirty({id: id})).toBe(false);
+				})
+			
+				it("should answer true if a jQuery node is provided", function() {
+					var id = makeID();
+					RD.Page.addDirtyField({attr: function() { return id; }}); // fake jQuery node
+					RD.Page.removeDirtyField(id);
+					expect(RD.Page.isFieldDirty({attr: function() { return id; }})).toBe(false);
+				})
+			
+				it("should answer true if a string ID is provided", function() {
+					var id = makeID();
+					RD.Page.addDirtyField(id); // fake jQuery node
+					RD.Page.removeDirtyField(id);
+					expect(RD.Page.isFieldDirty(id)).toBe(false);
+				})
+			})
+		})
+
+		describe("removeDirtyField", function() {
+			describe("for dirty fields", function() { 
+				var id;
+				beforeEach(function() {
+					id = makeID();
+					RD.Page.addDirtyField(id);
+					RD.Page.addDirtyField(makeID())
+				})
+				
+				it("should remove a field when provided an ID", function() {
+					RD.Page.removeDirtyField(id);
+					expect(RD.Page.numberOfDirtyFields()).toBe(1);
+				})
+				
+				it("should remove a field when provided a DOM node", function() {
+					RD.Page.removeDirtyField({id: id});
+					expect(RD.Page.numberOfDirtyFields()).toBe(1);
+				})
+				
+				it("should remove a field when provided a jQuery node", function() {
+					RD.Page.removeDirtyField({attr: function() { return id }});
+					expect(RD.Page.numberOfDirtyFields()).toBe(1);
+				})	
+			})
+			
+			describe("for not dirty fields", function() { 
+				var id;
+				beforeEach(function() {
+					id = makeID();
+					RD.Page.addDirtyField(id);
+					RD.Page.addDirtyField(makeID())
+				})
+				
+				it("should remove a field when provided an ID", function() {
+					RD.Page.removeDirtyField(makeID());
+					expect(RD.Page.numberOfDirtyFields()).toBe(2);
+				})
+				
+				it("should remove a field when provided a DOM node", function() {
+					RD.Page.removeDirtyField({id: makeID()});
+					expect(RD.Page.numberOfDirtyFields()).toBe(2);
+				})
+				
+				it("should remove a field when provided a jQuery node", function() {
+					RD.Page.removeDirtyField({attr: function() { return makeID() }});
+					expect(RD.Page.numberOfDirtyFields()).toBe(2);
+				})	
+			})  
+		})
+	
+		describe("alertForDirtyPage", function() {
+			
+		})
 	})
 })

@@ -62,7 +62,7 @@ RD.Page = (function() {
 	function getIDFromParameter(field) {
 		// if we're passed a jQuery object or a DOM node, get its ID
 		// if a string, just return it
-		if (typeof field == "object") {
+		if (field && typeof field == "object") {
 			field = (typeof field.attr === "function" ? field.attr("id") : field.id);
 		}
 		return field;
