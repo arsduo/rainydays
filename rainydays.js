@@ -128,9 +128,8 @@ RD.Page = (function() {
 		// this function gets bound to beforeunload to fire the dialog
 		alertForDirtyPage: function(e) {
 			// if the page is dirty, fires an alert to make sure the user intends to leave
-			if (isPageDirty() && !surpressExitDialog) {
-			  var text = typeof(pageManger.composeText === "function" ? pageManger.composeText(dirtyFields) : pageManger.text);
-
+			if (RD.Page.isPageDirty() && !surpressExitDialog) {
+			  var text = typeof(RD.Page.composeText) === "function" ? RD.Page.composeText(RD.Page.getDirtyFields()) : pageManger.text;
 			  var e = e || window.event;
 			  if (e) { // For IE and Firefox
 			    e.returnValue = text;

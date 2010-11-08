@@ -1,5 +1,6 @@
 // code located in rainydays.js
 describe("RD.Page", function() {
+  // ensure we always have a unique ID, to avoid any possible residual effects
 	var makeID = (function() {
 		var count = 0;
 		return function() {
@@ -342,6 +343,155 @@ describe("RD.Page", function() {
 	  })
 	
 		describe("alertForDirtyPage", function() {
+		  var text, e, eventHolder = window.event;
+		  beforeEach(function() {
+		    text = RD.Page.text, testText = "extra";
+		    RD.Page.text = testText;
+	      e = {};
+        window.event = {};
+		  })
+	  
+		  afterEach(function() {
+		    RD.Page.text = text;
+		    window.event = eventHolder;
+		  })
+		  
+		  // collect all the negative tests, since they're used three times
+		  var negativeTests = function() {
+		    describe("when there's no composeText function", function() {
+  			  it("should return the value of the RD.Page.text property", function() {
+  			    expect(RD.Page.alertForDirtyPage(e)).not.toBeDefined();
+  			  })
+	  
+  			  it("should set the returnValue of the e argument", function() {
+  			    RD.Page.alertForDirtyPage(e)
+  			    expect(e.returnValue).not.toBeDefined();
+  			  })
+	  
+  			  it("should set the returnValue of window.event if e is not provided", function() {
+  			    RD.Page.alertForDirtyPage();
+  			    expect(window.event.returnValue).not.toBeDefined();
+  			  })
+			  })
+			  
+			  describe("when there's a composeText function", function() {
+  			  var otherText;
+  			  beforeEach(function() {
+  			    otherText = "foobar";
+  			    RD.Page.composeText = function() { return otherText; }
+  			  })
+
+  			  afterEach(function() {
+  			    delete RD.Page.composeText;
+  			  })
+  			  
+  			  it("should not the value from the composeText function", function() {
+  			    spyOn(RD.Page, "composeText");
+  			    expect(RD.Page.composeText).not.toHaveBeenCalled();
+  			    RD.Page.alertForDirtyPage(e);
+  			  })
+  			  
+  			  it("should return the value of the otherText function", function() {
+  			    expect(RD.Page.alertForDirtyPage(e)).not.toBeDefined();
+  			  })
+	  
+  			  it("should set the returnValue of the e argument", function() {
+  			    RD.Page.alertForDirtyPage(e)
+  			    expect(e.returnValue).not.toBeDefined();
+  			  })
+	  
+  			  it("should set the returnValue of window.event if e is not provided", function() {
+  			    RD.Page.alertForDirtyPage();
+  			    expect(window.event.returnValue).not.toBeDefined();
+  			  })
+			  })		    
+		  }
+      
+			describe("when there are dirty fields", function() {			  
+        beforeEach(function() {
+          RD.Page.addDirtyField(makeID());
+        })
+        
+  		  describe("when there's no deliberate exit", function() {
+  		    beforeEach(function() {
+    		    RD.Page.cancelIntentionalExit();
+  		    })
+		    
+			    describe("when there's no composeText function", function() {
+    			  it("should return the value of the RD.Page.text property", function() {
+    			    expect(RD.Page.alertForDirtyPage(e)).toBe(testText);
+    			  })
+		  
+    			  it("should set the returnValue of the e argument", function() {
+    			    RD.Page.alertForDirtyPage(e)
+    			    expect(e.returnValue).toBe(testText);
+    			  })
+		  
+    			  it("should set the returnValue of window.event if e is not provided", function() {
+    			    RD.Page.alertForDirtyPage();
+    			    expect(window.event.returnValue).toBe(testText);
+    			  })
+  			  })
+  			  
+  			  describe("when there's a composeText function", function() {
+    			  var otherText;
+    			  beforeEach(function() {
+    			    otherText = "foobar";
+    			    RD.Page.composeText = function() { return otherText; }
+    			  })
+
+    			  afterEach(function() {
+    			    delete RD.Page.composeText;
+    			  })
+    			  
+    			  it("should call the composeText with list of dirty fields", function() {
+    			    spyOn(RD.Page, "composeText");
+    			    expect(RD.Page.composeText).toHaveBeenCalledWith(RD.Page.getDirtyFields());
+    			    RD.Page.alertForDirtyPage(e);
+    			  })
+    			  
+    			  it("should return the value of the otherText function", function() {
+    			    expect(RD.Page.alertForDirtyPage(e)).toBe(otherText);
+    			  })
+		  
+    			  it("should set the returnValue of the e argument", function() {
+    			    RD.Page.alertForDirtyPage(e)
+    			    expect(e.returnValue).toBe(otherText);
+    			  })
+		  
+    			  it("should set the returnValue of window.event if e is not provided", function() {
+    			    RD.Page.alertForDirtyPage();
+    			    expect(window.event.returnValue).toBe(otherText);
+    			  })
+  			  })
+  			})
+  			
+  			describe("when there is a deliberate exit", function() {
+          beforeEach(function() {
+            RD.Page.allowIntentionalExit();
+          })
+                    
+          negativeTests();
+  			})
+			})
+			
+			describe("when there are no dirty fields", function() {			  
+  		  describe("when there's no deliberate exit", function() {
+  		    beforeEach(function() {
+    		    RD.Page.cancelIntentionalExit();
+  		    })
+  		    
+  		    negativeTests();		    
+  			})
+  			
+  			describe("when there is a deliberate exit", function() {
+          beforeEach(function() {
+            RD.Page.allowIntentionalExit();
+          })
+
+          negativeTests();
+  			})
+			})
 			
 		})
 	})
