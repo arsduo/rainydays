@@ -113,6 +113,18 @@ RD.Page = (function() {
 		// if you want to compose a more elaborate text 
 		composeText: null,
 				
+    isIntentionalExitActivated: function() {
+      return surpressExitDialog;
+    },
+
+		allowIntentionalExit: function() {
+		  surpressExitDialog = true;
+		},
+
+		cancelIntentionalExit: function() {
+		  surpressExitDialog = false;
+		},
+
 		// this function gets bound to beforeunload to fire the dialog
 		alertForDirtyPage: function(e) {
 			// if the page is dirty, fires an alert to make sure the user intends to leave
@@ -129,13 +141,6 @@ RD.Page = (function() {
 			}
 		},
 		
-		allowIntentionalExit: function() {
-		  surpressExitDialog = true;
-		},
-
-		cancelIntentionalExit: function() {
-		  surpressExitDialog = false;
-		},
 		
 		/* initialization */
 		initialize: function() {

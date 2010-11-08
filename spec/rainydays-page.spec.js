@@ -33,6 +33,8 @@ describe("RD.Page", function() {
 			for (var i = 0; i < fields.length; i++) {
 				RD.Page.removeDirtyField(fields[i]);
 			}
+			// reset the intentional exit status
+			RD.Page.cancelIntentionalExit();
 		}
 		
 		beforeEach(resetDirtyFields);
@@ -310,6 +312,34 @@ describe("RD.Page", function() {
 				})	
 			})  
 		})
+	
+		describe("allowIntentionalExit", function() {
+			it("should cause alertForDirtyPage to return undefined")
+		})
+	
+	  describe("intentional exit functions", function() {
+	    describe("isIntentionalExitActivated", function() {
+	      it("should return false by default", function() {
+	        expect(RD.Page.isIntentionalExitActivated()).toBe(false);
+	      })
+	    })
+	    
+	    describe("allowIntentionalExit", function() {
+	      it("should enable intentional exiting", function() {
+  	      RD.Page.allowIntentionalExit();
+          expect(RD.Page.isIntentionalExitActivated()).toBe(true);	      
+        })
+	    })
+	    
+	    describe("allowIntentionalExit", function() {
+	      it("should cancel intentional exiting", function() {
+	        RD.Page.allowIntentionalExit();
+          RD.Page.cancelIntentionalExit();
+          expect(RD.Page.isIntentionalExitActivated()).toBe(false);	      
+        })
+	    })
+	    
+	  })
 	
 		describe("alertForDirtyPage", function() {
 			
