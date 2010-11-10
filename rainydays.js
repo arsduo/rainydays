@@ -146,6 +146,8 @@ RD.Page = (function() {
 			// tasks to run when the page is loaded
 			// we expose this to allow users whose jQuery variable isn't available under jQuery to still use this
 			var jQuery = RD.jQuery;
+			console.log("initializing")
+			console.log(jQuery.toSource())
 			jQuery(document).ready(function() {
 			  	// bind the dirty page alert to window beforeunload
 				jQuery(window).bind("beforeunload" + RD.eventNamespace, function(event) { 

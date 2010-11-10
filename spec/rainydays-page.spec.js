@@ -494,5 +494,20 @@ describe("RD.Page", function() {
 			})
 			
 		})
+
+    describe("initialize", function() {
+      var fakeDocument = {ready: function(){} }
+
+      beforeEach(function() {
+        spyOn(RD, "jQuery").andReturn(fakeDocument);
+        spyOn(fakeDocument, "ready");
+      })
+      
+      it("should add a document/ready function", function() {
+        expect(RD.jQuery).toHaveBeenCalled() // With(document);
+        //expect(fakeDocument.ready).toHaveBeenCalled();
+        RD.Page.initialize();
+      })
+    })
 	})
 })
