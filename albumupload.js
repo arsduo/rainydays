@@ -788,7 +788,7 @@ RD.AlbumUpload.prototype.becomeKeyPic = function(options) {
 		// eventually this might be a call to a global Mealstrom
 		// is it dangerous to pass the meal image?
 		if (options.surpressEvent !== true) {
-			console.log("Triggering event");
+			//console.log("Triggering event");
 			this.node.trigger("keyImageChange", {albumUpload: this});
 		}
 	}
