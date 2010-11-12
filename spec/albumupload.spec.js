@@ -85,9 +85,36 @@ describe("AlbumUpload", function() {
             })
         })
     })
+    
+    describe("newUploader", function() {
+        it("should create a new uploader object", function() {
+            spyOn(RD, "createObject").andCallThrough();
+            RD.AlbumUpload.newUploader({});
+            expect(RD.createObject).toHaveBeenCalledWith(RD.AlbumUpload.uploaderPrototype);
+        })
+        
+        it("should initialize that new uploader object", function() {
+            var uploader = RD.createObject(RD.AlbumUpload.uploaderPrototype), settings = {a: 2};
+            spyOn(RD, "createObject").andReturn(uploader);
+            spyOn(uploader, "initialize");
+            RD.AlbumUpload.newUploader(settings);
+            expect(uploader.initialize).toHaveBeenCalledWith(settings);
+            
+        })
+        
+        it("should return that new uploader object", function() {
+            var uploader = RD.createObject(RD.AlbumUpload.uploaderPrototype);
+            spyOn(RD, "createObject").andReturn(uploader);
+            spyOn(uploader, "initialize").andReturn(uploader);
+            expect(RD.AlbumUpload.newUploader()).toBe(uploader)
+        })
+    })
 
     describe("uploader prototype", function() {
-        var prototype = RD.createObject(RD.AlbumUpload.uploaderPrototype);
+        var prototype;
+        beforeEach(function() {
+            prototype = RD.createObject(RD.AlbumUpload.uploaderPrototype);            
+        })
 
         it("should provide a prototype", function() {
             expect(typeof(RD.AlbumUpload.uploaderPrototype)).toBe("object");
@@ -101,24 +128,41 @@ describe("AlbumUpload", function() {
             })
         })
         
+        describe("initialize", function() {
+            it("should copy the provided settings", function() {
+                spyOn(RD.jQuery, "extend");
+                var arg = {a: 3};
+                prototype.initialize(arg);
+                // aguments should be blank hash, arg
+                expect(RD.jQuery.extend).toHaveBeenCalledWith({}, arg);
+            })
+            
+            it("should store the copied settings in the settings property", function() {
+                var arg = {a: 3};
+                spyOn(RD.jQuery, "extend").andReturn(arg);
+                prototype.initialize(arg);
+                expect(prototype.settings).toBe(arg);
+            })
+        })
+        
         describe("newImage", function() {
             beforeEach(function() {
                 // reset the images array
-                prototype.images = [];
+                prototype.initialize({});
             })
-            
+
             it("should create a new image object from the prototype", function() {
                 spyOn(RD, "createObject").andCallThrough();
                 prototype.newImage();
                 expect(RD.createObject).toHaveBeenCalledWith(RD.AlbumUpload.imagePrototype);
             })
-            
+        
             it("should return that image", function() {
                 var result = "foo";
                 spyOn(RD, "createObject").andReturn(result);
                 expect(prototype.newImage()).toBe(result);
             })
-            
+        
             it("should add that image to the array", function() {
                 var result = "foo";
                 spyOn(RD, "createObject").andReturn(result);
@@ -126,8 +170,7 @@ describe("AlbumUpload", function() {
                 prototype.newImage();
                 expect(prototype.images.push).toHaveBeenCalledWith(result);
             })
-            
-            
+        
             it("should set the image's localID to the number of images in the array", function() {
                 var img;
                 for (var i = 0; i < 10; i++) {
@@ -136,7 +179,11 @@ describe("AlbumUpload", function() {
                 }
             })
             
-            
+            it("should hide the placeholderNode", function() {
+                spyOn(prototype.placeholderNode, "hide");
+                prototype.newImage();
+                expect(prototype.placeholderNode.hide).toHaveBeenCalled();
+            })
             
         })
     })

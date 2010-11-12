@@ -21,6 +21,10 @@ RD.AlbumUpload = {
     keyPicEvent: "keyPicRegistered",
     keyPicClass: "keyPic",
     uploadNodeClass: "albumUploadBlock", 
+    // list of available statuses
+    statusMap: {
+        
+    },
     
     labels: {
         queued_retry: "Waiting to retry",
@@ -35,23 +39,42 @@ RD.AlbumUpload = {
         upload_canceled: "Upload Canceled"
     },
     
+    newUploader: function(settings) {
+      return RD.createObject(this.uploaderPrototype).initialize(settings);
+    },
+    
     uploaderPrototype: {
         images: [],
         
+        initialize: function(settings) {
+            // bring jQuery into the local context
+            var jQuery = RD.jQuery;
+
+            // store provided settings
+            this.settings = jQuery.extend({}, settings);
+
+            // now initialize stuff
+            // placeholder node will either be found or be an empty jQuery array
+            this.placeholderNode = settings.placeholderID ? jQuery("#" + settings.placeholderID) : jQuery();
+            
+            return this; 
+        },
+        
         newImage: function() {
+            var albumUpload = RD.AlbumUpload;
+
             // create and store the new image
-            var image = RD.createObject(RD.AlbumUpload.imagePrototype);
+            var image = RD.createObject(albumUpload.imagePrototype);
             this.images.push(image);
-            // since we don't remove deleted images from the array, this is a good proxy for uniqueness
+            
+            // since we don't remove deleted images from the array, images.length is a good proxy for uniqueness
             image.localID = this.images.length;
+
+            // remove the placeholder node (no effect if not specified)
+            this.placeholderNode.hide();
 
             return image;
             
-
-            // remove the placeholder if it 's present
-            if (RD.AlbumUpload._placeholderNode && RD.AlbumUpload._placeholderNode.parent().length > 0) {
-              RD.AlbumUpload._placeholderNode.remove();
-            }
 
         		// create the node
             this._replaceWithRender("albumUploadBlock");
