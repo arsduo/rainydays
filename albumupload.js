@@ -8,7 +8,7 @@ Other outcome / test cases:
 - this initializes RD.AlbumUpload if it hasn't been (creates array, assigns the debug function)
 - this returns an item of type RD.AlbumUpload (viewed by the constructor function)
 - this adds that image to the RD.AlbumUpload.images() at the index of its localID (findable by RD.AlbumUpload.findByLocalID)
-- this creates a new node in RD.AlbumUpload._albumUploadsNode that matches the node object here
+- this creates a new node in RD.AlbumUpload.albumContainer that matches the node object here
 - the meal image's node is unique
 - this sets the initial status to created
 
@@ -50,15 +50,45 @@ RD.AlbumUpload = {
             // bring jQuery into the local context
             var jQuery = RD.jQuery;
 
-            // store provided settings
+			// make sure we got a settings
+			if (!settings || typeof(settings) !== "object") { 
+				throw("RD.AlbumUpload was not passed a settings hash!") 
+			}
+
+            // then store the provided settings
             this.settings = jQuery.extend({}, settings);
 
-            // now initialize stuff
-            // placeholder node will either be found or be an empty jQuery array
-            this.placeholderNode = settings.placeholderID ? jQuery("#" + settings.placeholderID) : jQuery();
-            
+			// now set up the DOM nodes we use
+			this.setupDOM();
+			
             return this; 
         },
+
+		setupDOM: function() {
+			// initialize all the different DOM nodes we use
+			var settings = this.settings, jQuery = RD.jQuery;
+			
+			// sort order storage -- where we keep track of the order of elements
+			// this is required
+			this.sortOrderStorage = jQuery("#" + settings.sortOrderStorageID);
+			if (this.sortOrderStorage.length === 0) {
+				throw("InitializationError: Could not find AlbumUpload sortOrderStorageID #" + settings.sortOrderStorageID + "!")
+			}
+
+			// albumContainer -- where all the visible action happens
+			// this is required
+			this.albumContainer = jQuery("#" + settings.albumContainerID);
+			if (this.albumContainer.length === 0) {
+				throw("InitializationError: Could not find AlbumUpload sortOrderStorageID #" + settings.sortOrderStorageID + "!");
+			}
+
+			// get the key image (album cover) value store and visible location if provided
+			this.keyImageStorage = settings.keyImageStorageID ? $("#" + settings.keyImageStorageID) : jQuery();
+			this.keyImageView = settings.keyImageViewID ? $("#" + settings.keyImageViewID) : jQuery();
+			
+            // placeholder node will either be found or be an empty jQuery array
+            this.placeholderNode = settings.placeholderID ? jQuery("#" + settings.placeholderID) : jQuery();            
+		},
         
         newImage: function() {
             var albumUpload = RD.AlbumUpload;
@@ -67,18 +97,17 @@ RD.AlbumUpload = {
             var image = RD.createObject(albumUpload.imagePrototype);
             this.images.push(image);
             
-            // since we don't remove deleted images from the array, images.length is a good proxy for uniqueness
-            image.localID = this.images.length;
-
             // remove the placeholder node (no effect if not specified)
             this.placeholderNode.hide();
 
+            // since we don't remove deleted images from the array, images.length is a good proxy for uniqueness
+			image.initialize({
+	            localID: this.images.length
+			});
+
             return image;
             
-
-        		// create the node
-            this._replaceWithRender("albumUploadBlock");
-
+			
         		// notify the sortable we've added a node
         		RD.AlbumUpload.refreshSortable();
 
@@ -91,7 +120,10 @@ RD.AlbumUpload = {
     },
     
     imagePrototype: {
-        
+        initialize: function() {
+			// create the node
+        	this._replaceWithRender("albumUploadBlock");
+		}	
     },
     
 	// JAML TEMPLATES
@@ -199,7 +231,7 @@ Other outputs:
 - if initialized is already true, does nothing
 - pre-initializes images array
 - sets sort order node
-- sets _albumUploadsNode
+- sets albumContainer
 - sets clearedObject
 - sets up Jaml templates
 - sets initialized to true
@@ -210,40 +242,8 @@ RD.AlbumUpload.initialize = function(options) {
 			throw("RD.AlbumUpload was not passed an options hash!")
 		}
 		
-		// preinitialize images
-		RD.AlbumUpload.images();
-		
-		// add language support
-  	RD.Utils.addLanguageSupport(RD.AlbumUpload);
-		
 		// get the sort order node
-		RD.AlbumUpload._imageSortOrderNode = $("#" + options.sortOrderStorageID);
-		if (RD.AlbumUpload._imageSortOrderNode.length === 0) {
-			throw("RD.AlbumUpload._initialize could not find input sortOrderStorageID #" + options.sortOrderStorageID + "! Cannot continue.");
-		}
-		
-		// get the album node
-		RD.AlbumUpload._albumUploadsNode = $("#" + options.albumNodeID);
-		if (RD.AlbumUpload._albumUploadsNode.length === 0) {
-			throw("RD.AlbumUpload._initialize could not find albumNodeID #" + options.albumNodeID + "! Cannot continue.");		
-		}
-		
-		// get the key image value store if provided
-		if (options.keyImageNodeID) {
-			RD.AlbumUpload._keyImageDataNode = $("#" + options.keyImageNodeID);
-			if (RD.AlbumUpload._keyImageDataNode.length === 0) {
-				// we're not storing an album cover
-				throw("RD.AlbumUpload._initialize could not find keyImageNodeID #" + options.keyImageNodeID + "! Cannot continue.")
-    	}
-		}
-    
-		// get the placeholder node if provided
-    	if (options.placeholderNodeID) {
-			RD.AlbumUpload._placeholderNode = RD.AlbumUpload._albumUploadsNode.find("#" + options.placeholderNodeID);
-			if (RD.AlbumUpload._placeholderNode.length === 0) {
-				throw("RD.AlbumUpload._initialize could not find input placeholderNodeID #" + options.placeholderNodeID + "! Cannot continue.");		    
-			}
-		}
+
 		
 		if (!options.swfuploadOptions) {
 			throw("RD.AlbumUpload._initialize was not passed swfuploadOptions!");
@@ -358,7 +358,7 @@ RD.AlbumUpload.prototype.initFromDatabase = function(imageDetails){
 	RD.AlbumUpload.updateAlbumUploadsOrder();
 	
 	// make it a key image if there is none
-	if (RD.AlbumUpload._keyImageDataNode && !RD.AlbumUpload.getKeyPic()) {
+	if (RD.AlbumUpload.keyImageStorage && !RD.AlbumUpload.getKeyPic()) {
 		// surpress the event if this isn't from an upload (e.g. is from a previous image)
 		// for such images this should never be fired but is a safety check
 		this.becomeKeyPic({surpressEvent: (this.filename ? false : true)});
@@ -413,7 +413,7 @@ RD.AlbumUpload.prototype.initFromUpload = function(uploadDetails) {
   this.node.addClass("uploading");
    
 	// make the meal images node dirty since we've added an image
-	RD.AlbumUpload._albumUploadsNode.trigger("fileUploadStarted", {fileHandler: this, details: uploadDetails});
+	RD.AlbumUpload.albumContainer.trigger("fileUploadStarted", {fileHandler: this, details: uploadDetails});
 
   // return
   RD.debug("Initialization done -- image has filename  " + this.filename);
@@ -838,16 +838,16 @@ Other outcomes / test cases:
 
 RD.AlbumUpload.updateAlbumUploadsOrder = function() {
   order = [];
-  RD.AlbumUpload._albumUploadsNode.find("div.albumUploadBlock").each(function() {
+  RD.AlbumUpload.albumContainer.find("div.albumUploadBlock").each(function() {
       if (this.mealImage && this.mealImage.id != null)
           order.push(this.mealImage.id);
   });
 
-  RD.AlbumUpload._imageSortOrderNode.val(order.join(","));
+  RD.AlbumUpload.sortOrderStorage.val(order.join(","));
 }
 
 RD.AlbumUpload.getSortOrder = function() {
-	return RD.AlbumUpload._imageSortOrderNode.val();
+	return RD.AlbumUpload.sortOrderStorage.val();
 }
 
 /*
@@ -860,7 +860,7 @@ Other outcomes / test cases:
 * /
 
 RD.AlbumUpload.refreshSortable = function() {	
-	RD.AlbumUpload._albumUploadsNode.sortable({update: RD.AlbumUpload.updateAlbumUploadsOrder,
+	RD.AlbumUpload.albumContainer.sortable({update: RD.AlbumUpload.updateAlbumUploadsOrder,
                                 placeholder: "beingSorted inlineBlock",
                                 tolerance: "pointer",
                                 cursor: "move",
@@ -876,7 +876,7 @@ Makes this meal image the key image.
 
 Outcomes:
 - returns true immediately if the image is already the key pic
-- RD.AlbumUpload._keyImageDataNode has a value === the mealImg's id
+- RD.AlbumUpload.keyImageStorage has a value === the mealImg's id
 - RD.AlbumUpload._keyPic === this.localID
 - afterward, the meal image node has class keyPic
 - afterward, no other image nodes have class keyPic
@@ -885,7 +885,7 @@ Outcomes:
 * /
 
 RD.AlbumUpload.prototype.becomeKeyPic = function(options) {
-	if (RD.AlbumUpload._keyImageDataNode) {
+	if (RD.AlbumUpload.keyImageStorage) {
 		var currentKeyPicId = RD.AlbumUpload._keyPic;
 		debug("become key pic called for " + this.localID + ", current: " + currentKeyPicId + ", same: " + (currentKeyPicId === this.localID));
 	
@@ -894,7 +894,7 @@ RD.AlbumUpload.prototype.becomeKeyPic = function(options) {
 		}
 	
 		// set the values
-	  RD.AlbumUpload._keyImageDataNode.val(this.id);
+	  RD.AlbumUpload.keyImageStorage.val(this.id);
 		RD.AlbumUpload._keyPic = this.localID;
 	
 		// set up default options if not supplied
@@ -903,7 +903,7 @@ RD.AlbumUpload.prototype.becomeKeyPic = function(options) {
 		}
 	
 		// handle classes
-		RD.AlbumUpload._albumUploadsNode.find("." + RD.AlbumUpload.keyPicClass).removeClass(RD.AlbumUpload.keyPicClass);
+		RD.AlbumUpload.albumContainer.find("." + RD.AlbumUpload.keyPicClass).removeClass(RD.AlbumUpload.keyPicClass);
 		this.node.addClass(RD.AlbumUpload.keyPicClass);
 
 		// trigger global event unless explicitly told not to, e.g. on page load
@@ -952,7 +952,7 @@ RD.AlbumUpload.clear = function(localId) {
 		if (keyPic && keyPic.localID === mi.localID) {
 			// remove this from being key pic
 			delete RD.AlbumUpload._keyPic;
-			RD.AlbumUpload._keyImageDataNode.val("");
+			RD.AlbumUpload.keyImageStorage.val("");
 		}
 
 		mi.node.remove();
@@ -971,7 +971,7 @@ RD.AlbumUpload.clear = function(localId) {
 			  }
 			}
 			if (!otherActiveImages) {
-	 			RD.AlbumUpload._albumUploadsNode.append(RD.AlbumUpload._placeholderNode)
+	 			RD.AlbumUpload.albumContainer.append(RD.AlbumUpload._placeholderNode)
 		  }
 		}
 	}
@@ -1030,27 +1030,7 @@ RD.AlbumUpload.images = function() {
 }
 
 
-/* PRIVATE FUNCTIONS * /
-RD.AlbumUpload._shutdown = function() {
-	// used for testing
-	// reset all initialized variables to nothing
-	delete RD.AlbumUpload._initialized;
-	delete RD.AlbumUpload._imagesForMeal;
-	delete RD.AlbumUpload._imageSortOrderNode;
-	delete RD.AlbumUpload._keyImageDataNode;
-	delete RD.AlbumUpload._placeholderNode;
-	delete RD.AlbumUpload._keyPic;
-	delete RD.AlbumUpload._albumUploadsNode;
-	delete RD.AlbumUpload.clearedObject;
-	
-	RD.AlbumUpload._removeAllNewKeyImageHandlers();
-	
-	for (var templateName in RD.AlbumUpload.internals._jamlTemplates) {
-		if (RD.AlbumUpload.internals._jamlTemplates.hasOwnProperty(templatesName)) {
-		  delete Jaml.templates[templateName];
-	  }
-	}
-}
+
 
 RD.AlbumUpload.prototype._badServerResponse = function(response) {
 	// used when the server responds successfully, but the content isn't what we expect
@@ -1122,7 +1102,7 @@ RD.AlbumUpload.prototype._replaceWithRender = function(blockName, details) {
 	if (!this.node) {
 		// rendering for the first time 
 		this.node = $(content);			
-	    RD.AlbumUpload._albumUploadsNode.append(this.node);
+	    RD.AlbumUpload.albumContainer.append(this.node);
 
 		// associate the node with this image
 		// so we can sort it later
