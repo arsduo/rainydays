@@ -20,7 +20,8 @@ RD.AlbumUpload = {
     retryLimit:  1,
     keyPicEvent: "keyPicRegistered",
     keyPicClass: "keyPic",
-    uploadNodeClass: "albumUploadBlock", 
+    imageNodeClass: "albumUploadBlock",
+ 	imageDataKey: "albumupload.image",
     // list of available statuses
     statusMap: {
         
@@ -39,6 +40,10 @@ RD.AlbumUpload = {
         upload_canceled: "Upload Canceled"
     },
     
+	initialize: function() {
+		this.registerJamlTemplates();
+	},
+	
     newUploader: function(settings) {
       return RD.createObject(this.uploaderPrototype).initialize(settings);
     },
@@ -83,11 +88,11 @@ RD.AlbumUpload = {
 			}
 
 			// get the key image (album cover) value store and visible location if provided
-			this.keyImageStorage = settings.keyImageStorageID ? $("#" + settings.keyImageStorageID) : jQuery();
-			this.keyImageView = settings.keyImageViewID ? $("#" + settings.keyImageViewID) : jQuery();
+			this.keyImageStorage = settings.keyImageStorageID ? jQuery("#" + settings.keyImageStorageID) : jQuery();
+			this.keyImageView = settings.keyImageViewID ? jQuery("#" + settings.keyImageViewID) : jQuery();
 			
             // placeholder node will either be found or be an empty jQuery array
-            this.placeholderNode = settings.placeholderID ? jQuery("#" + settings.placeholderID) : jQuery();            
+            this.placeholder = settings.placeholderID ? jQuery("#" + settings.placeholderID) : jQuery();            
 		},
         
         newImage: function() {
@@ -102,7 +107,8 @@ RD.AlbumUpload = {
 
             // since we don't remove deleted images from the array, images.length is a good proxy for uniqueness
 			image.initialize({
-	            localID: this.images.length
+	            localID: this.images.length,
+				uploader: this
 			});
 
             return image;
@@ -120,10 +126,50 @@ RD.AlbumUpload = {
     },
     
     imagePrototype: {
-        initialize: function() {
+        initialize: function(settings) {
+			this.localID = settings.localID;
+			this.uploader = settings.uploader;
+			
 			// create the node
-        	this._replaceWithRender("albumUploadBlock");
-		}	
+			this.createNode();
+			
+			return this;
+		},
+		
+		createNode: function() {
+			// render the outer block for our new image
+			var content = Jaml.render("imageContainer", this);
+
+			// create the jQuery object
+			this.node = RD.jQuery(content);			
+
+			// associate the image object with the DOM node for later use
+			this.node.data(RD.AlbumUpload.imageDataKey, this);
+
+			// and append it to our uploader
+			this.uploader.albumContainer.append(this.node);
+		},
+		
+		renderContent: function(template, details) {
+		    // replaces all content in the current node with the result of rendering the block
+			if (!details) details = this;
+
+			// render the content
+			// while checking for missing Jaml templates
+			content = null;
+			try {
+		    	content = Jaml.render(blockName, details);
+			} catch (e) { RD.debug("ERROR: Jaml encountered an error: " + RD.showSource(e)); }
+
+			if (!content) {
+				throw("Jaml returned null content for " + template);
+			}
+
+			// we have content, so get rid of everything in there
+			this.node.find("*").remove("*").append(content);
+
+		    return this;
+		}
     },
     
 	// JAML TEMPLATES
@@ -131,8 +177,8 @@ RD.AlbumUpload = {
 	// not really MVC, but this is Javascript
 	// http://github.com/edspencer/jaml
     jamlTemplates: {
-		albumUploadBlock: function(mealImage) {
-		    div({cls: "albumUploadBlock", id: "albumUpload" + mealImage.localID});
+		imageContainer: function(mealImage) {
+		    div({cls: RD.AlbumUpload.imageNodeClass, id: "albumUpload" + mealImage.localID});
 		},
 		
 		queued: function(mealImage) {
@@ -200,23 +246,6 @@ RD.AlbumUpload = {
 
 
 /*
-RD.AlbumUpload = (function() {
-  var albumUploadObject = function() {
-  	if (!RD.AlbumUpload._initialized) {
-			throw("Album upload called but not initialized!");
-		}
-		
-
-  };
-  
-    // fire some initializers that have to execute on evaluation, since they add methods other modules might call for page load
-    // and _init is (currently) not fired till the first image is added
-	// add tracking for new key images
-	RD.Utils.addEventManagement(albumUploadObject, "NewKeyImage");
-	
-	// return the constructor
-	return albumUploadObject;
-})();
 
 /*
 RD.AlbumUpload.initialize
@@ -864,7 +893,7 @@ RD.AlbumUpload.refreshSortable = function() {
                                 placeholder: "beingSorted inlineBlock",
                                 tolerance: "pointer",
                                 cursor: "move",
-                                items: "div." + RD.AlbumUpload.uploadNodeClass
+                                items: "div." + RD.AlbumUpload.imageNodeClass
                                 });
 
 	RD.AlbumUpload.updateAlbumUploadsOrder();
@@ -1072,50 +1101,5 @@ RD.AlbumUpload.prototype._getDialog = function() {
 	}
     
 	return this._zoomDialog;
-}
-
-RD.AlbumUpload.prototype._replaceWithRender = function(blockName, details) {
-    // replaces all content in the current node with the result of rendering the block
-	if (!details) details = this;
-	
-	// render the content
-	// while checking for missing Jaml templates
-	content = null;
-	try {
-    	content = Jaml.render(blockName, details);
-	}
-	catch (e) {
-		console.log("ERROR: Jaml encountered an error: " + RD.showSource(e));
-	}
-	
-	if (!content) {
-		if (!Jaml.templates[blockName]) {
-			templates = [];
-			for (var i in Jaml.templates) { templates.push(i) }
-			throw("Jaml does not have template " + blockName + " registered!  Unable to continue.  Templates: " + templates.join(","));
-		}
-		else {
-			throw("Jaml returned null content for " + blockName + "!");
-		}
-	}
-	
-	if (!this.node) {
-		// rendering for the first time 
-		this.node = $(content);			
-	    RD.AlbumUpload.albumContainer.append(this.node);
-
-		// associate the node with this image
-		// so we can sort it later
-		this.node[0].mealImage = this;
-	}
-	// replace existing content
-	else {
-	    if (this.node.children().length > 0)
-			this.node.find("*").remove("*");
-
-	    this.node.append(content);
-	}
-
-    return this;
 }
 */
