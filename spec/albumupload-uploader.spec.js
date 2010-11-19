@@ -15,28 +15,41 @@ describe("AlbumUpload", function() {
                 expect(typeof(prototype.images)).toBe("object");
                 expect(prototype.images.length).toBeDefined();
             })
+            
+            it("should provide sortable options", function() {
+                expect(typeof(prototype.sortableOptions)).toBe("object");
+            })
         })
+        
+        // fake interaction with the upload manager object
+        var fakeUploadManager, args;
+		beforeEach(function() {
+			// fake the jQuery calls so the checks pass
+			fakeUploadManager = {fakeMgr: true};
+			spyOn(RD.UploadManager, "create").andReturn(fakeUploadManager);
+			args = {
+			    swfuploadOptions: {swfOptions: true}
+			};
+		})
 
-        describe("initialization methods", function() {
+        describe("initialization methods", function() {			
 	        describe("initialize", function() {
-				// fake the jQuery calls so the checks pass
 				beforeEach(function() {
+    				// fake the jQuery calls so the checks pass
 					spyOn(prototype, "setupDOM");
 				})
 			
 	            it("should copy the provided settings", function() {
 	                spyOn(RD.jQuery, "extend");
-	                var arg = {a: 3};
-	                prototype.initialize(arg);
-	                // aguments should be blank hash, arg
-	                expect(RD.jQuery.extend).toHaveBeenCalledWith({}, arg);
+	                prototype.initialize(args);
+	                // aguments should be blank hash, args
+	                expect(RD.jQuery.extend).toHaveBeenCalledWith({}, args);
 	            })
            
 	            it("should store the copied settings in the settings property", function() {
-	                var arg = {a: 3};
-	                spyOn(RD.jQuery, "extend").andReturn(arg);
-	                prototype.initialize(arg);
-	                expect(prototype.settings).toBe(arg);
+	                spyOn(RD.jQuery, "extend").andReturn(args);
+	                prototype.initialize(args);
+	                expect(prototype.settings).toBe(args);
 	            })
 
 				it("should throw an error if not passed a setting object", function() {
@@ -47,9 +60,48 @@ describe("AlbumUpload", function() {
 				})
 			
 				it("should call the setupDOM method", function() {
-					prototype.initialize({});
+					prototype.initialize(args);
 					expect(prototype.setupDOM).toHaveBeenCalled();
 				})
+				
+				it("should throw an exception unless settings include swfuploadOptions", function() {
+				    delete args.swfuploadOptions;
+				    expect(function() { prototype.initialize(args) }).toThrow();
+				})
+				
+				it("should create an UploadManager to handle interaction with the SWFUpload", function() {
+                    prototype.initialize(args);
+                    expect(RD.UploadManager.create).toHaveBeenCalledWith(args.swfuploadOptions);
+				})
+
+				it("should add the UploadManager as uploader.uploadManager", function() {
+                    prototype.initialize(args);
+                    expect(prototype.uploadManager).toBe(fakeUploadManager);
+                })
+                
+                it("should set the update method for the sortable options to the updateAlbumUploadsOrder function", function(){ 
+                    expect(prototype.sortableOptions.update).not.toBeDefined();
+                    prototype.initialize(args);
+                    expect(prototype.sortableOptions.update).toBe(prototype.updateAlbumUploadsOrder);
+                })
+                
+                it("should set the update method for the sortable options to the updateAlbumUploadsOrder function", function(){ 
+                    expect(prototype.sortableOptions.update).not.toBeDefined();
+                    prototype.initialize(args);
+                    expect(prototype.sortableOptions.update).toBe(prototype.updateAlbumUploadsOrder);
+                })
+                
+                it("should set the items property for the sortable options", function(){ 
+                    expect(prototype.sortableOptions.items).not.toBeDefined();
+                    prototype.initialize(args);
+                    expect(prototype.sortableOptions.items).toBeDefined();
+                })
+                
+                it("should not alter the underlying prototype", function() {
+                    prototype.initialize(args);
+                    expect(RD.AlbumUpload.uploaderPrototype.sortableOptions.update).not.toBeDefined();
+                })
+                
 			})
 		
 			describe("setupDOM", function() {
@@ -68,11 +120,11 @@ describe("AlbumUpload", function() {
 				var initArgs, resultWithNode = $("<div/>"), resultWithoutNode = $();
 			
 				beforeEach(function() {
-					initArgs = $.extend({}, requiredNodes, optionalNodes);
+					initArgs = $.extend({}, args, requiredNodes, optionalNodes);
 				})
 				
 				var node;
-				describe("required nodes", function() {
+				describe("required nodes", function() {				    
 					for (node in requiredNodes) {
 						nodeProperty = requiredNodes[node];
 				
@@ -161,7 +213,7 @@ describe("AlbumUpload", function() {
 		            prototype.placeholderNode = $();            
 				});
 				
-        		prototype.initialize({});
+        		prototype.initialize(args);
 			})
 	        describe("newImage", function() {
 				var imgMock;
@@ -215,7 +267,10 @@ describe("AlbumUpload", function() {
 	                prototype.newImage();
 	                expect(prototype.placeholderNode.hide).toHaveBeenCalled();
 	            })
-            
+	        })
+	        
+	        describe("refreshSortable", function() {
+	            
 	        })
 		})
     })

@@ -57,7 +57,7 @@ RD.AlbumUpload = {
 
 			// make sure we got a settings
 			if (!settings || typeof(settings) !== "object") { 
-				throw("RD.AlbumUpload was not passed a settings hash!") 
+				throw("RD.AlbumUpload.newUploader was not passed a settings hash!") 
 			}
 
             // then store the provided settings
@@ -66,6 +66,18 @@ RD.AlbumUpload = {
 			// now set up the DOM nodes we use
 			this.setupDOM();
 			
+			// connect to the SWFUpload instance
+			if (!settings.swfuploadOptions) {
+    			throw("RD.AlbumUpload.newUploader was not passed swfuploadOptions!");
+    		}
+    		this.uploadManager = RD.UploadManager.create(settings.swfuploadOptions);
+    		
+    		// set up the sortable options for properties that can't be set up at load time
+    		this.sortableOptions = jQuery.extend({
+    		    items: "div." + RD.AlbumUpload.imageNodeClass,
+                update: this.updateAlbumUploadsOrder
+    		});
+    		
             return this; 
         },
 
@@ -111,18 +123,66 @@ RD.AlbumUpload = {
 				uploader: this
 			});
 
+    		// notify the sortable we've added a node
+            this.refreshSortable();
+
             return image;
             
-			
-        		// notify the sortable we've added a node
-        		RD.AlbumUpload.refreshSortable();
-
         		this.status = RD.AlbumUpload.statusMap["created"];
 
         		RD.debug("Created meal w/ local ID " + this.localID);
 
             return this;
+        },
+        
+        /*
+        refreshSortable
+        Resets the sortable so it picks up new elements.
+
+        Other outcomes / test cases:
+        - sortable includes any new elements
+        - updates the sort order to reflect the order on the page (can be tested by moving elements from the front to the back)
+        */
+
+        sortableOptions: {
+            placeholder: "beingSorted inlineBlock",
+            tolerance: "pointer",
+            cursor: "move",
+        },
+        
+        refreshSortable: function() {	
+        	this.albumContainer.sortable(this.sortableOptions);
+
+        	//this.updateAlbumUploadsOrder();
+        },
+        
+        /*
+        updateAlbumUploadsOrder
+        Updates the order of the variable imageSortOrder to save the order in which images are stored for a meal.
+
+        Assumptions:
+        - imageSortOrder exists (failure: throw exception, since the page is malformed and we can't recover)
+
+        Other outcomes / test cases:
+        - does not include uploads, errors, or cancels
+        - updates the sort order to reflect the order on the page (can be tested by moving elements from the front to the back)
+        * /
+
+        updateAlbumUploadsOrder: function() {
+          order = [];
+          RD.AlbumUpload.albumContainer.find("div.albumUploadBlock").each(function() {
+              if (this.mealImage && this.mealImage.id != null)
+                  order.push(this.mealImage.id);
+          });
+
+          RD.AlbumUpload.sortOrderStorage.val(order.join(","));
+        },
+
+        getSortOrder: function() {
+        	return RD.AlbumUpload.sortOrderStorage.val();
         }
+        */
+
     },
     
     imagePrototype: {
@@ -180,17 +240,17 @@ RD.AlbumUpload = {
 	// not really MVC, but this is Javascript
 	// http://github.com/edspencer/jaml
     jamlTemplates: {
-		imageContainer: function(mealImage) {
-		    div({cls: RD.AlbumUpload.imageNodeClass, id: "albumUpload" + mealImage.localID});
+		imageContainer: function(image) {
+		    div({cls: RD.AlbumUpload.imageNodeClass, id: "albumUpload" + image.localID});
 		},
 		
-		queued: function(mealImage) {
-		    div({cls: "uploadingText"}, RD.AlbumUpload.text(mealImage.retryCount ? "queued_retry" : "queued_upload") + "<br/>" + mealImage.filename)
+		queued: function(image) {
+		    div({cls: "uploadingText"}, RD.AlbumUpload.labels[image.retryCount ? "queued_retry" : "queued_upload"] + "<br/>" + image.filename)
 		},
 		
-		uploading: function(mealImage) {
+		uploading: function(image) {
 		    span(
-		        div({cls: "uploadingText"}, RD.AlbumUpload.labels.uploading_file + mealImage.filename),
+		        div({cls: "uploadingText"}, RD.AlbumUpload.labels.uploading_file + image.filename),
 		        div({cls: "progressBar"}),
 						div({cls: "processingMessage"})
 		    )
@@ -198,8 +258,8 @@ RD.AlbumUpload = {
 
 		errored: function(errorData) {
 		    div({cls: "errorBlock"},
-		        div(span({cls: "description"}, errorData.shortDescription), span(RD.AlbumUpload.labels.error_for + " " + errorData.mealImage.filename)),
-		        div(a({cls: "clearLink", href: "#", onclick:  "RD.AlbumUpload.clear(" + errorData.mealImage.localID + ")"}, RD.AlbumUpload.labels.link_clear))             
+		        div(span({cls: "description"}, errorData.shortDescription), span(RD.AlbumUpload.labels.error_for + " " + errorData.image.filename)),
+		        div(a({cls: "clearLink", href: "#", onclick:  "RD.AlbumUpload.clear(" + errorData.image.localID + ")"}, RD.AlbumUpload.labels.link_clear))             
 		    )
 		},
 		
@@ -207,21 +267,21 @@ RD.AlbumUpload = {
 		    div(img({src: imageURL, cls: "magnifyDialog"}));
 		},
 		
-		canceled: function(mealImage) {
+		canceled: function(image) {
 		    div(
 		        div({cls: "uploadingText"}, RD.AlbumUpload.labels.upload_canceled),
-		        div(a({cls: "clearLink", href: "#", onclick:  "RD.AlbumUpload.clear(" + mealImage.localID + ")"}, RD.AlbumUpload.labels.link_clear))             
+		        div(a({cls: "clearLink", href: "#", onclick:  "RD.AlbumUpload.clear(" + image.localID + ")"}, RD.AlbumUpload.labels.link_clear))             
 		    )
 		},
 		
-		visible: function(mealImage) {
+		visible: function(image) {
 		     span({cls: "verticalAligner"}, 
 		        div({cls: "keyPicText"},
 	          	span({cls: "isKeyPic"}, RD.AlbumUpload.labels.is_album_pic),
 	            a({href: "#", cls: "keyPicLink"}, RD.AlbumUpload.labels.make_album_pic)
 		        ),
 		        div({cls: "image"},
-		            img({cls: "thumbnail", id: "image" + mealImage.localID, src: mealImage.thumbImageURL}),
+		            img({cls: "thumbnail", id: "image" + image.localID, src: image.thumbImageURL}),
 		            span({cls: "deleteText"}, RD.AlbumUpload.labels.will_be_deleted)
 		        ),
 		        div({cls: "actions inactive"}, 
@@ -275,12 +335,6 @@ RD.AlbumUpload.initialize = function(options) {
 		}
 		
 		// get the sort order node
-
-		
-		if (!options.swfuploadOptions) {
-			throw("RD.AlbumUpload._initialize was not passed swfuploadOptions!");
-		}
-		RD.AlbumUpload.uploadManager = UploadManager.create(options.swfuploadOptions);
 		
 		
 		// set up the sortable
@@ -856,51 +910,6 @@ RD.AlbumUpload.isAlbumUpload = function(object) {
 		return false;
 }
 
-/*
-updateAlbumUploadsOrder
-Updates the order of the variable imageSortOrder to save the order in which images are stored for a meal.
-
-Assumptions:
-- imageSortOrder exists (failure: throw exception, since the page is malformed and we can't recover)
-
-Other outcomes / test cases:
-- does not include uploads, errors, or cancels
-- updates the sort order to reflect the order on the page (can be tested by moving elements from the front to the back)
-* /
-
-RD.AlbumUpload.updateAlbumUploadsOrder = function() {
-  order = [];
-  RD.AlbumUpload.albumContainer.find("div.albumUploadBlock").each(function() {
-      if (this.mealImage && this.mealImage.id != null)
-          order.push(this.mealImage.id);
-  });
-
-  RD.AlbumUpload.sortOrderStorage.val(order.join(","));
-}
-
-RD.AlbumUpload.getSortOrder = function() {
-	return RD.AlbumUpload.sortOrderStorage.val();
-}
-
-/*
-refreshSortable
-Resets the sortable so it picks up new elements.
-
-Other outcomes / test cases:
-- sortable includes any new elements
-- updates the sort order to reflect the order on the page (can be tested by moving elements from the front to the back)
-* /
-
-RD.AlbumUpload.refreshSortable = function() {	
-	RD.AlbumUpload.albumContainer.sortable({update: RD.AlbumUpload.updateAlbumUploadsOrder,
-                                placeholder: "beingSorted inlineBlock",
-                                tolerance: "pointer",
-                                cursor: "move",
-                                items: "div." + RD.AlbumUpload.imageNodeClass
-                                });
-
-	RD.AlbumUpload.updateAlbumUploadsOrder();
-}
 
 /*
 becomeKey

@@ -1,255 +1,255 @@
 RD.UploadManager = {
-	uploaders: [],
-	
-  create: function(options, handler) {
-		var instance;
-		
-		instance = Object.create(this.instancePrototype);
-		instance.options = $.extend({}, this.defaultOptions, options, instance.getHandlers());
-    	instance.swfu = new SWFUpload(instance.options);
-		instance.handler = handler;
-		
-		this.uploaders.push(instance);
-		
-		return instance;
-  },
+    uploaders: [],
 
-	defaultOptions: { 
-		// file types
-		file_types: "*.jpg; *.jpeg; *.png; *.gif",
-		file_types_description: "JPG, GIF, and PNG files only.",
+    create: function(options, handler) {
+        var instance;
 
-		// button settings
-		button_placeholder_id: "uploadButton",
-		button_cursor: SWFUpload.CURSOR.HAND,
+        instance = Object.create(this.instancePrototype);
+        instance.options = $.extend({}, this.defaultOptions, options, instance.getHandlers());
+        instance.swfu = new SWFUpload(instance.options);
+        instance.handler = handler;
 
-		// requeue on error
-		requeue_on_error: true
-	},
+        this.uploaders.push(instance);
 
-	instancePrototype: {		
-	  getHandlers: function() {
-			var result, handlers = {
-				swfupload_loaded_handler: "swfUploadReady",
-				file_queued_handler: "fileQueued",
-				file_queue_error_handler: "fileQueueError", 
-				file_dialog_complete_handler: "fileDialogComplete",
-				upload_start_handler: "uploadStart",
-				upload_progress_handler: "uploadProgress",
-				upload_error_handler: "uploadError",
-				upload_success_handler: "uploadSuccess",
-				upload_complete_handler: "uploadComplete",
-				queue_complete_handler: "queueComplete"
-			};
-			
-			// make sure the callbacks retain the FileUpload object as this
-			for (var i in handlers) {
-				handlers[i] = $.proxy(this[handlers[i]], this);
-			}
-			handlers.debug_handler = RD.debug;
+        return instance;
+    },
 
-			return handlers;
-		},
-	
-		swfUploadReady: function() {
-	    RD.debug("SWFUpload ready.");
-	  },
+    defaultOptions: { 
+        // file types
+        file_types: "*.jpg; *.jpeg; *.png; *.gif",
+        file_types_description: "JPG, GIF, and PNG files only.",
 
-	  fileQueued: function(file) {
-	  	RD.debug("File queued!");
-	  	// create the image and initialize it from the upload
-	  	this.handler.newUploadObject().initFromUpload(file);
+        // button settings
+        button_placeholder_id: "uploadButton",
+        button_cursor: SWFUpload.CURSOR.HAND,
 
-	  	// add the file type to the upload
-		// this == SWFU object, not the FileUpload object
-		this.swfu.addFileParam(file.id, 'Filetype', file.type);
-	    RD.debug("File type is " + file.type);
-	  },
+        // requeue on error
+        requeue_on_error: true
+    },
 
-	  fileQueueError: function(file, errorCode, message) {
-	  	RD.debug("File queue error!");
-	  	if (errorCode === SWFUpload.QUEUE_ERROR.QUEUE_LIMIT_EXCEEDED) {
-	  		alert("You have attempted to queue too many files.\n" + (message === 0 ? "You have reached the upload limit." : "You may select " + (message > 1 ? "up to " + message + " files." : "one file.")));
-	  		return;
-	    }
+    instancePrototype: {		
+        getHandlers: function() {
+            var result, handlers = {
+                swfupload_loaded_handler: "swfUploadReady",
+                file_queued_handler: "fileQueued",
+                file_queue_error_handler: "fileQueueError", 
+                file_dialog_complete_handler: "fileDialogComplete",
+                upload_start_handler: "uploadStart",
+                upload_progress_handler: "uploadProgress",
+                upload_error_handler: "uploadError",
+                upload_success_handler: "uploadSuccess",
+                upload_complete_handler: "uploadComplete",
+                queue_complete_handler: "queueComplete"
+            };
 
-	  	var errorText = "";
-	  	// most queue errors are unrecoverable
-	  	var isRecoverable = false;
+            // make sure the callbacks retain the FileUpload object as this
+            for (var i in handlers) {
+                handlers[i] = $.proxy(this[handlers[i]], this);
+            }
+            handlers.debug_handler = RD.debug;
 
-	  	switch (errorCode) {
-	  	case SWFUpload.QUEUE_ERROR.FILE_EXCEEDS_SIZE_LIMIT:
-	  		errorText = "File too big";
-	  		RD.debug("Error Code: File too big, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.QUEUE_ERROR.ZERO_BYTE_FILE:
-	  		errorText = "Empty file";
-	  		RD.debug("Error Code: Zero byte file, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.QUEUE_ERROR.INVALID_FILETYPE:
-	  		errorText = "Invalid type";
-	  		RD.debug("Error Code: Invalid File Type, File name: " + file.name + ", File type: " + file.type + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	default:
-	  		if (file !== null) {
-	  		}
-	  		errorText = "Other error";
-	  		RD.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	}
-	  	var upload = this.handler.findByFileObject(file);
-	  	if (upload) {
-	  	    RD.debug("In fileDialogError, setting uploadError.");
-	  	    upload.uploadErrored({
-	  	        isRecoverable: isRecoverable,
-	  	        shortDescription: errorText
-	  	    })
-	  	}
-	  },
+            return handlers;
+        },
 
-	  fileDialogComplete: function(numFilesSelected, numFilesQueued, totalQueued) {
-	      // we don't need to do anything specific here -- everything is handled in the fileQueued event
-	  	RD.debug("File dialog complete, starting upload.");
-			// this == SWFU object, not the FileUpload object
-	  	this.swfu.startUpload();
-	  },
+        swfUploadReady: function() {
+            RD.debug("SWFUpload ready.");
+        },
 
-	  uploadStart: function(file) {
-	      // tell the file it's uploading
-	  	RD.debug("uploadStart called");
-	      var upload = this.handler.findByFileObject(file);
-	      if (upload) {
-	          upload.uploadStarted();
-	          return true;
-	      }
-	      else
-	          RD.debug("Unable to find meal image " + file.name);
-	  },
+        fileQueued: function(file) {
+            RD.debug("File queued!");
+            // create the image and initialize it from the upload
+            this.handler.newUploadObject().initFromUpload(file);
 
-	  uploadProgress: function(file, bytesLoaded, bytesTotal) {
-	      // update the progress
-	      RD.debug("Upload progress! " + bytesLoaded + " / " + bytesTotal);
-	  	var percent = bytesLoaded / bytesTotal;
-	      var upload = this.handler.findByFileObject(file);
-	      if (upload) {
-	          upload.uploadProgressed(percent);
-	          return true;
-	      }
-	  },
+            // add the file type to the upload
+            // this == SWFU object, not the FileUpload object
+            this.swfu.addFileParam(file.id, 'Filetype', file.type);
+            RD.debug("File type is " + file.type);
+        },
 
-	  uploadSuccess: function(file, serverData) {
-	  	RD.debug("Upload success!  Server responded: " + (serverData.toSource ? serverData.toSource() : serverData));
+        fileQueueError: function(file, errorCode, message) {
+            RD.debug("File queue error!");
+            if (errorCode === SWFUpload.QUEUE_ERROR.QUEUE_LIMIT_EXCEEDED) {
+                alert("You have attempted to queue too many files.\n" + (message === 0 ? "You have reached the upload limit." : "You may select " + (message > 1 ? "up to " + message + " files." : "one file.")));
+                return;
+            }
 
-	      var upload = this.handler.findByFileObject(file);
-	      if (upload) {
-	          // parse the server data
-	      	results = null;
-	          try {
-	      		if (typeof(JSON) != "undefined" && typeof(JSON.parse) == "function"){
-	      	        // try to parse the quicker and safer way
-	      	        results = JSON.parse(serverData);
-	      	    }
-	      	    else {
-	      	        // use eval
-	      	        RD.debug("Parsing using eval :(");
-	      	        results = eval(serverData);
-	      					if (typeof(results) != "object") {
-	      						RD.debug("Server response did not parse to JSON!");
-	                  results = null;
-	  							}
-	          	}
-	      	}
-	          catch(e) {
-	      		// if we have an error, hand off to the bad server content department
-	      		results = null;
-	      	}
+            var errorText = "";
+            // most queue errors are unrecoverable
+            var isRecoverable = false;
 
-	          upload.uploadCompleted(results);
-	          return true;
-	      }
-	  },
+            switch (errorCode) {
+                case SWFUpload.QUEUE_ERROR.FILE_EXCEEDS_SIZE_LIMIT:
+                errorText = "File too big";
+                RD.debug("Error Code: File too big, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+                break;
+                case SWFUpload.QUEUE_ERROR.ZERO_BYTE_FILE:
+                errorText = "Empty file";
+                RD.debug("Error Code: Zero byte file, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+                break;
+                case SWFUpload.QUEUE_ERROR.INVALID_FILETYPE:
+                errorText = "Invalid type";
+                RD.debug("Error Code: Invalid File Type, File name: " + file.name + ", File type: " + file.type + ", File size: " + file.size + ", Message: " + message);
+                break;
+                default:
+                if (file !== null) {
+                }
+                errorText = "Other error";
+                RD.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+                break;
+            }
+            var upload = this.handler.findByFileObject(file);
+            if (upload) {
+                RD.debug("In fileDialogError, setting uploadError.");
+                upload.uploadErrored({
+                    isRecoverable: isRecoverable,
+                    shortDescription: errorText
+                })
+            }
+        },
 
-	  uploadError: function(file, errorCode, message) {
-	  	RD.debug("Upload error!");
+        fileDialogComplete: function(numFilesSelected, numFilesQueued, totalQueued) {
+            // we don't need to do anything specific here -- everything is handled in the fileQueued event
+            RD.debug("File dialog complete, starting upload.");
+            // this == SWFU object, not the FileUpload object
+            this.swfu.startUpload();
+        },
 
-	  	var errorText = "Upload Error", isRecoverable = true;
+        uploadStart: function(file) {
+            // tell the file it's uploading
+            RD.debug("uploadStart called");
+            var upload = this.handler.findByFileObject(file);
+            if (upload) {
+                upload.uploadStarted();
+                return true;
+            }
+            else
+            RD.debug("Unable to find meal image " + file.name);
+        },
 
-	  	switch (errorCode) {
-	  	case SWFUpload.UPLOAD_ERROR.HTTP_ERROR:
-	  		RD.debug("Error Code: HTTP Error, File name: " + file.name + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.UPLOAD_FAILED:
-	  		RD.debug("Error Code: Upload Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.IO_ERROR:
-	  		RD.debug("Error Code: IO Error, File name: " + file.name + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.SECURITY_ERROR:
-	          isRecoverable = false;
-	  		RD.debug("Error Code: Security Error, File name: " + file.name + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.UPLOAD_LIMIT_EXCEEDED:
-	          isRecoverable = false;
-	  		RD.debug("Error Code: Upload Limit Exceeded, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.FILE_VALIDATION_FAILED:
-	          isRecoverable = false;
-	  		RD.debug("Error Code: File Validation Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.FILE_CANCELLED:
-	  	    // if we have additional images to upload, upload them
-	  	    if (this.handler.doUnfinishedUploadsExist()){
-	              RD.debug("File was canceled, starting any additional uploads.");
-	              // this == SWFU object, not the FileUpload object
-								this.swfu.startUpload();
-	          }
-	          isRecoverable = false;
-	  		break;
-	  	case SWFUpload.UPLOAD_ERROR.UPLOAD_STOPPED:
-	  		isRecoverable = false;
-	  		break;
-	  	default:
-	      isRecoverable = true;
-	  		RD.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-	  		break;
-	  	}
+        uploadProgress: function(file, bytesLoaded, bytesTotal) {
+            // update the progress
+            RD.debug("Upload progress! " + bytesLoaded + " / " + bytesTotal);
+            var percent = bytesLoaded / bytesTotal;
+            var upload = this.handler.findByFileObject(file);
+            if (upload) {
+                upload.uploadProgressed(percent);
+                return true;
+            }
+        },
 
-	  	var upload = this.handler.findByFileObject(file);
-	  	if (upload) {
-	  	    // let it know it errored
-	  	    RD.debug("In uploadError, setting uploadError.");
+        uploadSuccess: function(file, serverData) {
+            RD.debug("Upload success!  Server responded: " + (serverData.toSource ? serverData.toSource() : serverData));
 
-	  	    upload.uploadErrored({
-	  	        shortDescription: errorText,
-	  	        isRecoverable: isRecoverable,
-	  	    })
+            var upload = this.handler.findByFileObject(file);
+            if (upload) {
+                // parse the server data
+                results = null;
+                try {
+                    if (typeof(JSON) != "undefined" && typeof(JSON.parse) == "function"){
+                        // try to parse the quicker and safer way
+                        results = JSON.parse(serverData);
+                    }
+                    else {
+                        // use eval
+                        RD.debug("Parsing using eval :(");
+                        results = eval(serverData);
+                        if (typeof(results) != "object") {
+                            RD.debug("Server response did not parse to JSON!");
+                            results = null;
+                        }
+                    }
+                }
+                catch(e) {
+                    // if we have an error, hand off to the bad server content department
+                    results = null;
+                }
 
-	  	    // if it says it's done, cancel it
-	  	    if (upload.shouldCancelUpload())
-	  	        this.swfu.cancelUpload(upload.fileObject.id);
-	  	}
-	  },
+                upload.uploadCompleted(results);
+                return true;
+            }
+        },
 
-	  uploadComplete: function(file) {
-	  	RD.debug("File upload complete for " + file.name);
+        uploadError: function(file, errorCode, message) {
+            RD.debug("Upload error!");
 
-	      // make sure uploadComplete was fired
-	  	var upload = this.handler.findByFileObject(file);
-	      if (upload && upload.isUploading()) {
-	          // we have a problem here
-	          throw("Problem!  this.handler hit uploadComplete without UploadSuccess!")
-	      }
+            var errorText = "Upload Error", isRecoverable = true;
 
-	  	if (this.swfu.getStats().files_queued === 0) {
-	  		RD.debug("All files uploaded!");
-	  	}
+            switch (errorCode) {
+                case SWFUpload.UPLOAD_ERROR.HTTP_ERROR:
+                RD.debug("Error Code: HTTP Error, File name: " + file.name + ", Message: " + message);
+                break;
+                case SWFUpload.UPLOAD_ERROR.UPLOAD_FAILED:
+                RD.debug("Error Code: Upload Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+                break;
+                case SWFUpload.UPLOAD_ERROR.IO_ERROR:
+                RD.debug("Error Code: IO Error, File name: " + file.name + ", Message: " + message);
+                break;
+                case SWFUpload.UPLOAD_ERROR.SECURITY_ERROR:
+                isRecoverable = false;
+                RD.debug("Error Code: Security Error, File name: " + file.name + ", Message: " + message);
+                break;
+                case SWFUpload.UPLOAD_ERROR.UPLOAD_LIMIT_EXCEEDED:
+                isRecoverable = false;
+                RD.debug("Error Code: Upload Limit Exceeded, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+                break;
+                case SWFUpload.UPLOAD_ERROR.FILE_VALIDATION_FAILED:
+                isRecoverable = false;
+                RD.debug("Error Code: File Validation Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+                break;
+                case SWFUpload.UPLOAD_ERROR.FILE_CANCELLED:
+                // if we have additional images to upload, upload them
+                if (this.handler.doUnfinishedUploadsExist()){
+                    RD.debug("File was canceled, starting any additional uploads.");
+                    // this == SWFU object, not the FileUpload object
+                    this.swfu.startUpload();
+                }
+                isRecoverable = false;
+                break;
+                case SWFUpload.UPLOAD_ERROR.UPLOAD_STOPPED:
+                isRecoverable = false;
+                break;
+                default:
+                isRecoverable = true;
+                RD.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+                break;
+            }
 
-	  	return true;
-	  },
+            var upload = this.handler.findByFileObject(file);
+            if (upload) {
+                // let it know it errored
+                RD.debug("In uploadError, setting uploadError.");
 
-	  // This event comes from the Queue Plugin
-	  queueComplete: function(numFilesUploaded) {
-	  	RD.debug("Queue completion happening!");
-	  }
-	}
+                upload.uploadErrored({
+                    shortDescription: errorText,
+                    isRecoverable: isRecoverable,
+                })
+
+                // if it says it's done, cancel it
+                if (upload.shouldCancelUpload())
+                this.swfu.cancelUpload(upload.fileObject.id);
+            }
+        },
+
+        uploadComplete: function(file) {
+            RD.debug("File upload complete for " + file.name);
+
+            // make sure uploadComplete was fired
+            var upload = this.handler.findByFileObject(file);
+            if (upload && upload.isUploading()) {
+                // we have a problem here
+                throw("Problem!  this.handler hit uploadComplete without UploadSuccess!")
+            }
+
+            if (this.swfu.getStats().files_queued === 0) {
+                RD.debug("All files uploaded!");
+            }
+
+            return true;
+        },
+
+        // This event comes from the Queue Plugin
+        queueComplete: function(numFilesUploaded) {
+            RD.debug("Queue completion happening!");
+        }
+    }
 };
