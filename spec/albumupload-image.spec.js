@@ -86,6 +86,45 @@ describe("AlbumUpload", function() {
 				expect(image.node.data).toHaveBeenCalledWith(RD.AlbumUpload.imageDataKey, image);
 			})
 		})
-    })
 
+		describe("renderContent", function() {
+			beforeEach(function() {
+				image.initialize({
+					localID: 2,
+					uploader: uploader
+				})
+			})
+			
+			it("should call Jaml with the supplied template name and details", function() {
+				spyOn(Jaml, "render").andReturn("foo");
+				var templateName = "queued", details = {foo: "bar"};
+				image.renderContent(templateName, details)
+				expect(Jaml.render).toHaveBeenCalledWith(templateName, details);
+			})
+			
+			it("should use the image as details if none are provided", function() {
+				spyOn(Jaml, "render").andReturn("foo");
+				var templateName = "queued";
+				image.renderContent(templateName)
+				expect(Jaml.render).toHaveBeenCalledWith(templateName, image);
+			})
+			
+			it("should throw an error if Jaml returns a falsy value for content", function() {
+				var falsy = null, fn = function() { image.renderContent("queued"); };
+				spyOn(Jaml, "render").andCallFake(function() { return falsy; })
+				expect(fn).toThrow();
+				falsy = "";
+				expect(fn).toThrow();
+				falsy = undefined;
+				expect(fn).toThrow();
+			})
+			
+			it("should throw an error if Jaml throws an error", function() {
+				var e = new Error(), fn = function() { image.renderContent("queued"); };
+				spyOn(RD, "debug");
+				spyOn(Jaml, "render").andThrow(e);
+				expect(fn).toThrow(e);
+			})
+		})
+  })
 })

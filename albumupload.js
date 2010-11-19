@@ -150,7 +150,7 @@ RD.AlbumUpload = {
 			this.uploader.albumContainer.append(this.node);
 		},
 		
-		renderContent: function(template, details) {
+		renderContent: function(templateName, details) {
 		    // replaces all content in the current node with the result of rendering the block
 			if (!details) details = this;
 
@@ -158,15 +158,18 @@ RD.AlbumUpload = {
 			// while checking for missing Jaml templates
 			content = null;
 			try {
-		    	content = Jaml.render(blockName, details);
-			} catch (e) { RD.debug("ERROR: Jaml encountered an error: " + RD.showSource(e)); }
+		    	content = Jaml.render(templateName, details);
+			} catch (e) { 
+				RD.debug("ERROR: Jaml encountered an error: " + RD.showSource(e)); 
+				throw(e);
+			}
 
 			if (!content) {
-				throw("Jaml returned null content for " + template);
+				throw("Jaml returned null content for " + templateName);
 			}
 
 			// we have content, so get rid of everything in there
-			this.node.find("*").remove("*").append(content);
+			this.node.find("*").replaceWith(content);
 
 		    return this;
 		}
