@@ -36,7 +36,10 @@ describe("AlbumUpload", function() {
 	        describe("initialize", function() {
 				beforeEach(function() {
     				// fake the jQuery calls so the checks pass
-					spyOn(prototype, "setupDOM");
+					spyOn(prototype, "setupDOM").andCallFake(function() {
+					    prototype.albumContainer = $("<div/>");
+					});
+					spyOn(prototype, "refreshSortable")
 				})
 			
 	            it("should copy the provided settings", function() {
@@ -101,7 +104,11 @@ describe("AlbumUpload", function() {
                     prototype.initialize(args);
                     expect(RD.AlbumUpload.uploaderPrototype.sortableOptions.update).not.toBeDefined();
                 })
-                
+              
+                it("should set up the sortable", function() {
+                    prototype.initialize(args);
+                    expect(prototype.refreshSortable).toHaveBeenCalled();
+                })
 			})
 		
 			describe("setupDOM", function() {
@@ -222,6 +229,7 @@ describe("AlbumUpload", function() {
 					imgMock = RD.createObject(RD.AlbumUpload.imagePrototype);
 					spyOn(RD, "createObject").andReturn(imgMock);
 					spyOn(imgMock, "initialize");
+					spyOn(RD, "debug");
 				})
             
 
@@ -252,6 +260,7 @@ describe("AlbumUpload", function() {
 		                    img = prototype.newImage();
 		                    initializeArgs = img.initialize.mostRecentCall.args[0];
 							expect(initializeArgs.localID).toBe(prototype.images.length)
+							expect(typeof(initializeArgs.localID)).toBe("number");
 		                }
 		            })
 		
@@ -270,7 +279,11 @@ describe("AlbumUpload", function() {
 	        })
 	        
 	        describe("refreshSortable", function() {
-	            
+	            it("should call sortable on the node with the options", function() {
+	                spyOn(prototype.albumContainer, "sortable");
+	                prototype.refreshSortable();
+	                expect(prototype.albumContainer.sortable).toHaveBeenCalledWith(prototype.sortableOptions);
+	            })
 	        })
 		})
     })

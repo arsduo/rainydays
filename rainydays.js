@@ -22,7 +22,7 @@ var RD = {
 
         try {
             console.log("Setting debug function.");
-            debugFunction = function() { console.log.apply(this, arguments) };
+            debugFunction = function() { console.log.apply(console, arguments) };
         }
         catch (ex) {
             debugFunction = function() {};

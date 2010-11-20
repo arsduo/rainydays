@@ -7,23 +7,50 @@ describe("AlbumUpload", function() {
         it("should define a retry limit", function() {
             expect(RD.AlbumUpload.retryLimit).toBeDefined();
         })
+        
+        describe("cssClasses", function() {
+            it("should provide a hash of classes", function() {
+                expect(typeof(RD.AlbumUpload.cssClasses)).toBe("object");
+            })
+            
+            it("should define the class for the key picture", function() {
+                expect(RD.AlbumUpload.cssClasses.keyPic).toBeDefined();
+            })
+
+            it("should define the class for the markup for each image", function() {
+                expect(RD.AlbumUpload.cssClasses.imageNode).toBeDefined();
+            })
+
+            it("should provide a class for the data stored related to each image", function() {
+                expect(RD.AlbumUpload.cssClasses.imageData).toBeDefined();
+            })
+
+            it("should provide a class for the visible content for each image", function() {
+                expect(RD.AlbumUpload.cssClasses.imageContent).toBeDefined();
+            })
+            
+            it("should provide a class for the vertical images", function() {
+                expect(RD.AlbumUpload.cssClasses.verticalImage).toBeDefined();
+            })
+            
+            it("should provide a class for the horizontal images", function() {
+                expect(RD.AlbumUpload.cssClasses.horizontalImage).toBeDefined();
+            })
+            
+            
+        })
 
         it("should define the event fired when the key picture is changed", function() {
             expect(RD.AlbumUpload.keyPicEvent).toBeDefined();
-        })
-
-        it("should define the class for the key picture", function() {
-            expect(RD.AlbumUpload.keyPicClass).toBeDefined();
-        })
-
-        it("should define the class for the uploading markup", function() {
-            expect(RD.AlbumUpload.imageNodeClass).toBeDefined();
         })
         
         it("should provide a set of labels which the user can change out", function() {
             expect(RD.AlbumUpload.labels).toBeDefined();
         })
         
+        it("should provide a placeholder for cleared objects", function() {
+            expect(RD.AlbumUpload.clearedObject).toBeDefined();
+        })
     })
 
     describe("JAML", function() {
@@ -54,7 +81,7 @@ describe("AlbumUpload", function() {
             beforeEach(function() {
                 spyOn(Jaml, "register");                
             })
-            
+
             it("should exist", function(){
                 expect(typeof(RD.AlbumUpload.registerJamlTemplates)).toBe("function");
             })
@@ -68,6 +95,7 @@ describe("AlbumUpload", function() {
                 expect(Jaml.register.callCount).toBe(templateCount);
             })
             
+            /*
             it("should provide Jaml.register with the info for each template", function() {
                 var name, fn;
                 RD.AlbumUpload.registerJamlTemplates();
@@ -79,6 +107,7 @@ describe("AlbumUpload", function() {
                     expect(fn).toBe(jamlTemplates[name])
                 }
             })
+            */
         })
     })
     
