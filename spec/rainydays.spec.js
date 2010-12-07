@@ -2,14 +2,14 @@ describe("RD global object", function() {
 	it("should store the global jQuery object as RD.jQuery", function() {
 		expect(RD.jQuery).toBe(jQuery)
 	})
-	
+
 	it("should expose the event namespace used", function() {
 		expect(typeof(RD.eventNamespace)).toBe("string");
 	})
-	
+
 	describe("debug function", function() {
 		// make sure there's a console object available, native or not
-		var console = window.console || {}; 
+		var console = window.console || {};
 
 		// see if we have a native console
 		var nativeConsole = false;
@@ -22,15 +22,15 @@ describe("RD global object", function() {
 		beforeEach(function() {
 			spyOn(console, "log");
 		})
-		
+
 		it("should create a debug function", function() {
 			expect(typeof(RD.debug)).toBe("function");
-		})	
-		
+		})
+
 		it("should accept multiple arguments without error", function() {
 			expect(function() { RD.debug("abc %s", "2") }).not.toThrow();
 		})
-		
+
 		// this isn't a great test since it depends on browser function
 		// but it's all we can do
 		if (nativeConsole) {
@@ -41,7 +41,7 @@ describe("RD global object", function() {
 			})
 		}
 	})
-	
+
 	describe("createObject function", function() {
 		it("should create a new object based on the old one", function() {
 			// not sure how best to test this
@@ -50,7 +50,7 @@ describe("RD global object", function() {
 			var proto = {
 				a: function() {},
 				b: function() {},
-				c: function() {}, 
+				c: function() {},
 				d: 2
 			}
 			var child = RD.createObject(proto);

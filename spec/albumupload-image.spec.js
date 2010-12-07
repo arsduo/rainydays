@@ -4,13 +4,13 @@ describe("AlbumUpload", function() {
         RD.AlbumUpload.initialize();
         var uploader, image;
 
-        beforeEach(function() {			
+        beforeEach(function() {
             // stub the album container
             uploader = RD.createObject(RD.AlbumUpload.uploaderPrototype);
             uploader.albumContainer = $("<div/>");
 
             // create the raw image
-            image = RD.createObject(RD.AlbumUpload.imagePrototype);			
+            image = RD.createObject(RD.AlbumUpload.imagePrototype);
         })
 
         describe("initialize", function() {
@@ -39,14 +39,19 @@ describe("AlbumUpload", function() {
             })
 
             it("should return the image", function() {
-                expect(image.initialize(initOptions)).toBe(image);				
+                expect(image.initialize(initOptions)).toBe(image);
             })
-            
+
             it("should set the status to created", function() {
                 image.initialize(initOptions);
                 expect(image.status).toBe("created");
             })
             
+            it("should create the details object", function() {
+                image.initialize(initOptions);
+                expect(image.details).toBeDefined();
+                expect(typeof(image.details)).toBe("object");
+            })
         })
 
         describe("createNode", function() {
@@ -91,6 +96,47 @@ describe("AlbumUpload", function() {
                 image.createNode();
                 expect(image.node.data).toHaveBeenCalledWith(RD.AlbumUpload.imageDataKey, image);
             })
+            
+            it("should find the data node and set it to dataNode", function() {
+                var result = $("<div/>"), result2 = $("<div/>");
+                // image.node
+                spyOn(RD, "jQuery").andReturn(result);
+                // image.dataNode
+                spyOn(result, "find").andReturn(result2);
+                image.createNode();
+                expect(image.node.find).toHaveBeenCalledWith("." + RD.AlbumUpload.cssClasses.imageData);
+                expect(image.dataNode).toBe(result2);
+            })
+            
+            describe("the sort order node", function() {
+                var input;
+
+                beforeEach(function() {
+                    image.createNode();
+                    input = image.dataNode.find("." + RD.AlbumUpload.imageSortList)[0];
+                })
+                
+                it("should be an input", function() {
+                    expect(input).toBeDefined();
+                    expect(input.tagName).toBe("INPUT");
+                })
+
+                it("should be hidden", function() {
+                    expect(input.type).toBe("hidden");
+                })
+
+                it("should have the sort list name as an array", function() {
+                    expect(input.name).toBe(RD.AlbumUpload.imageSortList + "[]");
+                })
+
+                it("should have a unique ID composed of the sort list and the image's local ID", function() {
+                    expect(input.id).toBe(RD.AlbumUpload.imageSortList + image.localID);
+                })
+
+                it("should have the local ID as the value", function() {
+                    expect(input.value).toBe(image.localID + "");
+                })
+            })
         })
 
         describe("renderContent", function() {
@@ -131,7 +177,7 @@ describe("AlbumUpload", function() {
                 spyOn(Jaml, "render").andThrow(e);
                 expect(fn).toThrow(e);
             })
-            
+
             it("should get the all the contents of the node's content child", function() {
                 var fake = {replaceWith: function() {}}, content = {};
                 spyOn(image.node, "find").andReturn(fake);
@@ -146,7 +192,7 @@ describe("AlbumUpload", function() {
                 image.renderContent("queued");
                 expect(image.node.find("." + cssClass).html()).toBe(content);
             })
-            
+
             it("should replace the node's innards with the content returned by Jaml", function() {
                 var fake = {replaceWith: function() {}}, content = {};
                 spyOn(image.node, "find").andReturn(fake);
@@ -155,7 +201,7 @@ describe("AlbumUpload", function() {
                 image.renderContent("queued");
                 expect(fake.replaceWith).toHaveBeenCalledWith(content);
             })
-            
+
             it("should properly render content", function() {
                 // make sure everything does work
                 image.image = image; // mock stuff up for certain templates
@@ -164,9 +210,9 @@ describe("AlbumUpload", function() {
                 }
             })
         })
-        
+
         describe("initFromDatabase", function() {
-            var initFromDBArgs;
+            var initFromDBArgs, requiredProperties = ["id", "fullImageURL", "thumbImageURL"], i;
             beforeEach(function() {
                 image.initialize({
                     localID: 2,
@@ -175,47 +221,61 @@ describe("AlbumUpload", function() {
 
                 initFromDBArgs = {
                     thumbImageURL: "foo",
-                    fullImageURL: "bar"
+                    fullImageURL: "bar",
+                    id: "bar"
                 }
-                
+
                 spyOn(RD, "debug");
             })
-            
+
             it("should call badServerResponse if it's not passed a valid object", function() {
                 spyOn(image, "badServerResponse");
                 image.initFromDatabase();
                 expect(image.badServerResponse).toHaveBeenCalledWith(undefined);
             })
-            
-            it("should call badServerResponse if the image details don't include thumbURL and fullURL", function() {
-                spyOn(image, "badServerResponse");
-                var arg = {a: 2};
-                image.initFromDatabase(arg);
-                expect(image.badServerResponse).toHaveBeenCalledWith(arg);
+
+            describe("required properties", function() {
+                var testRequiredProperty = function(j) {
+                    it("should call badServerResponse if the image details don't include " + requiredProperties[j], function() {
+                        delete initFromDBArgs[requiredProperties[j]];
+                        spyOn(image, "badServerResponse");
+                        image.initFromDatabase(initFromDBArgs);
+                        expect(image.badServerResponse).toHaveBeenCalledWith(initFromDBArgs);
+                    })                    
+                }
+
+                for (var i = 0; i < requiredProperties.length; i++) {
+                    testRequiredProperty(i);
+                }
             })
             
             it("should copy all the details from the initialization into the details property", function() {
-                var fake = {a: 3};
+                var fake = {a: 3}, originalDetails = image.details;
                 spyOn(RD.jQuery, "extend").andReturn(fake);
                 image.initFromDatabase(initFromDBArgs);
-                expect(RD.jQuery.extend).toHaveBeenCalledWith({}, initFromDBArgs);
+                expect(RD.jQuery.extend).toHaveBeenCalledWith(originalDetails, initFromDBArgs);
                 expect(image.details).toBe(fake);
             })
             
+            it("should copy the id to the remoteID property", function() {
+                image.initFromDatabase(initFromDBArgs);
+                expect(image.remoteID).toBe(initFromDBArgs.id);
+            })
+
             it("should set isHorizontal appropriately for horizontal images", function() {
                 initFromDBArgs.width = 3;
                 initFromDBArgs.height = 2;
                 image.initFromDatabase(initFromDBArgs);
                 expect(image.isHorizontal).toBe(true);
             })
-            
+
             it("should set isHorizontal appropriately for vertical images", function() {
                 initFromDBArgs.width = 2;
                 initFromDBArgs.height = 3;
                 image.initFromDatabase(initFromDBArgs);
                 expect(image.isHorizontal).toBe(false);
-            })            
-            
+            })
+
             it("should set the appropriate CSS class for horizontal images", function() {
                 initFromDBArgs.width = 3;
                 initFromDBArgs.height = 2;
@@ -223,22 +283,96 @@ describe("AlbumUpload", function() {
                 image.initFromDatabase(initFromDBArgs);
                 expect(image.node.addClass).toHaveBeenCalledWith(RD.AlbumUpload.cssClasses.horizontalImage);
             })
-            
+
             it("should set the appropriate CSS class for vertical images", function() {
                 initFromDBArgs.width = 2;
                 initFromDBArgs.height = 3;
                 spyOn(image.node, "addClass");
                 image.initFromDatabase(initFromDBArgs);
                 expect(image.node.addClass).toHaveBeenCalledWith(RD.AlbumUpload.cssClasses.verticalImage);
-            })            
+            })
+
+            it("should remove the uploading class", function() {
+                spyOn(image.node, "removeClass");
+                image.initFromDatabase(initFromDBArgs);
+                expect(image.node.removeClass).toHaveBeenCalledWith(RD.AlbumUpload.cssClasses.uploading);
+            })
+
+            it("should render the visible content", function() {
+                spyOn(image, "renderContent");
+                image.initFromDatabase(initFromDBArgs);
+                expect(image.renderContent).toHaveBeenCalledWith("visible");
+            })
+
+            describe("link bindings", function() {
+                // due to scoping with the for loop, we have a lot of nesting here
+                var classes = RD.AlbumUpload.cssClasses, links = {}, fake, ignoredFake;
+                // establish up the classes and associated methods we'll be looking at 
+                links[classes.deleteLink] = "toggleDeletion";
+                links[classes.magnifyLink] = "showFullImage";
+                links[classes.makeKeyPicLink] = "becomeKeyPic";
+                
+                beforeEach(function() {
+                    fake = $("<div/>"), ignoredFake = $("<div/>");
+                    spyOn(fake, "bind");
+                })
+
+                var linkTests = function(cssClass, method) {
+                    describe(cssClass + " => " + method, function() {
+                        beforeEach(function() {
+                            // find gets called three times each init, but we only care about the one that corresponds to the property we're looking at
+                            // so if it's not the target we want, return an object we don't monitor
+                            // if it is, return the one with the spy
+                            spyOn(image.node, "find").andCallFake(function(css) {
+                                return (css.match(cssClass)) ? fake : ignoredFake;
+                            })
+                        })
+                        
+                        it("should get to the " + cssClass + " link in the node", function() {
+                            image.initFromDatabase(initFromDBArgs);
+                            expect(image.node.find).toHaveBeenCalledWith("." + cssClass);
+                        })
+
+                        it("should bind a click listener to the " + cssClass + " link that triggers the " + method + " function", function() {
+                            spyOn(image, method);
+                            image.initFromDatabase(initFromDBArgs);
+                            expect(fake.bind).toHaveBeenCalled();
+
+                            var args = fake.bind.mostRecentCall.args;
+                            // make sure it's a click method
+                            expect(args[0]).toBe("click");
+
+                            // now make sure the function calls the right method when invoked
+                            expect(typeof(args[1])).toBe("function");
+                            args[1]();
+                            expect(image[method]).toHaveBeenCalled();
+                        })
+                    })
+                }
+
+                for (var link in links) {
+                    linkTests(link, links[link]);
+                }
+            })
+                        
+            it("should set the status to visible", function() {
+                image.initFromDatabase(initFromDBArgs);
+                expect(image.status).toBe("visible");
+            })
             
+            it("should use addData to store the remote ID", function() {
+                initFromDBArgs.id = "foo";
+                spyOn(image, "addData");
+                image.initFromDatabase(initFromDBArgs);
+                expect(image.addData).toHaveBeenCalledWith("id", initFromDBArgs.id);
+            })
         })
-        
+
         describe("badServerResponse", function() {
             beforeEach(function() {
                 spyOn(RD, "debug");
             })
-            
+
             it("should call uploadErrored with recoverable: false and a shortDescription", function() {
                 spyOn(image, "uploadErrored");
                 image.badServerResponse();
@@ -248,6 +382,88 @@ describe("AlbumUpload", function() {
                 expect(callArgs.isRecoverable).toBe(false);
                 expect(typeof(callArgs.shortDescription)).toBe("string");
             })
+        })
+        
+        describe("inputName", function() {
+            it("should create an input name value for the given key", function() {
+                var str = "foo";
+                expect(image.inputName(str)).toBe(RD.AlbumUpload.dataPrefix + "[" + image.localID + "][" + str + "]");
+            })
+        })
+        
+        describe("inputID", function() {
+            it("should get the input name", function() {
+                var str = "foo";
+                spyOn(image, "inputName").andReturn(str);
+                image.inputID(str);
+                expect(image.inputName).toHaveBeenCalledWith(str);
+            })
+            
+            it("should replace [] with _", function() {
+                var str = "foo";
+                spyOn(image, "inputName").andCallThrough();
+                var result = image.inputID(str);
+                expect(image.inputName).not.toMatch(/[\[\]]/);
+            })
+
+            it("shouldstrip trailing _", function() {
+                var str = "foo";
+                spyOn(image, "inputName").andCallThrough();
+                var result = image.inputID(str);
+                expect(image.inputName).not.toMatch(/\_$/);
+            })
+        })
+        
+        describe("addData", function() {
+            var result, name = "name", value = "value";
+            
+            beforeEach(function() {
+                spyOn(RD, "jQuery").andCallThrough();
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                })
+            })
+            
+            it("should append to the data node", function() {
+                spyOn(image.dataNode, "append");
+                image.addData(name, value);
+                expect(image.dataNode.append).toHaveBeenCalled();
+                var input = image.dataNode.append.mostRecentCall.args[0];
+            })
+            
+            describe("the node appended to dataNode", function() {
+                var input;
+
+                beforeEach(function() {
+                    spyOn(image.dataNode, "append");
+                    image.addData(name, value);
+                    input = $(image.dataNode.append.mostRecentCall.args[0])[0];                    
+                })
+                
+                it("should be hidden", function() {
+                    expect(input.type).toBe("hidden");
+                })
+                
+                it("should have the right name", function() {
+                    expect(input.name).toBe(image.inputName(name));
+                })
+                
+                it("should have the right ID", function() {
+                    expect(input.id).toBe(image.inputID(name));
+                })
+                
+                it("should have the value", function() {
+                    expect(input.value).toBe(value);
+                })
+            })
+            
+            it("should add that value to image.details", function() {
+                delete image.details[name];
+                image.addData(name, value);
+                expect(image.details[name]).toBe(value);
+            })
+            
         })
     })
 })

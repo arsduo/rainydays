@@ -18,11 +18,13 @@ always be occupied.  hence, clear replaces it with a null, rather than erasing i
 RD.AlbumUpload = {
     // properties 
     retryLimit:  1,
+    dataPrefix: "images",
     keyPicEvent: "keyPicRegistered",
- 	imageDataKey: "albumupload.image",
+   	imageDataKey: "albumupload.image",
+   	imageSortList: "imagePosition",
  	
- 	// this stands in for a deleted image in the array to preserve our local numbering system (array.length)
-	clearedObject: {},
+   	// this stands in for a deleted image in the array to preserve our local numbering system (array.length)
+  	clearedObject: {},
 	
     // list of available statuses
     statusMap: {
@@ -34,9 +36,13 @@ RD.AlbumUpload = {
         horizontalImage: "forHorizontalImage",
         verticalImage: "forVerticalImage",     
         imageNode: "albumUploadBlock",
-     	imageData: "imageData",
-     	imageContent: "imageContent",
-        keyPic: "keyPic"
+       	imageData: "imageData",
+       	imageContent: "imageContent",
+        keyPic: "keyPic",
+        uploading: "uploading",
+        deleteLink: "deleteLink",
+        magnifyLink: "magnifyLink",
+        makeKeyPicLink: "makeKeyPicLink"
     },
 
     labels: {
@@ -174,6 +180,9 @@ RD.AlbumUpload = {
 			// create the node
 			this.createNode();
 			
+			// set the details array
+			this.details = {};
+			
 			// set the status
 			this.status = "created";
     		
@@ -190,8 +199,31 @@ RD.AlbumUpload = {
 			// associate the image object with the DOM node for later use
 			this.node.data(RD.AlbumUpload.imageDataKey, this);
 
+            // set up some data
+			this.dataNode = this.node.find("." + RD.AlbumUpload.cssClasses.imageData);
+
 			// and append it to our uploader
 			this.uploader.albumContainer.append(this.node);
+		},
+		
+		inputName: function(name) {
+		  return RD.AlbumUpload.dataPrefix + "[" + this.localID + "][" + name + "]";
+		},
+
+		inputID: function(name) {
+		  return this.inputName(name).replace(/[\[\]]+/, "_").replace(/\_$/, "");
+		},
+		
+		addData: function(name, value) {
+		    this.dataNode.append(RD.jQuery("<input/>", {
+                type: "hidden",
+                name: this.inputName(name),
+                id: this.inputID(name),
+		        value: value		        
+		    }));
+		    
+		    // store the data on the image object as well
+		    this.details[name] = value;
 		},
 		
 		renderContent: function(templateName, details) {
@@ -246,16 +278,20 @@ RD.AlbumUpload = {
 
         initFromDatabase: function(imageDetails){
             // save details
-            var debug = RD.debug, classes = RD.AlbumUpload.cssClasses;
+            var debug = RD.debug, jQuery = RD.jQuery, classes = RD.AlbumUpload.cssClasses;
         	debug("Initializing meal " + this.localID + " from database.");
 
             // error check
-            if (!(imageDetails && imageDetails.thumbImageURL != null && imageDetails.fullImageURL != null)) {
+            if (!(imageDetails && imageDetails.id && imageDetails.thumbImageURL != null && imageDetails.fullImageURL != null)) {
                 debug("ERROR: Uploading Meal Images must have thumbImageURL, and fullImageURL!");
         		return this.badServerResponse(imageDetails); // which prints out the details
             }
-                        
-            this.details = RD.jQuery.extend({}, imageDetails);
+
+            this.details = jQuery.extend(this.details, imageDetails);
+            this.remoteID = imageDetails.id;
+
+            // add the remote ID to the data node so the server will know
+            this.addData("id", this.remoteID);
 
             // determine if this is horizontal or vertical
         	// if the height and width aren't properly detected by the server, we may be fudged here
@@ -263,35 +299,29 @@ RD.AlbumUpload = {
         	// then update the node
         	this.node.addClass((this.isHorizontal ? classes.horizontalImage : classes.verticalImage));
 
+        	// remove uploading class in case it was from an upload
+        	this.node.removeClass(classes.uploading);
+
+        	// render content 
+        	this.renderContent("visible");
+
+      	    // initialize links
+      	    var imageObject = this; // otherwise this gets misinterpreted when the function is applied
+      	    this.node.find("." + classes.deleteLink).bind("click", function() { imageObject.toggleDeletion(); return false; });
+      	    this.node.find("." + classes.magnifyLink).bind("click", function() { imageObject.showFullImage(); return false; });
+      	    this.node.find("." + classes.makeKeyPicLink).bind("click", function() { imageObject.becomeKeyPic(); return false; });
+        	
+            // set status
+            this.status = "visible";
+
+
             return;
 
-          // set status
-          this.status = RD.AlbumUpload.statusMap["visible"];
 
 
         	// set up the dialog
         	this._getDialog();
 
-        	RD.debug("Horizontal: " + this.isHorizontal);
-
-
-        	// remove uploading class in case it was from an upload
-        	this.node.removeClass("uploading");
-
-        	// render content and insert
-        	this._replaceWithRender("visible");
-        	// initialize links
-        	var tempObject = this; // otherwise this gets misinterpreted when the function is applied
-        	this.node.find("a.delete").bind("click", function() { tempObject.toggleDeletion(); return false; });
-        	this.node.find("a.magnify").bind("click", function() { tempObject.showFullImage(); return false; });
-        	this.node.find("a.keyPicLink").bind("click", function() { tempObject.becomeKeyPic(); return false; });
-
-        	// mark this as active
-        	this.node.find(".actions").removeClass("inactive");
-
-        	// create deletion marker
-        	// this gets inserted when the image is marked for deletion, removed otherwise
-        	this.deletionFlag = $("<input type='hidden' name='picsToDelete[]' id='deletedPic" + this.id + "' value='" + this.id + "'>");
 
         	// update the sort order
         	RD.AlbumUpload.updateAlbumUploadsOrder();
@@ -317,7 +347,10 @@ RD.AlbumUpload = {
         	return this.uploadErrored({isRecoverable: false, shortDescription: "Invalid server response"});
         },
         
-        uploadErrored: function() {}
+        uploadErrored: function() {},
+        toggleDeletion: function() {},
+        showFullImage: function() {},
+        becomeKeyPic: function() {}
         
     },
     
@@ -327,10 +360,18 @@ RD.AlbumUpload = {
 	// http://github.com/edspencer/jaml
     jamlTemplates: {
 		imageContainer: function(image) {
-		    var albumUpload = RD.AlbumUpload;
+		    var albumUpload = RD.AlbumUpload, sortList = albumUpload.imageSortList;
 		    div({cls: albumUpload.cssClasses.imageNode, id: albumUpload.imageIdPrefix + image.localID},
                 // provide a safe space for data as well as the visible content that gets replaced
-		        div({cls: albumUpload.cssClasses.imageData, id: albumUpload.cssClasses.imageData + image.localID}),
+		        div({cls: albumUpload.cssClasses.imageData, id: albumUpload.cssClasses.imageData + image.localID},
+		            input({
+		                type: "hidden", 
+		                name: sortList + "[]", 
+		                id: sortList + image.localID, 
+		                value: image.localID,
+		                cls: sortList
+		            })
+		        ),
 		        div({cls: albumUpload.cssClasses.imageContent, id: albumUpload.cssClasses.imageContent + image.localID})
 		    );
 		},
@@ -368,14 +409,14 @@ RD.AlbumUpload = {
 		visible: function(image) {
 		     span({cls: "verticalAligner"}, 
 		        div({cls: "keyPicText"},
-	          	span({cls: "isKeyPic"}, RD.AlbumUpload.labels.is_album_pic),
-	            a({href: "#", cls: "keyPicLink"}, RD.AlbumUpload.labels.make_album_pic)
+	          	    span({cls: "isKeyPic"}, RD.AlbumUpload.labels.is_album_pic),
+	                a({href: "#", cls: "keyPicLink"}, RD.AlbumUpload.labels.make_album_pic)
 		        ),
 		        div({cls: "image"},
 		            img({cls: "thumbnail", id: "image" + image.localID, src: image.thumbImageURL}),
 		            span({cls: "deleteText"}, RD.AlbumUpload.labels.will_be_deleted)
 		        ),
-		        div({cls: "actions inactive"}, 
+		        div({cls: "actions"}, 
 		            a({cls: "magnify", href: "#"}, div("&nbsp;")),
 		            a({cls: "delete", href: "#"}, div("&nbsp;"))
 		        ),

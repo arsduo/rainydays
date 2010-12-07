@@ -19,12 +19,12 @@ describe("RD.Page", function() {
             })
 
             it("should not expose whether the exit dialog is disabled", function() {
-                expect(RD.Page.surpressExitDialog).not.toBeDefined();			
+                expect(RD.Page.surpressExitDialog).not.toBeDefined();
             })
 
             it("should expose the text shown when a user leaves a dirty page", function() {
                 expect(typeof(RD.Page.text)).toBe("string");
-            })		
+            })
         })
 
         describe("functions", function() {
@@ -59,7 +59,7 @@ describe("RD.Page", function() {
                     RD.Page.addDirtyField(foo);
                     RD.Page.removeDirtyField(foo);
                     expect(RD.Page.isPageDirty()).toBe(false);
-                })			
+                })
             })
 
             describe("numberOfDirtyFields", function() {
@@ -240,7 +240,7 @@ describe("RD.Page", function() {
                     })
                 })
 
-                describe("if the field was removed", function() {			
+                describe("if the field was removed", function() {
                     it("should answer true if a DOM node is provided", function() {
                         var id = makeID();
                         RD.Page.addDirtyField({id: id}); // mock DOM node
@@ -265,7 +265,7 @@ describe("RD.Page", function() {
             })
 
             describe("removeDirtyField", function() {
-                describe("for dirty fields", function() { 
+                describe("for dirty fields", function() {
                     var id;
                     beforeEach(function() {
                         id = makeID();
@@ -286,10 +286,10 @@ describe("RD.Page", function() {
                     it("should remove a field when provided a jQuery node", function() {
                         RD.Page.removeDirtyField({attr: function() { return id }});
                         expect(RD.Page.numberOfDirtyFields()).toBe(1);
-                    })	
+                    })
                 })
 
-                describe("for not dirty fields", function() { 
+                describe("for not dirty fields", function() {
                     var id;
                     beforeEach(function() {
                         id = makeID();
@@ -310,8 +310,8 @@ describe("RD.Page", function() {
                     it("should remove a field when provided a jQuery node", function() {
                         RD.Page.removeDirtyField({attr: function() { return makeID() }});
                         expect(RD.Page.numberOfDirtyFields()).toBe(2);
-                    })	
-                })  
+                    })
+                })
             })
 
             describe("allowIntentionalExit", function() {
@@ -328,7 +328,7 @@ describe("RD.Page", function() {
                 describe("allowIntentionalExit", function() {
                     it("should enable intentional exiting", function() {
                         RD.Page.allowIntentionalExit();
-                        expect(RD.Page.isIntentionalExitActivated()).toBe(true);	      
+                        expect(RD.Page.isIntentionalExitActivated()).toBe(true);
                     })
                 })
 
@@ -336,7 +336,7 @@ describe("RD.Page", function() {
                     it("should cancel intentional exiting", function() {
                         RD.Page.allowIntentionalExit();
                         RD.Page.cancelIntentionalExit();
-                        expect(RD.Page.isIntentionalExitActivated()).toBe(false);	      
+                        expect(RD.Page.isIntentionalExitActivated()).toBe(false);
                     })
                 })
 
@@ -404,10 +404,10 @@ describe("RD.Page", function() {
                             RD.Page.alertForDirtyPage();
                             expect(window.event.returnValue).not.toBeDefined();
                         })
-                    })		    
+                    })
                 }
 
-                describe("when there are dirty fields", function() {			  
+                describe("when there are dirty fields", function() {
                     beforeEach(function() {
                         RD.Page.addDirtyField(makeID());
                     })
@@ -475,13 +475,13 @@ describe("RD.Page", function() {
                     })
                 })
 
-                describe("when there are no dirty fields", function() {			  
+                describe("when there are no dirty fields", function() {
                     describe("when there's no deliberate exit", function() {
                         beforeEach(function() {
                             RD.Page.cancelIntentionalExit();
                         })
 
-                        negativeTests();		    
+                        negativeTests();
                     })
 
                     describe("when there is a deliberate exit", function() {
@@ -509,7 +509,7 @@ describe("RD.Page", function() {
                     expect(RD.jQuery).toHaveBeenCalledWith(document);
                     expect(fakeDocument.ready).toHaveBeenCalled();
                 })
-                
+
                 describe("the document.ready function", function() {
                     var fn;
                     beforeEach(function() {
@@ -518,16 +518,16 @@ describe("RD.Page", function() {
                         // now get the actual function
                         fn = fakeDocument.ready.mostRecentCall.args[0];
                     })
-                    
+
                     it("should get the jQuery window object", function() {
                         fn();
                         expect(RD.jQuery).toHaveBeenCalled();
                         // doing toHaveBeenCalledWith(window) throws errors in FF3
                         expect(RD.jQuery.mostRecentCall.args[0]).toBe(window);
                     })
-                    
+
                     it("should bind to window's beforeunload.#{RD.eventNamespace} event", function() {
-                        // we get the same fakeDocument back 
+                        // we get the same fakeDocument back
                         // TODO refactor to get a unique object
                         var namespace = RD.eventNamespace;
                         RD.eventNamespace = ".foo";
@@ -536,7 +536,7 @@ describe("RD.Page", function() {
                         expect(fakeDocument.bind.mostRecentCall.args[0]).toBe("beforeunload" + RD.eventNamespace);
                         RD.eventNamespace = namespace;
                     })
-                    
+
                     it("should add a function that calls RD.Page.alertForDirtyPage", function() {
                         fn();
                         var fakeEvent, innerFn = fakeDocument.bind.mostRecentCall.args[1];
@@ -544,7 +544,7 @@ describe("RD.Page", function() {
                         innerFn(fakeEvent);
                         expect(RD.Page.alertForDirtyPage).toHaveBeenCalledWith(fakeEvent);
                     })
-                })                
+                })
             })
         })
     })

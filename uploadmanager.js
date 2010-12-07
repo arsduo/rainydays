@@ -14,7 +14,7 @@ RD.UploadManager = {
         return instance;
     },
 
-    defaultOptions: { 
+    defaultOptions: {
         // file types
         file_types: "*.jpg; *.jpeg; *.png; *.gif",
         file_types_description: "JPG, GIF, and PNG files only.",
@@ -27,12 +27,12 @@ RD.UploadManager = {
         requeue_on_error: true
     },
 
-    instancePrototype: {		
+    instancePrototype: {
         getHandlers: function() {
             var result, handlers = {
                 swfupload_loaded_handler: "swfUploadReady",
                 file_queued_handler: "fileQueued",
-                file_queue_error_handler: "fileQueueError", 
+                file_queue_error_handler: "fileQueueError",
                 file_dialog_complete_handler: "fileDialogComplete",
                 upload_start_handler: "uploadStart",
                 upload_progress_handler: "uploadProgress",

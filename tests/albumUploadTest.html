@@ -4,9 +4,9 @@
     <script src="/javascripts/jquery.js"></script>
     <script src="/javascripts/jquery-ui.js"></script>
     <script type="text/javascript" src="/javascripts/Jaml-all.js"></script>
-    
+
     <script language="JavaScript" src="/javascripts/jsunit/jsUnitCore.js"></script>
-    
+
 	  <script src="/javascripts/rainydays/rainydays.js"></script>
 	  <script src="/javascripts/rainydays/page.js"></script>
 	  <script src="/javascripts/rainydays/form.js"></script>
@@ -112,20 +112,20 @@ function testAlbumUploadInitializationAnArbitraryNumberOfTimes() {
 
 /* NEW MEALIMAGE() */
 function testAlbumUploadConstructorNormal() {
-	forAllInitStates(function() {	
+	forAllInitStates(function() {
 	  debug("Starting testAlbumUploadConstructorNormal");
 	  // gather preliminary data
 	  var originalNodeCount = $("#albumUploads").find("div." + RD.AlbumUpload.uploadNodeClass).length;
 
 	  // run the code
 	  var outcome = new RD.AlbumUpload();
-  
+
 	  // test RD.AlbumUpload was initialized -- assume it was done through initialization?
 	  assertTrue("RD.AlbumUpload wasn't initialized when a new one was made!", RD.AlbumUpload._initialized);
 
 	  // test returns mealImage
 	  assertEquals("new RD.AlbumUpload() not constructed by RD.AlbumUpload", outcome.constructor, RD.AlbumUpload);
-  
+
 	  // if placeholder set, test removal of placeholder div once there are active images
 	  if (RD.AlbumUpload._placeholderNode) {
 			assertUndefined("Placeholder div did not get removed!", RD.AlbumUpload._placeholderNode.parent()[0]);
@@ -136,16 +136,16 @@ function testAlbumUploadConstructorNormal() {
 	  if (found != outcome)
 	    debug("WARNING: Found: " + showSource(found));
 	  assertEquals("new RD.AlbumUpload() not in the images array! looked for " + outcome.localID, outcome, found);
-  
+
 	  // test that it has a node
 	  assertNotNull("new RD.AlbumUpload() doesn't have a node!", outcome.node);
-  
+
 	  // that it's only created one
 	  newNodeCount = RD.AlbumUpload._albumUploadsNode.find("div." + RD.AlbumUpload.uploadNodeClass).length;
 	  assertEquals("new RD.AlbumUpload() added more or less than one node to #albumUploads (original " + originalNodeCount + ", now " + newNodeCount + ")!", originalNodeCount + 1, newNodeCount);
 	  // and that it's in the right place
 	  assertNotNull("new RD.AlbumUpload() didn't have a node in #albumUploads!", RD.AlbumUpload._albumUploadsNode.find(outcome.node)[0]);
-  
+
 	  // test the status
 	  assertTrue("new RD.AlbumUpload() was not in created status!", outcome.isCreated());
 	});
@@ -154,10 +154,10 @@ function testAlbumUploadConstructorNormal() {
 function testAlbumUploadConstructorNoJaml() {
 	forAllInitStates(function() {
 	  debug("Starting testAlbumUploadConstructorNoJaml");
-  
+
 	  // knock out the Jaml template
 	  _removeJaml("albumUploadBlock");
-  
+
 	  // make sure we get an exception
 	  assertThrowsException("new RD.AlbumUpload() succeeded even with Jaml template albumUploadBlock deleted!", function() {new RD.AlbumUpload()});
 	})
@@ -166,10 +166,10 @@ function testAlbumUploadConstructorNoJaml() {
 function testAlbumUploadConstructorNoAlbumUploadsNode() {
 	forAllInitStates(function() {
 		debug("Starting testAlbumUploadConstructorNoRD.AlbumUploadsNode");
-  
+
 	  // knock out the node
 	  _removeAlbumUploadDiv();
-  
+
 	  // make sure we get an exception
 	  assertThrowsException("new RD.AlbumUpload() succeeded even no image upload node!", function() {new RD.AlbumUpload()});
 	})
@@ -181,7 +181,7 @@ function testAlbumUploadConstructorAnArbitraryNumberOfTimes() {
 	  timesToTest = Math.round(100 * Math.random());
 	  for (var i = 0; i < timesToTest; i++)
 	    testAlbumUploadConstructorNormal();
-    
+
 	  // test that all the nodes are unique
 	  var uniqueNodes = [];
 	  for (var miIndex in RD.AlbumUpload.images()) {
@@ -197,7 +197,7 @@ function testAlbumUploadConstructorAnArbitraryNumberOfTimes() {
 }
 
 /* INIT FROM DATABASE * /
-/* 
+/*
 Other external outcomes / test cases:
 - links in node have bindings to this RD.AlbumUpload
 - if key, it's registered as key (RD.AlbumUpload.getKeyImage() === this)
@@ -205,11 +205,11 @@ Other external outcomes / test cases:
 function testAlbumUploadInitFromDatabaseNormal() {
   debug("Starting testAlbumUploadInitFromDatabaseNormal");
 	forAllInitStates(function() {
-	  // test against all good meal images  
+	  // test against all good meal images
 	  for (var testDataIndex in testData.goodDatabaseImages) {
 	    // get the data passed by SWFUpload
 	    var imageDetails = testData.goodDatabaseImages[testDataIndex];
-    
+
 		  protoOutcome = new RD.AlbumUpload();
 			assertInitializesFromDatabaseProperly(protoOutcome, imageDetails);
 	  }
@@ -230,14 +230,14 @@ function assertInitializesFromDatabaseProperly(mealImage, imageDetails, initiali
       // only fire this for the specific meal image
       // otherwise old event handlers will cause this test to fail
       var forThis = e.mealImage && e.mealImage.localID === mealImage.localID;
-     
+
       if (forThis) {
         fail("Becoming default key pic on load fired global event!");
       }
 		}
-	
+
 		RD.AlbumUpload.handleNewKeyImage(checkEvent);
-	}	
+	}
 
 	// initializationFunction is, by default, initFromDatabase
 	// but it could be any function with the same signature that inside it initializes the mealImage from the database
@@ -250,29 +250,29 @@ function assertInitializesFromDatabaseProperly(mealImage, imageDetails, initiali
 
   // init from database
   outcome = mealImage[fnName](imageDetails);
-	
+
   // make sure they're the same
   assertEquals("A different mealImage was returned from " + initializationFunction + " (via assertInitializesFromDatabaseProperly) than from new RD.AlbumUpload()!", mealImage.localID, outcome.localID);
 
   // we know that new RD.AlbumUpload() works, so we just test initFromDatabase
   // make sure we can find it by its new ID
   assertEquals("RD.AlbumUpload init'd from database could not be found by its remote ID! " + imageDetails.id, outcome, RD.AlbumUpload.findByRemoteId(imageDetails.id));
- 
+
   // make sure all server data was saved into the meal image
   for (var key in imageDetails) {
     assertEquals("RD.AlbumUpload did not get attribute " + key + " copied from server data!", imageDetails[key], outcome[key]);
   }
- 
+
   // make sure it calculated whether the image was horizontal or not
   assertNotNull("new Meal Image had isHorizontal null!", outcome.isHorizontal);
   assertEquals("new Meal Image's horizontal disagreed with calculations!", outcome.isHorizontal, outcome.width > outcome.height);
- 
+
   // check that it's set the class appropriately for its dimensions
-  horizFn = (outcome.isHorizontal ? assertEvaluatesToTrue : assertEvaluatesToFalse); 
+  horizFn = (outcome.isHorizontal ? assertEvaluatesToTrue : assertEvaluatesToFalse);
   horizFn("RD.AlbumUpload had improper isHorizontal state for class forHorizontalImage! (isHorizontal: " + outcome.isHorizontal + ", class: " + outcome.node.attr("class") + ")", outcome.node.attr("class").match(/forHorizontalImage/));
   vertFn = (outcome.isHorizontal ? assertEvaluatesToFalse : assertEvaluatesToTrue);
-  vertFn("RD.AlbumUpload had improper isHorizontal state for class forVerticalImage! (isHorizontal: " + outcome.isHorizontal + ", class: " + outcome.node.attr("class") + ")", outcome.node.attr("class").match(/forVerticalImage/));    
- 
+  vertFn("RD.AlbumUpload had improper isHorizontal state for class forVerticalImage! (isHorizontal: " + outcome.isHorizontal + ", class: " + outcome.node.attr("class") + ")", outcome.node.attr("class").match(/forVerticalImage/));
+
   // ensure dialog exists
   assertEvaluatesToTrue("RD.AlbumUpload after initFromDatabase does not have dialog!", outcome._zoomDialog);
   // and that it's a dialog by checking an option we know was set
@@ -282,7 +282,7 @@ function assertInitializesFromDatabaseProperly(mealImage, imageDetails, initiali
   className = outcome.node.attr("className");
   assertEvaluatesToFalse("RD.AlbumUpload after initFromDatabase still has uploading class!", className.match(/uploading/));
   assertEvaluatesToFalse("RD.AlbumUpload after initFromDatabase still has inactive class!", className.match(/inactive/));
-     
+
 
 	if (RD.AlbumUpload._keyImageDataNode) {
 	  // see if we became the key image if appropriate (and not, if not appropriate)
@@ -312,7 +312,7 @@ function assertInitializesFromDatabaseProperly(mealImage, imageDetails, initiali
 
   // status is visible
   assertTrue("Meal Image after initFromDatabase did not have visible status!", outcome.isVisible());
- 
+
   // make sure that the meal image is in the sort order now
   // it may not be the first item, since it could have been from an upload
   var currentSortOrder = RD.AlbumUpload.getSortOrder();
@@ -337,11 +337,11 @@ function assertInitializesFromDatabaseProperly(mealImage, imageDetails, initiali
 function testAlbumUploadInitFromDatabaseWithDuplicates() {
   debug("Starting testAlbumUploadInitFromDatabaseWithDuplicates");
 	forAllInitStates(function() {
-	  // test against all good meal images  
+	  // test against all good meal images
 	  for (testDataIndex in testData.goodDatabaseImages) {
 	    // get the data passed by SWFUpload
 	    var imageDetails = testData.goodDatabaseImages[testDataIndex];
-    
+
 	    // create the original
 	    var original = new RD.AlbumUpload().initFromDatabase(imageDetails);
 
@@ -356,7 +356,7 @@ function testAlbumUploadInitFromDatabaseWithDuplicates() {
 	    var duplicateLocalID = duplicate.localID;
 	    var newLength = RD.AlbumUpload.images().length;
 	    var initOutcome = duplicate.initFromDatabase(imageDetails);
-    
+
 	    // assert the duplicate is removed completely
 	    assertEquals("Duplicate initialization did not return the original version!", original, initOutcome);
 
@@ -368,15 +368,15 @@ function testAlbumUploadInitFromDatabaseWithDuplicates() {
 
 function testAlbumUploadInitFromDatabaseNoJaml() {
   debug("Starting testAlbumUploadInitFromDatabaseNoJaml");
-  
+
 	forAllInitStates(function() {
 	  // knock out the Jaml template
 	  _removeJaml("visible");
-  
+
 	  // test a sets of image data to make sure everything works
 	  for (var testDataIndex in testData.goodDatabaseImages) {
 	    var imageDetails = testData.goodDatabaseImages[testDataIndex];
-    
+
 	    // make sure it's an exception
 	    assertThrowsException("RD.AlbumUpload.InitFromDatabase() succeeded even with Jaml template visible deleted!", function() { new RD.AlbumUpload().initFromDatabase(imageDetails); });
 	  }
@@ -386,15 +386,15 @@ function testAlbumUploadInitFromDatabaseNoJaml() {
 function testAlbumUploadInitFromDatabaseBadData() {
   debug("Starting testAlbumUploadInitFromDatabaseNormal");
 	forAllInitStates(function() {
-	  // test against all good meal images  
+	  // test against all good meal images
 	  for (var testDataIndex in testData.badDatabaseImages) {
 	    // get the data passed by SWFUpload
 	    var imageDetails = testData.badDatabaseImages[testDataIndex];
-    
+
 	    // init from database
 	    protoOutcome = new RD.AlbumUpload();
 	    outcome = protoOutcome.initFromDatabase(imageDetails);
-    
+
 	    assertBadServeResponse(outcome);
 	  }
 	})
@@ -414,17 +414,17 @@ function testInitFromUpload() {
 	forAllInitStates(function() {
 	  // get our class-level constants so we can get initial states
  		var originalSortOrder = RD.AlbumUpload.getSortOrder();
-	
+
 		for (var dataIndex in testData.goodFileUploads) {
 			fileData = testData.goodFileUploads[dataIndex];
-		
+
 			// init from file upload
 	    protoOutcome = new RD.AlbumUpload();
 	    outcome = protoOutcome.initFromUpload(fileData);
-    
+
 	    // make sure the same RD.AlbumUpload is returned
 	    assertEquals("A different mealImage was returned from initFromUpload than from new RD.AlbumUpload()!", protoOutcome.localID, outcome.localID);
-    
+
 	    // we know that new RD.AlbumUpload() works, so we just test initFromUpload
 
 	    // make sure it has an object
@@ -435,10 +435,10 @@ function testInitFromUpload() {
 
 			// make sure the filename is saved
 			assertEquals("RD.AlbumUpload init'd from upload does not have filename!", outcome.filename, fileData.name);
-		
+
 			// make sure it's queued
 			assertIsQueued(outcome);
-		
+
 			// make sure it has Jaml content
 			// in this case, just check for the presence of a filename
 			assertEvaluatesToTrue("RD.AlbumUpload node after initFromUpload doesn't have Jaml content (e.g. filename)!", outcome.node.html().match(new RegExp(outcome.filename)));
@@ -451,23 +451,23 @@ function testInitFromUpload() {
 	  	//assertTrue("Init from upload did not dirty the meal images field!", RD.Page.isFieldDirty(RD.AlbumUpload._albumUploadsNode));
 			fail("Need to check for fileUploadStarted event with proper data!")
 		}
-		
+
 		// make sure there are no changes to the sort order
 		assertEquals("Sort order changed after initFromUpload, even though it shouldn't have!", originalSortOrder, RD.AlbumUpload.getSortOrder());
 	})
 }
 
-function testInitFromUploadNoJaml() {  
+function testInitFromUploadNoJaml() {
 	debug("Starting testAlbumUploadInitFromDatabaseNoJaml");
-  
+
 	forAllInitStates(function() {
 	  // knock out the Jaml template
 	  _removeJaml("queued");
-  
+
 	  // test a sets of image data to make sure everything works
 	  for (var testDataIndex in testData.goodFileUploads) {
 	    var uploadDetails = testData.goodFileUploads[testDataIndex];
-    
+
 	    // make sure it's an exception
 	    assertThrowsException("RD.AlbumUpload.initFromUpload() succeeded even with Jaml template queued deleted!", function() { new RD.AlbumUpload().initFromDatabase(uploadDetails); });
 	  }
@@ -477,7 +477,7 @@ function testInitFromUploadNoJaml() {
 function testInitFromUploadWithDuplicates() {
 	// test against all good uploads
  	debug("Starting testAlbumUploadInitFromDatabaseWithDuplicates");
- 	
+
 	forAllInitStates(function() {
 		var originals = 0, duplicates = 0;
 		for (testDataIndex in testData.goodDatabaseImages) {
@@ -504,7 +504,7 @@ function testInitFromUploadWithDuplicates() {
 			// there is one more node
 			assertEquals("Creating a duplicate upload did not create 1 new node!", mealImageNodeCount + 1, RD.AlbumUpload._albumUploadsNode.find("div." + RD.AlbumUpload.uploadNodeClass).length);
 			// there is one more database entry
-			assertEquals("Creating a duplicate upload did not create 1 new array entry!", newLength, mealImageArrayCount + 1); 
+			assertEquals("Creating a duplicate upload did not create 1 new array entry!", newLength, mealImageArrayCount + 1);
 	  }
 
 		// when all is said and done, we should have as many nodes as there are duplicates and originals
@@ -542,10 +542,10 @@ function testUploadStarted() {
   // get our class-level constants so we can get initial states
 	forAllInitStates(function() {
 	  var originalSortOrder = RD.AlbumUpload.getSortOrder();
-	
+
 		for (var dataIndex in testData.goodFileUploads) {
 			fileData = testData.goodFileUploads[dataIndex];
-		
+
 			// init from file upload
 	    var protoOutcome = new RD.AlbumUpload();
 			mealImage = protoOutcome.initFromUpload(fileData).uploadStarted();
@@ -555,27 +555,27 @@ function testUploadStarted() {
 
 			// verify it's in upload state
 			assertIsUploading(mealImage);
-		
+
 			// verify it has the progressBar attribute
 			assertTrue("RD.AlbumUpload after uploadStarted does not have a progress bar!", mealImage.progressBar.length > 0);
 			// verify the progress bar is initialized and at 0
 			assertNotNull("RD.AlbumUpload progressbar after uploadStarted is not initialized (value === null)!", mealImage.progressBar.progressbar("option", "value"));
 			assertEquals("RD.AlbumUpload progressbar after uploadStarted is not set to 0 (value != 0)!", mealImage.progressBar.progressbar("option", "value"), 0);
-		}	
+		}
 	})
 }
 
-function testUploadStartedNoJaml() {  
+function testUploadStartedNoJaml() {
 	debug("Starting testUploadStartedNoJaml");
-  
+
 	forAllInitStates(function() {
 	  // knock out the Jaml template
 	  _removeJaml("uploading");
-  
+
 	  // test a sets of image data to make sure everything works
 	  for (var testDataIndex in testData.goodFileUploads) {
 	    var uploadDetails = testData.goodFileUploads[testDataIndex];
-    
+
 	    // make sure it's an exception
 	    assertThrowsException("RD.AlbumUpload.uploadStarted() succeeded even with Jaml template uploading deleted!", function() { new RD.AlbumUpload().initFromDatabase(uploadDetails).uploadStarted(); });
 	  }
@@ -590,7 +590,7 @@ function testUploadCanceled() {
 	forAllInitStates(function() {
 		for (var dataIndex in testData.goodFileUploads) {
 			fileData = testData.goodFileUploads[dataIndex];
-		
+
 			// init from file upload
 	    var protoOutcome = new RD.AlbumUpload();
 			mealImage = protoOutcome.initFromUpload(fileData).uploadStarted().uploadCanceled();
@@ -600,21 +600,21 @@ function testUploadCanceled() {
 
 			// verify it's in canceled state
 			assertIsCanceled(mealImage);
-		}	
+		}
 	})
 }
 
-function testUploadCanceledNoJaml() {  
+function testUploadCanceledNoJaml() {
 	debug("Starting testUploadCanceledNoJaml");
- 
+
 	forAllInitStates(function() {
 	  // knock out the Jaml template
 	  _removeJaml("canceled");
-  
+
 	  // test a sets of image data to make sure everything works
 	  for (var testDataIndex in testData.goodFileUploads) {
 	    var uploadDetails = testData.goodFileUploads[testDataIndex];
-    
+
 	    // make sure it's an exception
 	    assertThrowsException("RD.AlbumUpload.uploadCanceled() succeeded even with Jaml template canceled deleted!", function() { new RD.AlbumUpload().initFromDatabase(uploadDetails).uploadStarted().uploadCanceled(); });
 	  }
@@ -641,17 +641,17 @@ function testUploadProgressedWithProgressBarRemovals() {
 function _runProgressBarTest(removeProgressBarAtRandom) {
 	// split the upload progress into a random set of intervals
 	var interval = Math.round(Math.random() * 10);
-	
+
 	for (var dataIndex in testData.goodFileUploads) {
 		fileData = testData.goodFileUploads[dataIndex];
-		
+
 		// init from file upload
     	var protoOutcome = new RD.AlbumUpload().initFromUpload(fileData).uploadStarted();
 		for (var i = 0; i <= interval; i++) {
 			// if we want to test with removing the progress bar, do so randomly half the time
 			if (removeProgressBarAtRandom && Math.random() > 0.5)
 				delete protoOutcome.progressBar;
-				
+
 			// increment our original value further and further
 			var mealImage = protoOutcome.uploadProgressed((i === interval ? 1 : 1/(interval - i)));
 			// verify we get back our same mealImage each time
@@ -667,13 +667,13 @@ function _runProgressBarTest(removeProgressBarAtRandom) {
 				assertEquals("RD.AlbumUpload progressed to 100% did not have processing text!", text, RD.AlbumUpload.text("processing_uploaded_file"));
 			}
 		}
-		
-		
+
+
 	}
 }
 
-/* 
-MEALIMAGE.PROTOTYPE.UPLOADERROR 
+/*
+MEALIMAGE.PROTOTYPE.UPLOADERROR
 */
 
 function testUploadErrored() {
@@ -694,14 +694,14 @@ function testUploadErrored() {
 
 				// now verify that it's been errored
 				assertHitRecoverableError(mi);
-			
+
 				// now try again up to the retry limit to make sure it ultimately unrecoverably errors
 				for (var i = 0; i <= RD.AlbumUpload.RETRY_LIMIT; i++) { mi.uploadErrored(error) }
 				// now verify we're in an unrecoverable state
 				assertHitUnrecoverableError(mi);
 			}
-		}	
-	
+		}
+
 		// now test for unrecoverable errors
 		for (var goodData in testData.goodFileUploads) {
 			for (var unrecoverableError in errorData().unrecoverableUploadErrors) {
@@ -738,11 +738,11 @@ function assertHitRecoverableError(mi) {
 
 function testUploadErrorNoJaml() {
 	debug("Starting testUploadErrorNoJaml");
-  
+
 	forAllInitStates(function() {
 	  // knock out the Jaml template
 	  _removeJaml("errored");
-  
+
 	  // make sure we get an exception
 	  assertThrowsException("uploadErroreds() succeeded even with Jaml template errored deleted!", function() {new RD.AlbumUpload().uploadErrored});
 	})
@@ -760,11 +760,11 @@ function testAlbumUploadUploadCompleted() {
 			for (var serverDetails in testData.goodDatabaseImages) {
 				// set up the meal image
 				var mealImage = new RD.AlbumUpload().initFromUpload(testData.goodFileUploads[uploadDetails]);
-				// assert that it was properly (re)initialized 
+				// assert that it was properly (re)initialized
 				var outcome = assertInitializesFromDatabaseProperly(mealImage, testData.goodDatabaseImages[serverDetails], "uploadCompleted");
 				// make sure they're the same
 			  assertEquals("A different mealImage was returned from initFromDatabase (via assertInitializesFromDatabaseProperly) than from new RD.AlbumUpload()!", mealImage.localID, outcome.localID);
-		
+
 				// now clear it, otherwise we'll hit duplicates
 				RD.AlbumUpload.clear(outcome.localID);
 			}
@@ -780,10 +780,10 @@ function testAlbumUploadUploadCompletedBadData() {
 				// set up the meal image
 				var mealImage = new RD.AlbumUpload().initFromUpload(testData.goodFileUploads[uploadDetails]);
 				mealImage.uploadCompleted(testData.badDatabaseImages[serverDetails]);
-			
+
 				// assert it hit an error
 				assertHitUnrecoverableError(mealImage);
-					
+
 				// now clear it, otherwise we'll hit duplicates
 				RD.AlbumUpload.clear(mealImage.localID);
 			}
@@ -791,7 +791,7 @@ function testAlbumUploadUploadCompletedBadData() {
 	})
 }
 
-/* 
+/*
 TOGGLE DELETE (RD.AlbumUpload)
 toggleDeletion
 Sets the image to be deleted or not deleted.
@@ -813,7 +813,7 @@ function testToggleDeletionNormal() {
 			assertToggleDeleteHasNoEffect(mealImage);
 			mealImage.uploadProgressed(0.7);
 			assertToggleDeleteHasNoEffect(mealImage);
-		
+
 			// now test either canceled, errored, or completed
 			if ((chance = Math.random()) < 0.25) {
 				mealImage.uploadCanceled();
@@ -823,7 +823,7 @@ function testToggleDeletionNormal() {
 				// now error it out and make sure it doesn't work
 				// we only need to test one type of error data, I think
 				mealImage.uploadErrored(errorData().unrecoverableUploadErrors[0]);
-				assertToggleDeleteHasNoEffect(mealImage);			
+				assertToggleDeleteHasNoEffect(mealImage);
 			}
 			else {
 				// now get to the point where it should work
@@ -842,12 +842,12 @@ function testAlbumUploadAnArbitraryNumberOfTimes() {
 		forAllGoodUploadsAndDatabaseImages(function(uploadData, serverData) {
 			var mealImage = new RD.AlbumUpload().uploadStarted(uploadData).uploadCompleted(serverData);
 			var toggleCount = 0;
-		
+
 			// test a random number of times to make sure the outcome matches
 			var numberToTest = Math.round(Math.random() * 100);
-			for (var i = 0; i < numberToTest; i++) { 
-				mealImage.toggleDeletion(); 
-				toggleCount++; 
+			for (var i = 0; i < numberToTest; i++) {
+				mealImage.toggleDeletion();
+				toggleCount++;
 			}
 
 			// make sure we have the right final state
@@ -861,7 +861,7 @@ function testAlbumUploadAnArbitraryNumberOfTimes() {
 				assertNull("RD.AlbumUpload after " + toggleCount + " random delete toggles should not have had deleted class but did!", mealImage.node.attr("class").match(/markedForDeletion/));
 				assertIsVisible(mealImage);
 			}
-		
+
 			RD.AlbumUpload.clear(mealImage.localID);
 		});
 	})
@@ -883,17 +883,17 @@ function assertToggleDeleteDoesHaveEffect(mealImage) {
 	var targetMatchStatus = (targetStatus === RD.AlbumUpload._STATUS.visible ? false : true)
 
 	mealImage.toggleDeletion();
-	
+
 	// test the deletion flag
 	fail("Need to test deletion flag is inserted or removed properly");
-	
-	
+
+
 	assertEquals("RD.AlbumUpload in original state " + originalStatus + " did not change to the appropriate status!", mealImage.status, targetStatus);
 	var hasMatch = (!!mealImage.node.attr("class").match(/markedForDeletion/)); // need to cast to boolean
 	assertTrue("RD.AlbumUpload in state " + originalStatus + " did not have appropriate change in class with toggleDeletion! " + mealImage.node.attr("class"), hasMatch === targetMatchStatus);
 }
 
-/* 
+/*
 SHOWFULLIMAGE (RD.AlbumUpload.prototype.showFullImage)
 */
 
@@ -907,7 +907,7 @@ function testShowFullImageNormal() {
 			assertDoesNotGenerateImageDialog(mealImage);
 			mealImage.uploadProgressed(0.7);
 			assertDoesNotGenerateImageDialog(mealImage);
-		
+
 			// init from database and make sure it exists
 			mealImage.uploadCompleted(serverData);
 			assertHasImageDialog(mealImage);
@@ -917,7 +917,7 @@ function testShowFullImageNormal() {
 			// verify it's closed
 			mealImage.hideFullImage();
 			assertDialogIsClosed(mealImage);
-		
+
 			// now delete it, and make sure it's still present and visible
 			mealImage.toggleDeletion();
 			// assert the dialog still works
@@ -925,7 +925,7 @@ function testShowFullImageNormal() {
 			assertDialogIsOpen(mealImage);
 			mealImage.hideFullImage();
 			assertDialogIsClosed(mealImage);
-		
+
 			// now clear the image so we don't get duplicates later
 			RD.AlbumUpload.clear(mealImage.localID);
 
@@ -995,13 +995,13 @@ function testClear() {
 
 	  // clear unless we're testing that a given mealImage was cleared
 	  RD.AlbumUpload.clear(localID);
-  
+
 	  // see if it's in the image array
 		assertCleared(localID); // test that its place was taken by RD.AlbumUpload.clearedObject
 	  assertEquals("Cleared meal image was removed from the internal array (old and new array lengths not equal)!", startLength,  RD.AlbumUpload.images().length);
-  
+
 	  // see if it's no longer the key pic
-		if (RD.AlbumUpload._keyImageDataNode) { 
+		if (RD.AlbumUpload._keyImageDataNode) {
 		  assertUndefined("RD.AlbumUpload was set to key pic, then cleared, but key pic accessor still returned a value!", RD.AlbumUpload.getKeyPic());
 		  assertUndefined("RD.AlbumUpload was set to key pic, then cleared, but _keyPic still has a value!", RD.AlbumUpload._keyPic);
 		  assertEquals("RD.AlbumUpload was set to key pic, then cleared, but _keyImageDataNode still has a value!", RD.AlbumUpload._keyImageDataNode.val(), "");
@@ -1032,7 +1032,7 @@ function testClearWithInvalidID() {
 
 	  // clear unless we're testing that a given mealImage was cleared
 	  RD.AlbumUpload.clear(-999);
-  
+
 	  // make sure nothing's changed
 	  // see if it's in the dom list
 	  assertEquals("Meal image length changed on clear for invalid localID!", startLength,  RD.AlbumUpload.images().length);
@@ -1048,7 +1048,7 @@ function testClearAnArbitraryNumberOfTimes() {
 	  var nodesCreated = [];
 	  var nodesCleared = [];
 	  var nodesNotCleared = [];
-  
+
 	  for (var i = 0; i < timesToTest; i++){
 	    var mi = new RD.AlbumUpload();
 	    nodesCreated.push(mi);
@@ -1070,13 +1070,13 @@ function testClearAnArbitraryNumberOfTimes() {
 	      }
 	    }
 	  }
-  
+
 	  // now see if everything matches up
 	  // preliminary data
 	  var imagesInArray = RD.AlbumUpload.images().length;
 	  var mealImageNodeCount = RD.AlbumUpload._albumUploadsNode.find("div." + RD.AlbumUpload.uploadNodeClass).length;
 	  var sortOrder = RD.AlbumUpload.getSortOrder().split(",");
-  
+
 	  // make sure all the numbers check out
 	  assertEquals("After random creating and clearing, nodesCreated != nodesCleared + nodesNotCleared!", nodesCreated.length,  nodesCleared.length + nodesNotCleared.length);
 
@@ -1085,7 +1085,7 @@ function testClearAnArbitraryNumberOfTimes() {
 
 	  // make sure the DOM list has the right number of nodes
 	  assertEquals("Nodes left in the DOM after clearing and creating are not what's expected!", nodesNotCleared.length,  RD.AlbumUpload._albumUploadsNode.find("div." + RD.AlbumUpload.uploadNodeClass).length);
-  
+
 	  // make sure all cleared nodes are set to the clearedObject placeholder
 	  // and that their DOM node is gone
 	  for (var i in nodesCleared) {
@@ -1094,7 +1094,7 @@ function testClearAnArbitraryNumberOfTimes() {
 	    assertEquals("RD.AlbumUpload cleared at random still attached to a node!", 0, mi.node.parent().length);
 	    // ensure it's not in the sorted list
 	  }
-  
+
 	  // make sure none of the nodesNotCleared are set to the clearedObject placeholder and all have localID's
 	  for (var i in nodesNotCleared) {
 	    var mi = nodesNotCleared[i];
@@ -1131,7 +1131,7 @@ function testIsAlbumUpload() {
 	  testSubjects.push({data: testData.badDatabaseImages, shouldSucceed: false, initMethod: "initFromDatabase"});
 	  testSubjects.push({data: testData.goodFileUploads, shouldSucceed: true, initMethod: "initFromUpload"});
 	  testSubjects.push({data: testData.badFileUploads, shouldSucceed: false, initMethod: "initFromUpload"});
-  
+
 	  // also test random objects
 	  testSubjects.push({items: ["random object", 2, null, ([]), {id: 2}, {
 	    thumbImageURL:"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/4865/DSC01152_thumb_vertical.JPG",
@@ -1147,21 +1147,21 @@ function testIsAlbumUpload() {
 	  for (var testGroupIndex in testSubjects) {
 	    var testingData = testSubjects[testGroupIndex];
 	    var expectSuccess = testingData.shouldSucceed;
-    
+
 	    if (!testingData.items) testingData.items = [];
 	    if (testingData.data) {
 	        // make sure we have the right information needed to run the tests
 	      if (typeof(testingData.data) === "object" && !testingData.initMethod || typeof(RD.AlbumUpload.prototype[testingData.initMethod]) != "function")
 	        throw("Data given to testIsRD.AlbumUpload did not come with an initMethod!");
-      
+
 	      for (var datumIndex in testingData.data) {
 	        var datum = testingData.data[datumIndex];
 
 	        var mi = new RD.AlbumUpload();
 	        // the new RD.AlbumUpload should always pass
-	        assertTrue("new RD.AlbumUpload() is not a RD.AlbumUpload!", RD.AlbumUpload.isAlbumUpload(mi));      
+	        assertTrue("new RD.AlbumUpload() is not a RD.AlbumUpload!", RD.AlbumUpload.isAlbumUpload(mi));
 	        testingData.items.push(mi[testingData.initMethod](datum));
-	      }      
+	      }
 	    }
 
 	    for (var dataIndex in testData.items) {
@@ -1170,7 +1170,7 @@ function testIsAlbumUpload() {
 	      // now see if this is what we expect
 	      assertTrue("RD.AlbumUpload.isAlbumUpload() did not return " + expectSuccess + " as expected!", RD.AlbumUpload.isAlbumUpload(mealImage));
 	    }
-	  }  
+	  }
 	})
 }
 
@@ -1179,10 +1179,10 @@ function testIsAlbumUpload() {
 function testStatusAccessors() {
 	forAllInitStates(function() {
 		var mi = new RD.AlbumUpload();
-	
+
 		// sets of assertions to test whether things are or are not in certain states
 		var assertions = [];
-		assertions["created"] = {up: assertIsCreated, down: assertIsNotCreated}; 
+		assertions["created"] = {up: assertIsCreated, down: assertIsNotCreated};
 		assertions["visible"] = {up: assertIsVisible, down: assertIsNotVisible};
 		assertions["queued"] = {up: assertIsQueued, down: assertIsNotQueued};
 		assertions["uploading"] = {up: assertIsUploading, down: assertIsNotUploading};
@@ -1190,15 +1190,15 @@ function testStatusAccessors() {
 		assertions["deleting"] = {up: assertIsDeleting, down: assertIsNotDeleting};
 		assertions["canceled"] = {up: assertIsCanceled, down: assertIsNotCanceled};
 
-		// make sure the assertion tests match up with 
+		// make sure the assertion tests match up with
 		assertEquals("Discrepancy between assertions for status checking and actual statuses!", assertions.length, RD.AlbumUpload._STATUS.length);
-	
+
 		var assertionsTested = [];
-	
+
 		for (var status in RD.AlbumUpload._STATUS) {
 			mi.status = RD.AlbumUpload._STATUS[status];
 			var foundStatus = false;
-		
+
 			for (var testAgainstStatus in assertions) {
 				assertion = assertions[testAgainstStatus];
 				if (status === testAgainstStatus) {
@@ -1214,11 +1214,11 @@ function testStatusAccessors() {
 					// make sure that other accessors than the appropriate one fail
 					assertion.down(mi);
 			}
-		
+
 			// make sure the status found an appropriate accessor
 			assertTrue("Status " + status + " did not have an accessor in testStatusAccessors!", foundStatus);
 		}
-	
+
 		// make sure all our accessors set up for testing were indeed tested
 		for (var assertionThatShouldHaveBeenTested in assertions) {
 			assertNotNull("Assertion " + assertionThatShouldHaveBeenTested + " not tested!", assertionsTested[assertionThatShouldHaveBeenTested]);
@@ -1271,25 +1271,25 @@ function testIsRetrying() {
 			// test with null errorCount
 			mealImage.errorCount = null;
 			assertFalse("RD.AlbumUpload with null retryCount and in status " + statusName + " returned true for isRetrying!", mealImage.isRetrying());
-		
+
 			// test with 0 errorCount
 			mealImage.errorCount = 0;
 			assertFalse("RD.AlbumUpload with 0 retryCount and in status " + statusName + " returned true for isRetrying!", mealImage.isRetrying());
 
-			// test with 1 for error count 
+			// test with 1 for error count
 			mealImage.errorCount = 1;
 			if (statusName === "queued")
 				assertTrue("RD.AlbumUpload with 1 retryCount and in status " + statusName + " returned false for isRetrying!", mealImage.isRetrying());
 			else
 				assertFalse("RD.AlbumUpload with 1 retryCount and in status " + statusName + " returned true for isRetrying!", mealImage.isRetrying());
-		
+
 			// test random number > 0
 			mealImage.errorCount = Math.round(100 * Math.random()) + 1;
 			if (statusName === "queued")
 				assertTrue("RD.AlbumUpload with " + mealImage.errorCount + " retryCount and in status " + statusName + " returned false for isRetrying!", mealImage.isRetrying());
 			else
 				assertFalse("RD.AlbumUpload with " + mealImage.errorCount + " retryCount and in status " + statusName + " returned true for isRetrying!", mealImage.isRetrying());
-		
+
 		}
 	})
 }
@@ -1314,18 +1314,18 @@ function testShouldCancelUpload() {
 			// test with null errorCount
 			mealImage.errorCount = null;
 			assertFalse("RD.AlbumUpload with null retryCount and in status " + statusName + " returned true for shouldCancelUpload!", mealImage.shouldCancelUpload());
-		
+
 			// test with 0 errorCount
 			mealImage.errorCount = 0;
 			assertFalse("RD.AlbumUpload with 0 retryCount and in status " + statusName + " returned true for shouldCancelUpload!", mealImage.shouldCancelUpload());
 
-			// test with RD.AlbumUpload.RETRY_LIMIT for error count 
+			// test with RD.AlbumUpload.RETRY_LIMIT for error count
 			mealImage.errorCount = RD.AlbumUpload.RETRY_LIMIT;
 			assertFalse("RD.AlbumUpload with RD.AlbumUpload.RETRY_LIMIT retryCount and in status " + statusName + " returned true for shouldCancelUpload!", mealImage.shouldCancelUpload());
 
-			// test with RD.AlbumUpload.RETRY_LIMIT + some number for error count 
+			// test with RD.AlbumUpload.RETRY_LIMIT + some number for error count
 			// add an extra 1 because Math.round(Math.random * 10) can sometimes be 0
-			mealImage.errorCount = RD.AlbumUpload.RETRY_LIMIT + Math.round(Math.random() * 10) + 1; 
+			mealImage.errorCount = RD.AlbumUpload.RETRY_LIMIT + Math.round(Math.random() * 10) + 1;
 			assertTrue("RD.AlbumUpload with " + mealImage.errorCount + " retryCount and in status " + statusName + " returned true for shouldCancelUpload!", mealImage.shouldCancelUpload());
 		}
 	})
@@ -1347,7 +1347,7 @@ function testImages() {
 		assertEquals("MeaLImages called twice did not return the same images array!", result, RD.AlbumUpload.images());
 		// make sure it's an array
 		assertEquals("RD.AlbumUpload images() is not an array!", Array, RD.AlbumUpload.images().constructor);
-	
+
 		// now make sure it will create a new array if it's blank
 		delete RD.AlbumUpload._imagesForMeal;
 		assertNotNull("RD.AlbumUpload.images() failed to create a new image array when it was deleted!", RD.AlbumUpload.images());
@@ -1376,18 +1376,18 @@ function testFindByLocalId() {
 			albumUploads.push(mi);
 			if (Math.random() > 0.5) mi.uploadStarted(uploadData);
 		});
-	
+
 		// now see if everything works both for bad inputs and good inputs
 		assertUndefined("After creating, RD.AlbumUpload.testFindByLocalId didn't return null for undefined input!", RD.AlbumUpload.findByLocalId());
 		assertUndefined("After creating, RD.AlbumUpload.testFindByLocalId didn't return null for null input!", RD.AlbumUpload.findByLocalId(null));
 		assertUndefined("After creating, RD.AlbumUpload.testFindByLocalId didn't return null for string input!", RD.AlbumUpload.findByLocalId("abc"));
-	
+
 		for (var idIndex in localIDs) {
 			var result = RD.AlbumUpload.findByLocalId(localIDs[idIndex]);
 			assertEvaluatesToTrue("Unable to find object from a created mealImage's local ID!", result);
 			assertTrue("Object found by local ID wasn't an actual RD.AlbumUpload!", RD.AlbumUpload.isAlbumUpload(result));
 		}
-	
+
 		for (var objIndex in albumUploads) {
 			var result = RD.AlbumUpload.findByLocalId(albumUploads[objIndex].localID);
 			assertEvaluatesToTrue("Unable to find object from object's ID from a created mealImage's local ID!", result);
@@ -1412,17 +1412,17 @@ function testFindByRemoteId() {
 		// create a bunch of meal images
 		var remoteIDs = [];
 		var albumUploads = [];
-	
+
 		// for each set of server data, create some regular RD.AlbumUploads randomly
 		// stopping once we randomly assign the server data (we don't want duplicates!)
 		forEachGoodDatabaseImage(function(serverData) {
 			var set = false;
-			forEachGoodUpload(function(uploadData) {	
+			forEachGoodUpload(function(uploadData) {
 				if (set) return;
-			
-				// create a new meal image	
+
+				// create a new meal image
 				var mi = new RD.AlbumUpload();
-						
+
 				// randomly choose what's to happen
 				var chance = Math.random();
 				if (chance < 0.75) {
@@ -1433,25 +1433,25 @@ function testFindByRemoteId() {
 						mi.uploadCompleted(serverData);
 						remoteIDs.push(mi.id);
 						albumUploads.push(mi);
-					
+
 						// mark us to stop
 						set = true;
 					}
 				}
 			})
 		});
-	
+
 		// now see if everything works both for bad inputs and good inputs
 		assertUndefined("After creating, RD.AlbumUpload.testFindByRemoteId didn't return undefined for undefined input!", RD.AlbumUpload.findByRemoteId());
 		assertUndefined("After creating, RD.AlbumUpload.testFindByRemoteId didn't return undefined for null input!", RD.AlbumUpload.findByRemoteId(null));
 		assertUndefined("After creating, RD.AlbumUpload.testFindByRemoteId didn't return undefined for string input!", RD.AlbumUpload.findByRemoteId("abc"));
-	
+
 		for (var idIndex in remoteIDs) {
 			var result = RD.AlbumUpload.findByRemoteId(remoteIDs[idIndex]);
 			assertEvaluatesToTrue("Unable to find object from a created mealImage's remote ID!", result);
 			assertTrue("Object found by remote ID wasn't an actual RD.AlbumUpload!", RD.AlbumUpload.isAlbumUpload(result));
 		}
-	
+
 		for (var objIndex in albumUploads) {
 			var result = RD.AlbumUpload.findByRemoteId(albumUploads[objIndex].id);
 			assertEvaluatesToTrue("Unable to find object from object's remote ID from a created mealImage's remote ID!", result);
@@ -1476,30 +1476,30 @@ function testFindByFileObject() {
 		// create a bunch of meal images
 		var fileObjects = [];
 		var albumUploads = [];
-	
+
 		// for each set of server data, create some regular RD.AlbumUploads randomly
 		// stopping once we randomly assign the server data (we don't want duplicates!)
-		forEachGoodUpload(function(uploadData) {	
-			// create a new meal image	
+		forEachGoodUpload(function(uploadData) {
+			// create a new meal image
 			var mi = new RD.AlbumUpload();
 			mi.initFromUpload(uploadData);
 
 			fileObjects.push(uploadData);
 			albumUploads.push(mi);
 		});
-	
+
 		// now see if everything works both for bad inputs and good inputs
 		assertUndefined("After creating, RD.AlbumUpload.findByFileObject didn't return undefined for undefined input!", RD.AlbumUpload.findByFileObject());
 		assertUndefined("After creating, RD.AlbumUpload.findByFileObject didn't return undefined for null input!", RD.AlbumUpload.findByFileObject(null));
 		assertUndefined("After creating, RD.AlbumUpload.findByFileObject didn't return undefined for string input!", RD.AlbumUpload.findByFileObject("abc"));
 		assertUndefined("After creating, RD.AlbumUpload.findByFileObject didn't return undefined for object input!", RD.AlbumUpload.findByFileObject({name: "abc"}));
-	
+
 		for (var fileObjIndex in fileObjects) {
 			var result = RD.AlbumUpload.findByFileObject(fileObjects[fileObjIndex]);
 			assertEvaluatesToTrue("Unable to find object from a created mealImage's file object!", result);
 			assertTrue("Object found by file object wasn't an actual RD.AlbumUpload!", RD.AlbumUpload.isAlbumUpload(result));
 		}
-	
+
 		for (var objIndex in albumUploads) {
 			var result = RD.AlbumUpload.findByFileObject(albumUploads[objIndex].fileObject);
 			assertEvaluatesToTrue("Unable to find object from object's file object from a created mealImage's file object!", result);
@@ -1514,19 +1514,19 @@ function testFindByFileObjectWithCanceledAndDeleted() {
 		// stopping once we randomly assign the server data (we don't want duplicates!)
 		var limit = Math.round(Math.random() * 100) + 10;
 		var uploadDatums = [], uncanceledObjects = [], canceledObjects = [], erroredObjects = [];
-	
+
 		for (var i = 0; i < limit; i++) {
-			// create a new meal image and set the upload started	
+			// create a new meal image and set the upload started
 			debug("here" + i);
 			var mi = new RD.AlbumUpload();
 
 			var datum = uploadDataFromIndex(i);
 			debug("Datum id: " + datum.id);
 			uploadDatums.push(datum);
-		
+
 			// start the upload
 			mi.initFromUpload(datum);
-		
+
 			// now randomly assign it to a state
 			if (i % 2 === 0) {
 				mi.uploadCanceled();
@@ -1541,13 +1541,13 @@ function testFindByFileObjectWithCanceledAndDeleted() {
 				uncanceledObjects.push(datum);
 			}
 		};
-	
+
 		debug("Length of canceled: " + canceledObjects.length + ", uncanceledObjects: " + uncanceledObjects.length + ", errored: " + erroredObjects.length);
-	
+
 		var withCanceled = {includeCanceled: true};
 		var withErrored = {includeErrored: true};
 		var withBoth = {includeErrored: true, includeCanceled: true};
-	
+
 		// now test that we find all the uncanceled, canceled, and errored ones with the appropriate options
 		for (var objIndex in uncanceledObjects) {
 			var result = RD.AlbumUpload.findByFileObject(uncanceledObjects[objIndex]);
@@ -1559,7 +1559,7 @@ function testFindByFileObjectWithCanceledAndDeleted() {
 			result = RD.AlbumUpload.findByFileObject(uncanceledObjects[objIndex], withBoth);
 			assertIsAlbumUpload(result);
 		}
-	
+
 		for (var objIndex in canceledObjects) {
 			var result = RD.AlbumUpload.findByFileObject(canceledObjects[objIndex]);
 			assertUndefined("Canceled object found by findByFileObject with no params!", result);
@@ -1571,7 +1571,7 @@ function testFindByFileObjectWithCanceledAndDeleted() {
 			result = RD.AlbumUpload.findByFileObject(canceledObjects[objIndex], withBoth);
 			assertIsAlbumUpload(result);
 		}
-	
+
 		for (var objIndex in erroredObjects) {
 			var result = RD.AlbumUpload.findByFileObject(erroredObjects[objIndex]);
 			assertUndefined("Errored object found by findByFileObject with no params!", result);
@@ -1607,30 +1607,30 @@ function testFindByFileName() {
 		// create a bunch of meal images
 		var fileNames = [];
 		var albumUploads = [];
-	
+
 		// for each set of server data, create some regular RD.AlbumUploads randomly
 		// stopping once we randomly assign the server data (we don't want duplicates!)
-		forEachGoodUpload(function(uploadData) {	
-			// create a new meal image	
+		forEachGoodUpload(function(uploadData) {
+			// create a new meal image
 			var mi = new RD.AlbumUpload();
 			mi.initFromUpload(uploadData);
 
 			fileNames.push(uploadData.name);
 			albumUploads.push(mi);
 		});
-	
+
 		// now see if everything works both for bad inputs and good inputs
 		assertUndefined("After creating, RD.AlbumUpload.findByFilename didn't return undefined for undefined input!", RD.AlbumUpload.findByFilename());
 		assertUndefined("After creating, RD.AlbumUpload.findByFilename didn't return undefined for null input!", RD.AlbumUpload.findByFilename(null));
 		assertUndefined("After creating, RD.AlbumUpload.findByFilename didn't return undefined for string input!", RD.AlbumUpload.findByFilename("abc"));
 		assertUndefined("After creating, RD.AlbumUpload.findByFilename didn't return undefined for object input!", RD.AlbumUpload.findByFilename({name: "abc"}));
-	
+
 		for (var fileObjIndex in fileNames) {
 			var result = RD.AlbumUpload.findByFilename(fileNames[fileObjIndex]);
 			assertEvaluatesToTrue("Unable to find object from a created mealImage's file name!", result);
 			assertTrue("Object found by file object wasn't an actual RD.AlbumUpload!", RD.AlbumUpload.isAlbumUpload(result));
 		}
-	
+
 		for (var objIndex in albumUploads) {
 			var result = RD.AlbumUpload.findByFilename(albumUploads[objIndex].filename);
 			assertEvaluatesToTrue("Unable to find object from object's file object from a created mealImage's file object!", result);
@@ -1645,21 +1645,21 @@ function testFindByFileNameWithCanceledAndDeleted() {
 		// stopping once we randomly assign the server data (we don't want duplicates!)
 		var limit = Math.round(Math.random() * 100) + 10;
 		var uploadDatums = [], uncanceledObjects = [], canceledObjects = [], erroredObjects = [];
-	
+
 		for (var i = 0; i < limit; i++) {
-			// create a new meal image and set the upload started	
+			// create a new meal image and set the upload started
 			debug("here" + i);
 			var mi = new RD.AlbumUpload();
 
 			var datum = uploadDataFromIndex(i);
 			var name = datum.name;
-		
+
 			debug("Datum id: " + datum.id);
 			uploadDatums.push(name);
-		
+
 			// start the upload
 			mi.initFromUpload(datum);
-		
+
 			// now randomly assign it to a state
 			if (i % 2 === 0) {
 				mi.uploadCanceled();
@@ -1674,13 +1674,13 @@ function testFindByFileNameWithCanceledAndDeleted() {
 				uncanceledObjects.push(name);
 			}
 		};
-	
+
 		debug("Length of canceled: " + canceledObjects.length + ", uncanceledObjects: " + uncanceledObjects.length + ", errored: " + erroredObjects.length);
-	
+
 		var withCanceled = {includeCanceled: true};
 		var withErrored = {includeErrored: true};
 		var withBoth = {includeErrored: true, includeCanceled: true};
-	
+
 		// now test that we find all the uncanceled, canceled, and errored ones with the appropriate options
 		for (var objIndex in uncanceledObjects) {
 			var result = RD.AlbumUpload.findByFilename(uncanceledObjects[objIndex]);
@@ -1692,7 +1692,7 @@ function testFindByFileNameWithCanceledAndDeleted() {
 			result = RD.AlbumUpload.findByFilename(uncanceledObjects[objIndex], withBoth);
 			assertIsAlbumUpload(result);
 		}
-	
+
 		for (var objIndex in canceledObjects) {
 			var result = RD.AlbumUpload.findByFilename(canceledObjects[objIndex]);
 
@@ -1705,7 +1705,7 @@ function testFindByFileNameWithCanceledAndDeleted() {
 			result = RD.AlbumUpload.findByFilename(canceledObjects[objIndex], withBoth);
 			assertIsAlbumUpload(result);
 		}
-	
+
 		for (var objIndex in erroredObjects) {
 			var result = RD.AlbumUpload.findByFilename(erroredObjects[objIndex]);
 			assertUndefined("Errored object found by findByFilename with no params!", result);
@@ -1740,17 +1740,17 @@ function testIsAlbumUpload() {
 		assertFalse("isAlbumUpload returned true for number!", RD.AlbumUpload.isAlbumUpload(2));
 		assertFalse("isAlbumUpload returned true for random array!", RD.AlbumUpload.isAlbumUpload([1, 2]));
 		assertFalse("isAlbumUpload returned true for random hash!", RD.AlbumUpload.isAlbumUpload({a: 2, b: 3}));
-	
+
 		// now test a real RD.AlbumUpload
 		var mi = new RD.AlbumUpload();
 		assertTrue("Real RD.AlbumUpload didn't pass isAlbumUpload!", RD.AlbumUpload.isAlbumUpload(mi));
-	
+
 		// now test something fake like a MaelImage
 		var fakeMI = new Array();
 		assertFalse("isAlbumUpload returned true for empty hash!", RD.AlbumUpload.isAlbumUpload(fakeMI));
 		fakeMI.localID = mi.localID;
 		assertFalse("isAlbumUpload returned true for fake MI with real MI's localID!", RD.AlbumUpload.isAlbumUpload(fakeMI));
-	
+
 		// now break the RD.AlbumUpload and make sure it doesn't work
 		delete mi.localID;
 		assertFalse("isAlbumUpload returned true for broken MI with no localID!", RD.AlbumUpload.isAlbumUpload(mi));
@@ -1771,39 +1771,39 @@ function testRefreshSortable() {
 	forAllInitStates(function() {
 		// we're testing this by manually creating nodes
 		// so we need to initialize ourselves
-	
+
 		// test that it picks up additional elements
 		var limit = Math.round(Math.random() * 100);
 		var ids = [];
 		var div;
-	
+
 		for (var i = 0; i < limit; i++) {
 			var orderBefore = RD.AlbumUpload._albumUploadsNode.sortable("toArray");
-		
+
 			// now add a div to it
 			div = $(document.createElement("div"));
 			div.addClass(RD.AlbumUpload.uploadNodeClass);
 			div.attr("id", "foo" + i);
 			ids.push(div.attr("id"));
 			RD.AlbumUpload._albumUploadsNode.append(div);
-	
+
 			// refresh the sortable
 			RD.AlbumUpload.refreshSortable();
-	
+
 			// now see if we've added that item
 			var currentOrder = RD.AlbumUpload._albumUploadsNode.sortable("toArray");
 			assertEquals("RefreshSortable didn't pick up a new item!", orderBefore.length + 1, currentOrder.length);
-		
+
 			// make sure it's in the right place
 			assertEquals("New div was not put into appropriate place!", currentOrder.indexOf(div.attr("id")), currentOrder.length - 1);
 		}
-		
+
 		// now make sure that all the IDs are present
 		var idsToCheck = RD.AlbumUpload._albumUploadsNode.sortable("toArray");
 		for (var i in ids) {
 			assertTrue("Unable to find id after adding and refreshing!", idsToCheck.indexOf(ids[i]) >= 0);
 		}
-	
+
 		// now try moving something and make sure it works
 		// div is the last div created, so let's move it to the front
 		var finalOrder = RD.AlbumUpload._albumUploadsNode.sortable("toArray");
@@ -1817,10 +1817,10 @@ function testUpdateOrder() {
 	forAllInitStates(function() {
 		// we're testing this by manually creating nodes
 		// so we need to initialize ourselves
-	
+
 		var ids = [];
 		var mi;
-	
+
 		forEachGoodDatabaseImage(function(serverData) {
 			// create a new meal mage
 			// this automatically refreshes the sortable
@@ -1830,34 +1830,34 @@ function testUpdateOrder() {
 
 			// make sure the now-stored order is updated to the new order
 			// calculate what the order should be based on what we just did
-			var orderShouldBe = (orderBefore.length > 0 ? orderBefore.split(",") : []); // compensate for "".split(",") === [""] 
-			orderShouldBe.push(mi.id); 
+			var orderShouldBe = (orderBefore.length > 0 ? orderBefore.split(",") : []); // compensate for "".split(",") === [""]
+			orderShouldBe.push(mi.id);
 			orderShouldBe = orderShouldBe.join(",");
 			assertEquals("After new div, stored order != actual order!", orderShouldBe, RD.AlbumUpload.getSortOrder());
 		});
-	
+
 		// get the individual IDs
 		var finalOrder = RD.AlbumUpload.getSortOrder().split(",");
-	
+
 		// now make sure that all the IDs are present
 		var idsToCheck = RD.AlbumUpload._albumUploadsNode.sortable("toArray");
 		for (var i in ids) {
 			assertTrue("Unable to find id after adding and refreshing!", idsToCheck.indexOf(ids[i]));
 		}
-	
+
 		// now try moving something and make sure it works
 		// div is the last div created, so let's move it to the front
 		//RD.AlbumUpload._albumUploadsNode.remove(mi.node);
 		RD.AlbumUpload._albumUploadsNode.prepend(mi.node);
-	
+
 		// now move that last ID to the front to simulate the move
 		var ultimateOrder = finalOrder;
 		var lastID = parseInt(ultimateOrder.pop()); // parseInt because the value will be a strin from a split-string array
 		assertEquals("Last ID not equal to the last MI created!", lastID, mi.id);
 		ultimateOrder = [lastID].concat(ultimateOrder);
-	
+
 		assertNotEquals("After prepend, the order wasn't changed!", finalOrder, ultimateOrder)
-		assertEquals("Prepended meal node was not put into appropriate place in the order!  lastID: " + lastID + ", currentOrder: " + RD.showSource(ultimateOrder), ultimateOrder.indexOf(mi.id), 0);	
+		assertEquals("Prepended meal node was not put into appropriate place in the order!  lastID: " + lastID + ", currentOrder: " + RD.showSource(ultimateOrder), ultimateOrder.indexOf(mi.id), 0);
 	})
 }
 
@@ -1870,26 +1870,26 @@ function testDoUnfinishedUploadsExist() {
 		var queuedMeals = [], uploadingMeals = [];
 
 		var limit = Math.round(Math.random() * 100);
-			
+
 		forAllGoodUploadsAndDatabaseImages(function(uploadData, serverData) {
 			var mi = new RD.AlbumUpload();
 
-			// now randomly act on the 
+			// now randomly act on the
 			var probability = Math.random();
-		
+
 			// if we haven't assigned this server ID, assign it
 			if (!RD.AlbumUpload.findByRemoteId(serverData.id)) {
 				// do upload first, or not
 				if (probability > 0.5)
 					mi.initFromUpload(uploadData).uploadStarted().uploadProgressed(0.5);
-			
+
 				// now init from database
 				mi.initFromDatabase(serverData);
 			}
 			else {
 				// do an init and maybe start upload
 				mi.initFromUpload(uploadData);
-			
+
 				// now it's queued -- so randomly start it to uploading
 				if (probability > 0.5) {
 					mi.uploadStarted();
@@ -1900,16 +1900,16 @@ function testDoUnfinishedUploadsExist() {
 					queuedMeals.push(mi);
 				}
 			}
-		
+
 			// make sure we're still working
 			var failureString = "doUnfinishedUploadsExist returned the wrong value after adding meals (queued: " + queuedMeals.length + ", uploading: " + uploadingMeals.length + ")!";
 			fn = (queuedMeals.length > 0 || uploadingMeals.length > 0 ? assertTrue : assertFalse);
-			fn(failureString, RD.AlbumUpload.doUnfinishedUploadsExist());	
+			fn(failureString, RD.AlbumUpload.doUnfinishedUploadsExist());
 		});
-	
+
 		// now try removing items one by one, randomly clearing or canceling, until it should return false
 		var mi;
-		while (mi = queuedMeals.pop()) {		
+		while (mi = queuedMeals.pop()) {
 			var probability = Math.random();
 			if (probability > 0.5)
 				mi.uploadCanceled();
@@ -1919,9 +1919,9 @@ function testDoUnfinishedUploadsExist() {
 			// make sure we're still working
 			var failureString = "doUnfinishedUploadsExist returned the wrong value after removing a queued meal (queued: " + queuedMeals.length + ", uploading: " + uploadingMeals.length + ")!";
 			fn = (queuedMeals.length > 0 || uploadingMeals.length > 0 ? assertTrue : assertFalse);
-			fn(failureString, RD.AlbumUpload.doUnfinishedUploadsExist());	
+			fn(failureString, RD.AlbumUpload.doUnfinishedUploadsExist());
 		}
-	
+
 		// the same for the uploading queue
 		while (mi = uploadingMeals.pop()) {
 			var probability = Math.random();
@@ -1929,13 +1929,13 @@ function testDoUnfinishedUploadsExist() {
 				mi.uploadCanceled();
 			else
 				RD.AlbumUpload.clear(mi.localID);
-		
+
 			// make sure we're still working
 			var failureString = "doUnfinishedUploadsExist returned the wrong value after removing a canceled meal (queued: " + queuedMeals.length + ", uploading: " + uploadingMeals.length + ")!";
 			fn = (queuedMeals.length > 0 || uploadingMeals.length > 0 ? assertTrue : assertFalse);
-			fn(failureString, RD.AlbumUpload.doUnfinishedUploadsExist());	
+			fn(failureString, RD.AlbumUpload.doUnfinishedUploadsExist());
 		}
-	
+
 		// now we should be done
 		assertFalse("After removing all queued and uploading meals, doUnfinishedUploadsExist still returns true!", RD.AlbumUpload.doUnfinishedUploadsExist());
 	})
@@ -1954,18 +1954,18 @@ function testDoDeletedItemsExist() {
 		forAllGoodUploadsAndDatabaseImages(function(uploadData, serverData) {
 			var mi = new RD.AlbumUpload();
 
-			// now randomly act on the 
+			// now randomly act on the
 			var probability = Math.random();
-		
+
 			// if we haven't assigned this server ID, assign it
 			if (!RD.AlbumUpload.findByRemoteId(serverData.id)) {
 				// do upload first, or not
 				if (probability > 0.5)
 					mi.initFromUpload(uploadData).uploadStarted().uploadProgressed(0.5);
-			
+
 				// now init from database
 				mi.initFromDatabase(serverData);
-			
+
 				// now delete
 				mi.toggleDeletion();
 				if (probability > 0.75) {
@@ -1979,7 +1979,7 @@ function testDoDeletedItemsExist() {
 				// add some background noise
 				// do an init and maybe start upload
 				mi.initFromUpload(uploadData);
-			
+
 				// now it's queued -- so randomly start it to uploading
 				if (probability > 0.5) {
 					mi.uploadStarted();
@@ -1988,25 +1988,25 @@ function testDoDeletedItemsExist() {
 					// just leave it queued
 				}
 			}
-		
+
 			// make sure we're still working
 			var failureString = "doDeletedMealsExist returned the wrong value after adding meals (deleted: " + deletedMeals.length + ")!";
 			fn = (deletedMeals.length > 0 ? assertTrue : assertFalse);
-			fn(failureString, RD.AlbumUpload.doDeletedItemsExist());	
+			fn(failureString, RD.AlbumUpload.doDeletedItemsExist());
 		});
-	
+
 		// now try removing deleted items one by one, randomly clearing or canceling, until it should return false
 		var mi;
-		while ((mi = deletedMeals.pop())) {		
+		while ((mi = deletedMeals.pop())) {
 			RD.AlbumUpload.clear(mi.localID);
 
 			// make sure we're still working
 			var failureString = "doDeletedMealsExist returned the wrong value after removing a deleted meal (deleted: " + deletedMeals.length + ")!";
 			fn = (deletedMeals.length > 0 ? assertTrue : assertFalse);
-			fn(failureString, RD.AlbumUpload.doDeletedItemsExist());	
+			fn(failureString, RD.AlbumUpload.doDeletedItemsExist());
 		}
-	
-	
+
+
 		// now we should be done
 		assertFalse("After removing all deleted meals, doDeletedMealsExist still returns true!", RD.AlbumUpload.doDeletedItemsExist());
 	})
@@ -2027,16 +2027,16 @@ function testBecomeKeyPic() {
 			forAllGoodUploadsAndDatabaseImages(function(uploadData, serverData) {
 		    // set up a new meal image
 		    var mi = new RD.AlbumUpload().initFromUpload(uploadData);
-    
+
 		    // if it's the first one with this serverData, init it from that and test becomeKeyImage
 		    if (!RD.AlbumUpload.findByRemoteId(serverData.id)) {
 		      mi.initFromDatabase(serverData);
-      
+
 		      // see if it automatically became the key pic
 		      var wasAlreadyKeyPic = (RD.AlbumUpload.getKeyPic() && RD.AlbumUpload.getKeyPic().localID === mi.localID);
 
 		      // if not, expect the event to fire
-		      var eventFired = false;      
+		      var eventFired = false;
 		      var eventShouldFire = (Math.random() > 0.5);
 		      debug("Event should fire: " + eventShouldFire + ", was: " + wasAlreadyKeyPic);
 		      var checkEvent = function(e) {
@@ -2054,27 +2054,27 @@ function testBecomeKeyPic() {
 		      }
 					fail("need to update event");
 		    	RD.AlbumUpload.handleNewKeyImage(checkEvent);
-            
+
 		      // now have it become the key pic
 		      var result = mi.becomeKeyPic({surpressEvent: !eventShouldFire});
 		      assertTrue("becomeKeyPic didn't return true!", result);
-      
+
 		      // make sure the event fired if it should have
 		      if (eventShouldFire && !wasAlreadyKeyPic) {
 		        assertTrue("Event didn't fire when it should have!", eventFired);
 		      }
-      
+
 		      // make sure it's the key pic
 		      var newKeyPic = RD.AlbumUpload.getKeyPic();
 		      assertTrue("RD.AlbumUpload key pic was not a meal image even after explicit call! (MI._keyPic: " + RD.AlbumUpload._keyPic + ", node: " + RD.AlbumUpload._keyImageDataNode.val() + ")", RD.AlbumUpload.isAlbumUpload(newKeyPic));
-      
+
 		      assertEquals("Image did not become the key pic!", newKeyPic.localID, mi.localID);
 		      assertEquals("RD.AlbumUpload._keyPic !== key pic!", RD.AlbumUpload._keyPic, mi.localID);
 
 		      // make sure the DOM node has the right value
 		      // remember node value is a string
-		      assertEquals("keypic node did not store the right value!", RD.AlbumUpload._keyImageDataNode.val(), mi.id + ""); 
-      
+		      assertEquals("keypic node did not store the right value!", RD.AlbumUpload._keyImageDataNode.val(), mi.id + "");
+
 		      // make sure the mi's node -- and only that one -- has class keyPic
 		      var nodesWithKeyPic = RD.AlbumUpload._albumUploadsNode.find(".keyPic");
 		      assertEquals("More than one node had class .keyPic!", nodesWithKeyPic.length, 1);
@@ -2090,19 +2090,19 @@ function testKeyPicWithSameValue() {
 	forAllInitStates(function(details) {
 	  if (details.keyImageNodeID) {
 		  // test to make sure that subsequent calls for the same meal ID don't change the value
-		  // also tests that clear removes the key pic, incidentally 
+		  // also tests that clear removes the key pic, incidentally
 		  forEachGoodDatabaseImage(function(serverData) {
 		    var mi = new RD.AlbumUpload().initFromDatabase(serverData);
 		    var previousKeyPic = RD.AlbumUpload.getKeyPic();
 		    assertTrue("RD.AlbumUpload key pic was not a meal image even after initFromDB! (MI._keyPic: " + RD.AlbumUpload._keyPic + ", node: " + RD.AlbumUpload._keyImageDataNode.val() + ")", RD.AlbumUpload.isAlbumUpload(previousKeyPic));
 		    assertEquals("RD.AlbumUpload did not become key pic on database initialization!", mi.localID, previousKeyPic.localID);
-    
+
 		    // now call it again
 		    var result = mi.becomeKeyPic();
 		    var keyPic = RD.AlbumUpload.getKeyPic();
 		    assertTrue("RD.AlbumUpload did not return true when called twice for the same MI!", result);
 		    assertEquals("KeyPic changed after second call by same object!", mi.localID, keyPic.localID);
-  
+
 		    RD.AlbumUpload.clear(mi.localID);
 		  });
 		}
@@ -2120,14 +2120,14 @@ function testGetKeyPic() {
 	forAllInitStates(function(details) {
 	  if (details.keyImageNodeID) {
 		  // test along several circumstances
-  
+
 		  // 1. nothing done
 		  assertUndefined("No key pic set, but value was returned!", RD.AlbumUpload.getKeyPic());
-  
+
 		  // 2. improper value that doesn't map to any image
 		  RD.AlbumUpload._keyPic = 2;
 		  assertUndefined("Key pic set to invalid value, but getKeyPic returned a value!", RD.AlbumUpload.getKeyPic());
-  
+
 		  // 3. an actual value
 		  // get the key image set
 		  var mi = new RD.AlbumUpload().initFromDatabase(testData.goodDatabaseImages[0]);
@@ -2152,7 +2152,7 @@ function testAlbumUploadShutdown() {
   assertUndefined("RD.AlbumUpload shutdown did not remove _keyPic!", RD.AlbumUpload._keyPic);
   assertUndefined("RD.AlbumUpload shutdown did not remove _albumUploadsNode!", RD.AlbumUpload._albumUploadsNode);
 	assertUndefined("RD.AlbumUpload shutdown did not remove clearedObject to an empty hash!", RD.AlbumUpload.clearedObject);
-  
+
 	for (var templateName in RD.AlbumUpload.internals._JAML_TEMPLATES) {
 		if (RD.AlbumUpload.internals._JAML_TEMPLATES.hasOwnProperty(templatesName)) {
 		  assertUndefined("RD.AlbumUpload shutdown did not remove Jaml templates!", Jaml.templates[templateName]);
@@ -2166,7 +2166,7 @@ var debug;
 function setUp() {
     // runs standard setup
     debug = _debug;
-    
+
     _addAlbumUploadDiv();
     _addAlbumUploadSortOrder();
     _addAlbumUploadPlaceholder();
@@ -2203,21 +2203,21 @@ function initializationParamsNoOptionalFields() {
 }
 
 function forAllInitStates(fn) {
-	var allParams = [defaultInitializationParams(), 
-										initializationParamsNoPlaceholder(), 
-										initializationParamsNoKeyImage(), 
+	var allParams = [defaultInitializationParams(),
+										initializationParamsNoPlaceholder(),
+										initializationParamsNoKeyImage(),
 										initializationParamsNoOptionalFields()
 									];
-									
+
   for (var i = 0; i < allParams.length; i++) {
 		// try against this init state
 		RD.AlbumUpload.initialize(allParams[i]);
 		fn(allParams[i]);
 		// then reset state
 		tearDown();
-		setUp(); 
+		setUp();
 	}
-	
+
 }
 
 function tearDown() {
@@ -2234,8 +2234,8 @@ function _addAlbumUploadDiv() {
     if (!document.getElementById("albumUploads")) {
        div = document.createElement("div");
        div.id = "albumUploads";
-       document.getElementById("testHanger").appendChild(div); 
-    }    
+       document.getElementById("testHanger").appendChild(div);
+    }
 }
 
 function _addAlbumUploadPlaceholder() {
@@ -2247,8 +2247,8 @@ function _addAlbumUploadSortOrder() {
        input = document.createElement("input");
        input.id = "imageSortOrder";
        input.type = 'hidden';
-       document.getElementById("testHanger").appendChild(input); 
-    }    
+       document.getElementById("testHanger").appendChild(input);
+    }
 }
 
 function _addKeyImageNode() {
@@ -2256,7 +2256,7 @@ function _addKeyImageNode() {
        input = document.createElement("input");
        input.id = "meal_key_picture_id";
        input.type = 'hidden';
-       document.getElementById("testHanger").appendChild(input); 
+       document.getElementById("testHanger").appendChild(input);
     }
 }
 
@@ -2294,75 +2294,75 @@ function _initTestData() {
   testData = {};
   testData.goodFileUploads = [];
   testData.goodFileUploads.push({
-    name:"DSC01152.JPG", 
-    creationdate:(new Date(1256834007000)), 
-    modificationdate:(new Date(1256834010000)), 
-    post:{}, 
-    type:"JPEG", 
-    index:0,  
-    filestatus:-1, 
-    size:3982465, 
+    name:"DSC01152.JPG",
+    creationdate:(new Date(1256834007000)),
+    modificationdate:(new Date(1256834010000)),
+    post:{},
+    type:"JPEG",
+    index:0,
+    filestatus:-1,
+    size:3982465,
     id:"SWFUpload_0_0"
   });
   testData.goodFileUploads.push({
     // make sure we pass when we get 0's, which Javascript accepts as false
-    name:"0", 
-    creationdate:(new Date(1256834007000)), 
-    modificationdate:(new Date(1256834010000)), 
-    post:{}, 
-    type:"JPEG", 
-    index:0,  
-    filestatus:-1, 
-    size:3982465, 
+    name:"0",
+    creationdate:(new Date(1256834007000)),
+    modificationdate:(new Date(1256834010000)),
+    post:{},
+    type:"JPEG",
+    index:0,
+    filestatus:-1,
+    size:3982465,
     id: 0
   });
   testData.goodFileUploads.push({
-    name:"DSC01352.JPG", 
-    creationdate:(new Date(1256834007000)), 
-    modificationdate:(new Date(1256834010000)), 
-    post:{}, 
-    type:"JPEG", 
-    index:0,  
-    filestatus:-1, 
-    size:3982465, 
+    name:"DSC01352.JPG",
+    creationdate:(new Date(1256834007000)),
+    modificationdate:(new Date(1256834010000)),
+    post:{},
+    type:"JPEG",
+    index:0,
+    filestatus:-1,
+    size:3982465,
     id:"SWFUpload_0_2"
   });
   testData.goodFileUploads.push({
-    name:"DSC0152.JPG", 
-    creationdate:(new Date(1256834007000)), 
-    modificationdate:(new Date(1256834010000)), 
-    post:{}, 
-    type:"JPEG", 
-    index:0,  
-    filestatus:-1, 
-    size:3982465, 
+    name:"DSC0152.JPG",
+    creationdate:(new Date(1256834007000)),
+    modificationdate:(new Date(1256834010000)),
+    post:{},
+    type:"JPEG",
+    index:0,
+    filestatus:-1,
+    size:3982465,
     id:"SWFUpload_0_1"
   });
-  
+
   testData.badFileUploads = {};
   testData.badFileUploads["null"] = null;
   testData.badFileUploads["notObject"] = "foo and bar!";
   testData.badFileUploads["noID"] = {
-    name:"DSC012452.JPG", 
-    creationdate:(new Date(1256834007000)), 
-    modificationdate:(new Date(1256834010000)), 
-    post:{}, 
-    type:"JPEG", 
-    index:0,  
-    filestatus:-1, 
-    size:3982465, 
+    name:"DSC012452.JPG",
+    creationdate:(new Date(1256834007000)),
+    modificationdate:(new Date(1256834010000)),
+    post:{},
+    type:"JPEG",
+    index:0,
+    filestatus:-1,
+    size:3982465,
   };
   testData.badFileUploads["noName"] = {
-    creationdate:(new Date(1256834007000)), 
-    modificationdate:(new Date(1256834010000)), 
-    post:{}, 
-    type:"JPEG", 
-    index:0,  
-    filestatus:-1, 
-    size:3982465, 
+    creationdate:(new Date(1256834007000)),
+    modificationdate:(new Date(1256834010000)),
+    post:{},
+    type:"JPEG",
+    index:0,
+    filestatus:-1,
+    size:3982465,
     id:"SWFUpload_1_1"
   };
-  
+
   // good database info
   testData.goodDatabaseImages = [];
   testData.goodDatabaseImages.push({
@@ -2381,7 +2381,7 @@ function _initTestData() {
     "isKey":false,
     "height": 0,
     "id": 0
-  }); 
+  });
   // equal width and height
   testData.goodDatabaseImages.push({
     thumbImageURL:"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/4865/DSC01152_thumb_vertical.JPG",
@@ -2399,13 +2399,13 @@ function _initTestData() {
     "height":3000,
     "id":1234
   });
-  testData.goodDatabaseImages.push({   
+  testData.goodDatabaseImages.push({
     "thumbImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/23423/DSC011332_thumb_vertical.JPG",
     "fullImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/23423/DSC011332.JPG",
     "isKey":false,
     "id":12343
   });
-  
+
   // bad database info
   testData.badDatabaseImages = {};
   testData.badDatabaseImages["null"] = null;
@@ -2431,7 +2431,7 @@ function _initTestData() {
     "fullImageURL":"http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/2342/DSC0112.JPG",
     "isKey":false,
     "height":3000
-  };	
+  };
 }
 
 function errorData() {
@@ -2445,7 +2445,7 @@ function errorData() {
 				shortDescription: "Upload test " + mi.localID,
 			});
 		}
-	
+
 		_errorDataStore.unrecoverableUploadErrors = [];
 		for (var i in testData.goodFileUploads) {
 			mi = new RD.AlbumUpload().initFromUpload(testData.goodFileUploads[i]);
@@ -2459,7 +2459,7 @@ function errorData() {
 }
 
 function databaseDataFromIndex(i) {
-  return {   
+  return {
     "thumbImageURL": "http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/23423/DSC011332_thumb_vertical.JPG",
     "fullImageURL": "http://localhost/~ahkoppel2/mealstromimages/images/meals/0000/23423/DSC011332.JPG",
     "isKey": false,
@@ -2469,14 +2469,14 @@ function databaseDataFromIndex(i) {
 
 function uploadDataFromIndex(i) {
 	return {
-    name:"uploadFromIndex" + i + ".JPG", 
-    creationdate:(new Date(1256834007000)), 
-    modificationdate:(new Date(1256834010000)), 
-    post:{}, 
-    type:"JPEG", 
-    index:0,  
-    filestatus:-1, 
-    size:3982465, 
+    name:"uploadFromIndex" + i + ".JPG",
+    creationdate:(new Date(1256834007000)),
+    modificationdate:(new Date(1256834010000)),
+    post:{},
+    type:"JPEG",
+    index:0,
+    filestatus:-1,
+    size:3982465,
     id:"SWFUpload_" + i + "_" + i
   }
 }
