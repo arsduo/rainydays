@@ -410,7 +410,18 @@ describe("AlbumUpload", function() {
                 var str = "foo";
                 spyOn(image, "inputName").andCallThrough();
                 var result = image.inputID(str);
-                expect(image.inputName).not.toMatch(/\_$/);
+                expect(result).not.toMatch(/\_$/);
+            })
+            
+            it("should be global", function() {
+                var str = "foo";
+                var result = image.inputID(str);
+                expect(result).not.toMatch(/(\[|\])/);
+            })
+            
+            it("should work", function() {
+                image.localID = 2;
+                expect(image.inputID("foo")).toBe(RD.AlbumUpload.dataPrefix + "_2_foo");
             })
         })
         
@@ -464,6 +475,32 @@ describe("AlbumUpload", function() {
                 expect(image.details[name]).toBe(value);
             })
             
+        })
+
+        describe("removeData", function() {
+            var result, name = "name", value = "value";
+            
+            beforeEach(function() {
+                spyOn(RD, "jQuery").andCallThrough();
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                })
+            })
+            
+            it("should remove the input from the data node", function() {
+                spyOn(image.dataNode, "remove");
+                var name = "foo";
+                image.removeData(name);
+                expect(image.dataNode.remove).toHaveBeenCalledWith("#" + image.inputID(name));
+            })
+            
+            it("should remove the data from details", function() {
+                var name = "foo";
+                image.details.foo = "bar";
+                image.removeData(name);
+                expect(image.details.foo).not.toBeDefined();
+            })
         })
     })
 })

@@ -211,7 +211,7 @@ RD.AlbumUpload = {
 		},
 
 		inputID: function(name) {
-		  return this.inputName(name).replace(/[\[\]]+/, "_").replace(/\_$/, "");
+		  return this.inputName(name).replace(/[\[\]]+/g, "_").replace(/\_$/, "");
 		},
 		
 		addData: function(name, value) {
@@ -224,6 +224,11 @@ RD.AlbumUpload = {
 		    
 		    // store the data on the image object as well
 		    this.details[name] = value;
+		},
+		
+		removeData: function(name) {
+		    this.dataNode.remove("#" + this.inputID(name));
+		    delete this.details[name];
 		},
 		
 		renderContent: function(templateName, details) {
