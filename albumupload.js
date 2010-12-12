@@ -30,7 +30,7 @@ RD.AlbumUpload = {
     statusMap: {
         
     },
-    
+        
     // default sortable options
     sortableOptions: {
         placeholder: "beingSorted inlineBlock",
@@ -394,14 +394,12 @@ RD.AlbumUpload = {
             // set status
             this.status = "queued";
 
-            return;
-
             // render and insert content
-            this._replaceWithRender("queued");
+            this.renderContent("queued");
             this.node.addClass("uploading");
-
+            
             // make the meal images node dirty since we've added an image
-            RD.AlbumUpload.albumContainer.trigger("fileUploadStarted", {fileHandler: this, details: uploadDetails});
+            this.uploader.albumContainer.trigger("fileUploadStarted", {image: this});
 
             // return
             RD.debug("Initialization done -- image has filename  " + this.filename);

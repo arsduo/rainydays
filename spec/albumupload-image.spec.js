@@ -457,12 +457,41 @@ describe("AlbumUpload", function() {
             it("should save the file object on the image", function() {
                 image.initFromUpload(uploadArgs);
                 expect(image.fileObject).toBe(uploadArgs);
-            })            
+            })      
             
             it("should set the status to queued", function() {
+                image.initFromUpload(uploadArgs);
+                expect(image.status).toBe("queued");
+            })
+
+            it("should render the queued content", function() {
+                spyOn(image, "renderContent");
+                image.initFromUpload(uploadArgs);
+                expect(image.renderContent).toHaveBeenCalledWith("queued");
+            })            
+            
+            it("should add the uploading class to the element", function() {
+                image.node.attr("class", "")
+                image.initFromUpload(uploadArgs);
+                expect(image.node.attr("class")).toBe("uploading");
+            })            
+            
+            it("should trigger the fileUploadStarted event on the albumContainer with {image: image}", function() {
+                var triggered = false, args, evented = function(data) {
+                    triggered = true;
+                    args = arguments;
+                }
+                image.uploader.albumContainer.bind("fileUploadStarted", evented);
+                image.initFromUpload(uploadArgs);
                 
+                expect(triggered).toBe(true);
+                expect(!!args[1]).toBe(true);
+                expect(args[1].image).toBe(image)
             })
             
+            it("should return the image", function() {
+                expect(image.initFromUpload(uploadArgs)).toBe(image);
+            })
         })
 
         describe("badServerResponse", function() {
