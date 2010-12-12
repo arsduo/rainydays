@@ -494,6 +494,90 @@ describe("AlbumUpload", function() {
             })
         })
 
+        describe("uploadStarted", function() {
+            beforeEach(function() {
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                }).initFromUpload({
+                    id: "SWFUpload1_0",
+                    name: "bar.jpg"
+                })
+            })
+
+            it("should render the uploading content", function() {
+                spyOn(image, "renderContent");
+                image.uploadStarted();
+                expect(image.renderContent).toHaveBeenCalledWith("uploading")
+            })
+            
+            it("should get the progressbar if it doesn't exist", function() {
+                var oldValue = jQuery.ui.progressbar;
+                delete jQuery.ui.progressbar;
+                image.uploadStarted();
+                expect(image.progressBar).not.toBeDefined();
+                jQuery.ui.progressbar = oldValue;
+            })
+
+            it("should initialize the progressbar on any items with the RD.AlbumUpload.cssClass.progressBar class", function() {
+                // clear out anything existing so we know what the progressbar will be
+                var cls = RD.AlbumUpload.cssClasses.progressBar;
+                image.node.remove("." + cls);
+                var div = $("<div class='" + cls + "'/>");
+                image.node.append(div);
+                
+                image.uploadStarted();
+                expect(div.progressbar("value")).toBe(0);
+            })
+            
+            it("should initialize the progressbar on any items with the RD.AlbumUpload.cssClass.progressBar class", function() {
+                // clear out anything existing so we know what the progressbar will be
+                var cls = RD.AlbumUpload.cssClasses.progressBar;
+                image.node.remove("." + cls);
+                var div = $("<div class='" + cls + "'/>");
+                image.node.append(div);
+                
+                image.uploadStarted();
+                expect(image.progressBar[0]).toBe(div[0]);
+            })
+            
+            it("should change the status to uploading", function() {
+                image.uploadStarted();
+                expect(image.status).toBe("uploading");
+            })
+            
+            it("return the image", function() {
+                expect(image.uploadStarted()).toBe(image);
+            })
+        })
+
+        describe("uploadCanceled", function() {
+            beforeEach(function() {
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                }).initFromUpload({
+                    id: "SWFUpload1_0",
+                    name: "bar.jpg"
+                }).uploadStarted();
+            })
+
+            it("should render the canceled content", function() {
+                spyOn(image, "renderContent");
+                image.uploadStarted();
+                expect(image.renderContent).toHaveBeenCalledWith("canceled")
+            })
+            
+            it("should change the status to canceled", function() {
+                image.uploadStarted();
+                expect(image.status).toBe("canceled");
+            })
+            
+            it("return the image", function() {
+                expect(image.uploadStarted()).toBe(image);
+            })
+        })
+
         describe("badServerResponse", function() {
             beforeEach(function() {
                 spyOn(RD, "debug");

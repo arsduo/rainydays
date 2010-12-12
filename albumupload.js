@@ -48,7 +48,8 @@ RD.AlbumUpload = {
         uploading: "uploading",
         deleteLink: "deleteLink",
         magnifyLink: "magnifyLink",
-        makeKeyPicLink: "makeKeyPicLink"
+        makeKeyPicLink: "makeKeyPicLink",
+        progressbar: "progressbar"
     },
 
     labels: {
@@ -406,6 +407,97 @@ RD.AlbumUpload = {
             return this;
         },
         
+        /*
+        uploadStarted
+        This marks when an upload starts, updating status and visuals.
+
+        Assumptions:
+        - Jaml template "uploading" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
+        - Jaml template "uploading" includes an element with class of progressBar (failure: none outside testing-- we just don't show status bar)
+
+        Other outcomes / test cases:
+        - has uploading status
+        - content replaced by uploading content
+        - has progressBar attribute set with a length > 1 (jQuery result array)
+        - progressBar returns 0 for .progressbar("option", "value") (returns null if no progressbar set)
+        - returns this RD.AlbumUpload
+        */
+
+        uploadStarted: function() {
+            RD.debug("Upload started for mealImage " + this.localID);
+
+            // replace the markup with uploading
+            this.renderContent("uploading");
+
+            // generate the progress bar if jQuery.ui.progressbar available
+            if (jQuery.ui.progressbar) {
+                this.progressBar = this.node.find("." + RD.AlbumUpload.cssClasses.progressBar).progressbar({value: 0});
+        	    RD.debug("Found progress bar " + RD.showSource(this.progressBar));
+        	} 
+
+            // set the status
+            this.status = "uploading";
+
+            return this;
+        },
+        
+        /*
+        uploadCanceled
+        This marks when an upload starts, updating status and visuals.
+
+        Assumptions:
+        - Jaml template "canceled" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
+
+        Other outcomes / test cases:
+        - has canceled status
+        - content replaced by canceled content
+        - returns this RD.AlbumUpload
+        */
+
+        uploadCanceled: function() {
+        	// replace with the right markup
+        	this.renderContent("canceled");
+
+        	// set the status
+        	this.status = "canceled";
+
+        	return this;
+        },
+        
+        
+        /*
+        uploadProgressed
+        This is triggered when an upload has made progress, updating status and visuals.
+
+        Assumptions:
+        - Nothing external has removed the progressbar element (failure: reruns this.uploadStarted) 
+
+        Other outcomes / test cases:
+        - this.progressBar.progressbar("option", "value") is equal to percentage * 100
+        - when we hit 100%, throw up a processing message while the server thinks, 
+        - returns this RD.AlbumUpload
+        */
+
+        uploadProgressed: function(percentage) {
+            RD.debug("Upload progressed to " + percentage + "% for mealImage " + this.localID);
+
+            // error check -- reset progress bar if it somehow gets deleted
+            if (!this.progressBar) {
+                this.uploadStarted();
+            }
+
+            // update the progressbar
+            this.progressBar.progressbar("option", "value", percentage * 100);
+
+            // if percentage is 100%, say processing
+            if (percentage > 0.99) {
+                this.node.find(".processingMessage").html(RD.AlbumUpload.labels.processing_uploaded_file);
+            }
+
+            // return the item
+            return this;
+        },
+        
         badServerResponse: function(response) {
         	// used when the server responds successfully, but the content isn't what we expect
         	// notify the console of the error, then render the error view
@@ -527,117 +619,6 @@ RD.AlbumUpload = {
     }
 }
 
-
-/*
-
-/*
-RD.AlbumUpload.initialize
-Assumptions:
-- gets an options hash that contains certain required nodes and certain optional nodes (failure: throws exception)
-- #imageSortOrder exists (failure: throws exception, since we cannot continue)
-- #mealimages exists (failure: throws exception, since we cannot continue)
-- if options.keyImageId is provided, the corresponding node exists (failure: throws exception, since we cannot continue)
-- if options.placeholderNodeID is provided, the corresponding node exists (failure: throws exception, since we cannot continue)
-
-Other outputs:
-- if initialized is already true, does nothing
-- pre-initializes images array
-- sets sort order node
-- sets albumContainer
-- sets clearedObject
-- sets up Jaml templates
-- sets initialized to true
-* /
-
-/*
-uploadStarted
-This marks when an upload starts, updating status and visuals.
-
-Assumptions:
-- Jaml template "uploading" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
-- Jaml template "uploading" includes an element with class of progressBar (failure: none outside testing-- we just don't show status bar)
-
-Other outcomes / test cases:
-- has uploading status
-- content replaced by uploading content
-- has progressBar attribute set with a length > 1 (jQuery result array)
-- progressBar returns 0 for .progressbar("option", "value") (returns null if no progressbar set)
-- returns this RD.AlbumUpload
-* /
-
-RD.AlbumUpload.prototype.uploadStarted = function() {
-    RD.debug("Upload started for mealImage " + this.localID);
-
-    // replace the markup with uploading
-    this._replaceWithRender("uploading");
-    
-    // generate the progress bar
-    this.progressBar = this.node.find(".progressBar");
-	debug("Found progress bar " + RD.showSource(this.progressBar));
-	this.progressBar.progressbar({value: 0});
-    
-    // set the status
-    this.status = RD.AlbumUpload.statusMap["uploading"];
-    
-    return this;
-}
-
-/*
-uploadCanceled
-This marks when an upload starts, updating status and visuals.
-
-Assumptions:
-- Jaml template "canceled" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
-
-Other outcomes / test cases:
-- has canceled status
-- content replaced by canceled content
-- returns this RD.AlbumUpload
-* /
-
-RD.AlbumUpload.prototype.uploadCanceled = function() {
-	// replace with the right markup
-	this._replaceWithRender("canceled");
-
-	// set the status
-	this.status = RD.AlbumUpload.statusMap["canceled"];
-
-	return this;
-}
-
-/*
-uploadProgressed
-This is triggered when an upload has made progress, updating status and visuals.
-
-Assumptions:
-- Nothing external has removed the progressbar element (failure: reruns this.uploadStarted) 
-
-Other outcomes / test cases:
-- this.progressBar.progressbar("option", "value") is equal to percentage * 100
-- when we hit 100%, throw up a processing message while the server thinks, 
-- returns this RD.AlbumUpload
-* /
-
-RD.AlbumUpload.prototype.uploadProgressed = function(percentage) {
-    RD.debug("Upload progressed to " + percentage + "% for mealImage " + this.localID);
-
-    // error check -- reset progress bar if it somehow gets deleted
-    //if (!this.progressBar)
-    //    throw("uploadProgress called for meal image " + this.localID + " but this.progressBar is null!");
-    if (!this.progressBar)
-		this.uploadStarted();
-
-    // update the progressbar
-    this.progressBar.progressbar("option", "value", percentage * 100);
-    
-		// if percentage is 100%, say processing
-		if (percentage > 0.99) {
-			this.node.find(".processingMessage").html(RD.AlbumUpload.labels.processing_uploaded_file);
-		}
-		
-    // return the item
-    return this;
-}
 
 /*
 uploadErrored
