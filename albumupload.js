@@ -31,6 +31,12 @@ RD.AlbumUpload = {
         
     },
     
+    // default sortable options
+    sortableOptions: {
+        placeholder: "beingSorted inlineBlock",
+        tolerance: "pointer",
+        cursor: "move",
+    },    
 
     cssClasses: {
         horizontalImage: "forHorizontalImage",
@@ -91,9 +97,8 @@ RD.AlbumUpload = {
     		this.uploadManager = RD.UploadManager.create(settings.swfuploadOptions);
     		
     		// set up the sortable options for properties that can't be set up at load time
-    		this.sortableOptions = jQuery.extend({
-    		    items: "div." + RD.AlbumUpload.cssClasses.imageNode,
-                update: this.updateAlbumUploadsOrder
+    		this.sortableOptions = jQuery.extend(RD.AlbumUpload.sortableOptions, {
+    		    items: "div." + RD.AlbumUpload.cssClasses.imageNode
     		});
     		
     		// set up the sortable for the first time
@@ -106,13 +111,6 @@ RD.AlbumUpload = {
 			// initialize all the different DOM nodes we use
 			var settings = this.settings, jQuery = RD.jQuery;
 			
-			// sort order storage -- where we keep track of the order of elements
-			// this is required
-			this.sortOrderStorage = jQuery("#" + settings.sortOrderStorageID);
-			if (this.sortOrderStorage.length === 0) {
-				throw("InitializationError: Could not find AlbumUpload sortOrderStorageID #" + settings.sortOrderStorageID + "!")
-			}
-
 			// albumContainer -- where all the visible action happens
 			// this is required
 			this.albumContainer = jQuery("#" + settings.albumContainerID);
@@ -121,7 +119,7 @@ RD.AlbumUpload = {
 			}
 
 			// get the key image (album cover) value store and visible location if provided
-			this.keyImageStorage = settings.keyImageStorageID ? jQuery("#" + settings.keyImageStorageID) : jQuery();
+			this.keyPicStorage = settings.keyPicStorageID ? jQuery("#" + settings.keyPicStorageID) : jQuery();
 			this.keyImageView = settings.keyImageViewID ? jQuery("#" + settings.keyImageViewID) : jQuery();
 			
             // placeholder node will either be found or be an empty jQuery array
@@ -160,15 +158,41 @@ RD.AlbumUpload = {
         - sortable includes any new elements
         - updates the sort order to reflect the order on the page (can be tested by moving elements from the front to the back)
         */
-
-        sortableOptions: {
-            placeholder: "beingSorted inlineBlock",
-            tolerance: "pointer",
-            cursor: "move",
-        },
         
         refreshSortable: function() {
         	this.albumContainer.sortable(this.sortableOptions);
+        },
+        
+        setKeyPic: function(image) {        	
+        	var currentKeyPic, keyPicClass, albumUpload = RD.AlbumUpload;
+        	 
+        	if (this.keyPicStorage.length === 0) {
+    		    // if we're not storing an image, no need to go further
+    		    return false;
+    		}
+    		else {
+            	currentKeyPic = this.keyPic;
+            	keyPicClass = albumUpload.cssClasses.keyPic;
+        		RD.debug("become key pic called for " + image.localID + ", current: " + (currentKeyPic ? currentKeyPic.localID : "none") + ", same: " + (currentKeyPic === image));
+
+        		if (currentKeyPic === undefined || currentKeyPic !== image) {
+        		    // changing key pic!
+            		// set the values
+            		// we store the local ID, which is the key to the image detail hash
+            	    this.keyPicStorage.val(image.localID);
+                	this.keyPic = image;
+
+            		// handle classes
+            		this.albumContainer.find("." + keyPicClass).removeClass(keyPicClass);
+            		image.node.addClass(keyPicClass);
+
+            		// trigger global event unless explicitly told not to, e.g. on page load
+        			//console.log("Triggering event");
+        			this.albumContainer.trigger(albumUpload.keyPicEvent, {uploader: this, image: image});
+        		}
+
+    			return true;
+    		}
         }
     },
     
@@ -302,8 +326,7 @@ RD.AlbumUpload = {
         	// if the height and width aren't properly detected by the server, we may be fudged here
         	this.isHorizontal = (this.details.width > this.details.height);
         	// then update the node
-        	this.node.addClass((this.isHorizontal ? classes.horizontalImage : classes.verticalImage));
-
+        	this.node.addClass(this.isHorizontal ? classes.horizontalImage : classes.verticalImage);
         	// remove uploading class in case it was from an upload
         	this.node.removeClass(classes.uploading);
 
@@ -314,34 +337,75 @@ RD.AlbumUpload = {
       	    var imageObject = this; // otherwise this gets misinterpreted when the function is applied
       	    this.node.find("." + classes.deleteLink).bind("click", function() { imageObject.toggleDeletion(); return false; });
       	    this.node.find("." + classes.magnifyLink).bind("click", function() { imageObject.showFullImage(); return false; });
-      	    this.node.find("." + classes.makeKeyPicLink).bind("click", function() { imageObject.becomeKeyPic(); return false; });
+      	    this.node.find("." + classes.makeKeyPicLink).bind("click", function() { imageObject.uploader.setKeyPic(imageObject); return false; });
         	
             // set status
             this.status = "visible";
-
-
-            return;
-
-
-
-        	// set up the dialog
-        	this._getDialog();
-
-
-        	// update the sort order
-        	RD.AlbumUpload.updateAlbumUploadsOrder();
-
-        	// make it a key image if there is none
-        	if (RD.AlbumUpload.keyImageStorage && !RD.AlbumUpload.getKeyPic()) {
-        		// surpress the event if this isn't from an upload (e.g. is from a previous image)
-        		// for such images this should never be fired but is a safety check
-        		this.becomeKeyPic({surpressEvent: (this.filename ? false : true)});
-        	}
-
+            
+            if (!this.uploader.keyPic || this.details.isKeyPic) {
+                // make it a key image if appropriate:
+                // * there is no key picture (first upload)
+                // * we're loading from the database, and this is the previously-designated key pic
+        		this.uploader.setKeyPic(this);
+        	}            	
         	// return
+
         	RD.debug("Initialization done -- image has remote ID " + this.id);
 
         	return this;
+        },
+        
+        /*
+        initFromUpload
+        This initializes a new RD.AlbumUpload using information provided by the SWF uploader.  
+
+        Assumptions:
+        - uploadDetails is not null and is a valid file object per SWF documentation (failure: triggers and returns _badFileUpload)
+        	- see http://demo.swfupload.org/Documentation/#fileobject
+        - Jaml template "queued" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
+        - two images uploaded with the same filename create new nodes
+
+        Other outcomes / test cases:
+        - this mealImage is findable by the fileObject (uploadDetails)
+        - has a fileObject === uploadDetails
+        - has .filename === uploadDetails.name
+        - has queued status
+        - has content from Jaml file
+        - has uploading class
+        - doesn't affect sort order
+        - makes the overall meal images node dirty
+        - returns this RD.AlbumUpload
+        */
+        
+        initFromUpload: function(uploadDetails) {
+            RD.debug("Initializing meal " + this.localID + " from upload.");
+
+            // error check
+            // ID is used elsewhere
+            if (!(uploadDetails && uploadDetails.id != null && uploadDetails.name != null)) {
+                RD.debug("ERROR: Uploading images must exist (" + uploadDetails + ") and have an id (" + (uploadDetails ? uploadDetails.id : "obj is null") + ") and a filename (" + (uploadDetails ? uploadDetails.name : "obj is null") + ")");
+                return this.badFileUpload(uploadDetails); // which prints out the details
+            }
+            
+            // save details
+            this.filename = uploadDetails.name;
+            this.fileObject = uploadDetails;
+
+            // set status
+            this.status = "queued";
+
+            return;
+
+            // render and insert content
+            this._replaceWithRender("queued");
+            this.node.addClass("uploading");
+
+            // make the meal images node dirty since we've added an image
+            RD.AlbumUpload.albumContainer.trigger("fileUploadStarted", {fileHandler: this, details: uploadDetails});
+
+            // return
+            RD.debug("Initialization done -- image has filename  " + this.filename);
+            return this;
         },
         
         badServerResponse: function(response) {
@@ -352,11 +416,32 @@ RD.AlbumUpload = {
         	return this.uploadErrored({isRecoverable: false, shortDescription: "Invalid server response"});
         },
         
+        badFileUpload: function(fileObject) {
+        	// used when the SWFUploader adds a file, but that file is missing essential content
+        	// I expect this never to fire, but better to be secure than sorry
+        	// notify the console of the error, then render the error view
+        	// we can't recover, since SWFUpload doesn't requeue on file errors
+        	RD.debug("Bad file upload! " + (fileObject ? RD.showSource(fileObject) : "null!"));
+        	return this.uploadErrored({isRecoverable: false, shortDescription: "Problem uploading file!"});	
+        },
+        
         uploadErrored: function() {},
         toggleDeletion: function() {},
-        showFullImage: function() {},
-        becomeKeyPic: function() {}
+        showFullImage: function() {}        
         
+        /*
+        becomeKey
+        Makes this meal image the key image.
+
+        Outcomes:
+        - returns true immediately if the image is already the key pic
+        - RD.AlbumUpload.keyPicStorage has a value === the mealImg's id
+        - RD.AlbumUpload._keyPic === this.localID
+        - afterward, the meal image node has class keyPic
+        - afterward, no other image nodes have class keyPic
+        - unless told not to, a keyPicRegistered event is fired to let any handlers know a keyPic was registered
+        - returns true if it succeeds
+        */
     },
     
 	// JAML TEMPLATES
@@ -465,57 +550,6 @@ Other outputs:
 - sets up Jaml templates
 - sets initialized to true
 * /
-
-
-/*
-initFromUpload
-This initializes a new RD.AlbumUpload using information provided by the SWF uploader.  
-
-Assumptions:
-- uploadDetails is not null and is a valid file object per SWF documentation (failure: triggers and returns _badFileUpload)
-	- see http://demo.swfupload.org/Documentation/#fileobject
-- Jaml template "queued" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
-- two images uploaded with the same filename create new nodes
-
-Other outcomes / test cases:
-- this mealImage is findable by the fileObject (uploadDetails)
-- has a fileObject === uploadDetails
-- has .filename === uploadDetails.name
-- has queued status
-- has content from Jaml file
-- has uploading class
-- doesn't affect sort order
-- makes the overall meal images node dirty
-- returns this RD.AlbumUpload
-* /
-
-RD.AlbumUpload.prototype.initFromUpload = function(uploadDetails) {
-	RD.debug("Initializing meal " + this.localID + " from upload.");
-
-  // error check
-  if (!(uploadDetails && uploadDetails.id != null && uploadDetails.name != null)) {
-   	debug("ERROR: Uploading Meal Images must exist (" + uploadDetails + " and have an id (" + (uploadDetails ? uploadDetails.id : "obj is null") + ") and a filename (" + (uploadDetails ? uploadDetails.filename : "obj is null") + ")");
-		return this._badFileUpload(uploadDetails); // which prints out the details
-  }
-
-  // save details
-  this.filename = uploadDetails.name;
-  this.fileObject = uploadDetails;
-
-  // set status
-  this.status = RD.AlbumUpload.statusMap["queued"];
-
-  // render and insert content
-  this._replaceWithRender("queued");
-  this.node.addClass("uploading");
-   
-	// make the meal images node dirty since we've added an image
-	RD.AlbumUpload.albumContainer.trigger("fileUploadStarted", {fileHandler: this, details: uploadDetails});
-
-  // return
-  RD.debug("Initialization done -- image has filename  " + this.filename);
-  return this;        
-}
 
 /*
 uploadStarted
@@ -921,55 +955,6 @@ RD.AlbumUpload.isAlbumUpload = function(object) {
 		return false;
 }
 
-
-/*
-becomeKey
-Makes this meal image the key image.
-
-Outcomes:
-- returns true immediately if the image is already the key pic
-- RD.AlbumUpload.keyImageStorage has a value === the mealImg's id
-- RD.AlbumUpload._keyPic === this.localID
-- afterward, the meal image node has class keyPic
-- afterward, no other image nodes have class keyPic
-- unless told not to, a keyPicRegistered event is fired to let any handlers know a keyPic was registered
-- returns true if it succeeds
-* /
-
-RD.AlbumUpload.prototype.becomeKeyPic = function(options) {
-	if (RD.AlbumUpload.keyImageStorage) {
-		var currentKeyPicId = RD.AlbumUpload._keyPic;
-		debug("become key pic called for " + this.localID + ", current: " + currentKeyPicId + ", same: " + (currentKeyPicId === this.localID));
-	
-		if (currentKeyPicId !== undefined && currentKeyPicId === this.localID) {
-			return true;
-		}
-	
-		// set the values
-	  RD.AlbumUpload.keyImageStorage.val(this.id);
-		RD.AlbumUpload._keyPic = this.localID;
-	
-		// set up default options if not supplied
-		if (!options) {
-			options = {};
-		}
-	
-		// handle classes
-		RD.AlbumUpload.albumContainer.find("." + RD.AlbumUpload.cssClasses.keyPic).removeClass(RD.AlbumUpload.cssClasses.keyPic);
-		this.node.addClass(RD.AlbumUpload.cssClasses.keyPic);
-
-		// trigger global event unless explicitly told not to, e.g. on page load
-		// eventually this might be a call to a global Mealstrom
-		// is it dangerous to pass the meal image?
-		if (options.surpressEvent !== true) {
-			//console.log("Triggering event");
-			this.node.trigger("keyImageChange", {albumUpload: this});
-		}
-	}
-		
-  return true;
-}
-
 /*
 getKeyPic
 Gets the key pic object.
@@ -1004,7 +989,7 @@ RD.AlbumUpload.clear = function(localId) {
 		if (keyPic && keyPic.localID === mi.localID) {
 			// remove this from being key pic
 			delete RD.AlbumUpload._keyPic;
-			RD.AlbumUpload.keyImageStorage.val("");
+			RD.AlbumUpload.keyPicStorage.val("");
 		}
 
 		mi.node.remove();
@@ -1082,16 +1067,6 @@ RD.AlbumUpload.images = function() {
 }
 
 
-
-
-RD.AlbumUpload.prototype._badFileUpload = function(data) {
-	// used when the SWFUploader adds a file, but that file is missing essential content
-	// I expect this never to fire, but better to be secure than sorry
-	// notify the console of the error, then render the error view
-	// we can't recover, since SWFUpload doesn't requeue on file errors
-	debug("Bad file upload! " + (data ? RD.showSource(data) : "null!"));
-	return this.uploadErrored({isRecoverable: false, shortDescription: "Problem uploading file!"});	
-}
 
 RD.AlbumUpload.prototype._getDialog = function() {
 	// make sure we're at the right states -- this should be filtered

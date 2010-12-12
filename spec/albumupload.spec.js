@@ -57,6 +57,10 @@ describe("AlbumUpload", function() {
         it("should provide the ID/name for the order of images", function() {
             expect(RD.AlbumUpload.imageSortList).toBeDefined();
         })
+        
+        it("should provide default options for uploader sortables", function() {
+            expect(typeof(RD.AlbumUpload.sortableOptions)).toBe("object");
+        })
     })
 
     describe("JAML", function() {

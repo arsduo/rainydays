@@ -2,15 +2,30 @@ describe("AlbumUpload", function() {
     describe("image prototype", function() {
         // initialize the whole shebang
         RD.AlbumUpload.initialize();
-        var uploader, image;
-
+        var uploader, image, testNodes;
         beforeEach(function() {
             // stub the album container
-            uploader = RD.createObject(RD.AlbumUpload.uploaderPrototype);
-            uploader.albumContainer = $("<div/>");
+            testNodes = $("<div/>", {
+                id: "testNode",
+                style: "display: none;"
+            })
+            testNodes.append($("<div/>", {id: "sort"}));
+            $("body").append(testNodes);
+            
+            spyOn(RD.UploadManager, "create")
+
+            
+            uploader = RD.AlbumUpload.newUploader({
+                albumContainerID: "sort",
+                swfuploadOptions: {}
+            });
 
             // create the raw image
             image = RD.createObject(RD.AlbumUpload.imagePrototype);
+        });
+        
+        afterEach(function() {
+            testNodes.remove();
         })
 
         describe("initialize", function() {
@@ -279,23 +294,20 @@ describe("AlbumUpload", function() {
             it("should set the appropriate CSS class for horizontal images", function() {
                 initFromDBArgs.width = 3;
                 initFromDBArgs.height = 2;
-                spyOn(image.node, "addClass");
                 image.initFromDatabase(initFromDBArgs);
-                expect(image.node.addClass).toHaveBeenCalledWith(RD.AlbumUpload.cssClasses.horizontalImage);
+                expect(image.node.attr("class")).toMatch(RD.AlbumUpload.cssClasses.horizontalImage);
             })
 
             it("should set the appropriate CSS class for vertical images", function() {
                 initFromDBArgs.width = 2;
                 initFromDBArgs.height = 3;
-                spyOn(image.node, "addClass");
                 image.initFromDatabase(initFromDBArgs);
-                expect(image.node.addClass).toHaveBeenCalledWith(RD.AlbumUpload.cssClasses.verticalImage);
+                expect(image.node.attr("class")).toMatch(RD.AlbumUpload.cssClasses.verticalImage);
             })
 
             it("should remove the uploading class", function() {
-                spyOn(image.node, "removeClass");
                 image.initFromDatabase(initFromDBArgs);
-                expect(image.node.removeClass).toHaveBeenCalledWith(RD.AlbumUpload.cssClasses.uploading);
+                expect(image.node.attr("class")).not.toMatch(RD.AlbumUpload.cssClasses.uploading);
             })
 
             it("should render the visible content", function() {
@@ -310,7 +322,7 @@ describe("AlbumUpload", function() {
                 // establish up the classes and associated methods we'll be looking at 
                 links[classes.deleteLink] = "toggleDeletion";
                 links[classes.magnifyLink] = "showFullImage";
-                links[classes.makeKeyPicLink] = "becomeKeyPic";
+                links[classes.makeKeyPicLink] = "setKeyPic";
                 
                 beforeEach(function() {
                     fake = $("<div/>"), ignoredFake = $("<div/>");
@@ -334,7 +346,10 @@ describe("AlbumUpload", function() {
                         })
 
                         it("should bind a click listener to the " + cssClass + " link that triggers the " + method + " function", function() {
-                            spyOn(image, method);
+                            // setKeyPic is called on the image's uploader
+                            var target = (cssClass === classes.makeKeyPicLink ? image.uploader : image);
+                            
+                            spyOn(target, method);
                             image.initFromDatabase(initFromDBArgs);
                             expect(fake.bind).toHaveBeenCalled();
 
@@ -345,7 +360,7 @@ describe("AlbumUpload", function() {
                             // now make sure the function calls the right method when invoked
                             expect(typeof(args[1])).toBe("function");
                             args[1]();
-                            expect(image[method]).toHaveBeenCalled();
+                            expect(target[method]).toHaveBeenCalled();
                         })
                     })
                 }
@@ -366,6 +381,88 @@ describe("AlbumUpload", function() {
                 image.initFromDatabase(initFromDBArgs);
                 expect(image.addData).toHaveBeenCalledWith("id", initFromDBArgs.id);
             })
+
+            describe("key pic", function() {
+                it("should become the key pic if there's no key pic set", function() {
+                    delete image.uploader.keyPic;
+                    spyOn(image.uploader, "setKeyPic");
+                    image.initFromDatabase(initFromDBArgs);
+                    expect(image.uploader.setKeyPic).toHaveBeenCalledWith(image);
+                })
+                
+                it("should become the key pic if there's a previous key pic, but this is marked", function() {
+                    delete image.uploader.keyPic;
+                    initFromDBArgs.isKeyPic = true;
+                    spyOn(image.uploader, "setKeyPic");
+                    image.initFromDatabase(initFromDBArgs);
+                    expect(image.uploader.setKeyPic).toHaveBeenCalledWith(image);
+                })
+
+                it("should not become the key pic if there's a previous key pic", function() {
+                    image.uploader.keyPic = 2;
+                    spyOn(image.uploader, "setKeyPic");
+                    image.initFromDatabase(initFromDBArgs);
+                    expect(image.uploader.setKeyPic).not.toHaveBeenCalled();
+                })                
+            })
+
+            it("should return the image", function() {
+                expect(image.initFromDatabase(initFromDBArgs)).toBe(image);
+            })
+        })
+
+        describe("initFromUpload", function() {
+            var uploadArgs;
+            beforeEach(function() {
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                })
+                
+                uploadArgs = {
+                    id: "SWFUpload1_0",
+                    name: "bar.jpg"
+                }
+            })
+            
+            
+            describe("if the right info isn't provided", function() {
+                beforeEach(function() {
+                    spyOn(image, "badFileUpload");                    
+                })
+                
+                it("should switch to badFileUpload if there are no upload parameters", function() {
+                    image.initFromUpload();
+                    expect(image.badFileUpload).toHaveBeenCalledWith(undefined);
+                })
+            
+                it("should throw an error if there's no ID parameter", function() {
+                    delete uploadArgs.id;
+                    image.initFromUpload(uploadArgs);
+                    expect(image.badFileUpload).toHaveBeenCalledWith(uploadArgs);
+                })
+
+                it("should throw an error if there's no name parameter", function() {
+                    delete uploadArgs.name;
+                    image.initFromUpload(uploadArgs);
+                    expect(image.badFileUpload).toHaveBeenCalledWith(uploadArgs);
+                })
+            })
+            
+            it("should save the filename on the image", function() {
+                image.initFromUpload(uploadArgs);
+                expect(image.filename).toBe(uploadArgs.name);
+            })            
+            
+            it("should save the file object on the image", function() {
+                image.initFromUpload(uploadArgs);
+                expect(image.fileObject).toBe(uploadArgs);
+            })            
+            
+            it("should set the status to queued", function() {
+                
+            })
+            
         })
 
         describe("badServerResponse", function() {
@@ -376,6 +473,22 @@ describe("AlbumUpload", function() {
             it("should call uploadErrored with recoverable: false and a shortDescription", function() {
                 spyOn(image, "uploadErrored");
                 image.badServerResponse();
+                expect(image.uploadErrored).toHaveBeenCalled();
+                var callArgs = image.uploadErrored.mostRecentCall.args[0];
+                expect(callArgs).toBeDefined();
+                expect(callArgs.isRecoverable).toBe(false);
+                expect(typeof(callArgs.shortDescription)).toBe("string");
+            })
+        })
+
+        describe("badFileUpload", function() {
+            beforeEach(function() {
+                spyOn(RD, "debug");
+            })
+
+            it("should call uploadErrored with recoverable: false and a shortDescription", function() {
+                spyOn(image, "uploadErrored");
+                image.badFileUpload();
                 expect(image.uploadErrored).toHaveBeenCalled();
                 var callArgs = image.uploadErrored.mostRecentCall.args[0];
                 expect(callArgs).toBeDefined();
@@ -406,7 +519,7 @@ describe("AlbumUpload", function() {
                 expect(image.inputName).not.toMatch(/[\[\]]/);
             })
 
-            it("shouldstrip trailing _", function() {
+            it("should strip trailing _", function() {
                 var str = "foo";
                 spyOn(image, "inputName").andCallThrough();
                 var result = image.inputID(str);
