@@ -564,17 +564,72 @@ describe("AlbumUpload", function() {
 
             it("should render the canceled content", function() {
                 spyOn(image, "renderContent");
-                image.uploadStarted();
+                image.uploadCanceled();
                 expect(image.renderContent).toHaveBeenCalledWith("canceled")
             })
             
             it("should change the status to canceled", function() {
-                image.uploadStarted();
+                image.uploadCanceled();
                 expect(image.status).toBe("canceled");
             })
             
             it("return the image", function() {
-                expect(image.uploadStarted()).toBe(image);
+                expect(image.uploadCanceled()).toBe(image);
+            })
+        })
+ 
+        describe("uploadProgressed", function() {
+            beforeEach(function() {
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                }).initFromUpload({
+                    id: "SWFUpload1_0",
+                    name: "bar.jpg"
+                }).uploadStarted();
+            })
+
+            it("should do nothing if passed an undefined status", function() {
+                spyOn(image.progressBar, "progressbar");
+                image.uploadProgressed();
+                image.uploadProgressed(null);
+                expect(image.progressBar.progressbar).not.toHaveBeenCalled();
+            })
+            
+            it("should call uploadStarted if it hasn't been called", function() {
+                image.status = "foo";
+                spyOn(image, "uploadStarted");
+                image.uploadProgressed(20);
+                expect(image.uploadStarted).toHaveBeenCalled();
+            })
+            
+            it("should update the progressBar value with argument * 100", function() {
+                var amount = 0.35;
+                spyOn(image.progressBar, "progressbar");
+                image.uploadProgressed(amount);
+                expect(image.progressBar.progressbar).toHaveBeenCalledWith("option", "value", amount * 100);
+            })
+            
+            it("should update any text nodes with the processingMessage class if the amount > 1", function() {
+                var node = $("<div class='" + RD.AlbumUpload.cssClasses.processingMessage + "'/>");
+                image.node.append(node);
+                image.uploadProgressed(1);
+                expect(node.html()).toBe(RD.AlbumUpload.labels.processing_uploaded_file)
+            })
+                        
+            it("should not render any content", function() {
+                spyOn(image, "renderContent");
+                image.uploadProgressed(10);
+                expect(image.renderContent).not.toHaveBeenCalled()
+            })
+            
+            it("should not change the status", function() {
+                image.uploadProgressed(20);
+                expect(image.status).toBe("uploading");
+            })
+            
+            it("should return the image", function() {
+                expect(image.uploadProgressed(20)).toBe(image);
             })
         })
 

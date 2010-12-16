@@ -49,7 +49,8 @@ RD.AlbumUpload = {
         deleteLink: "deleteLink",
         magnifyLink: "magnifyLink",
         makeKeyPicLink: "makeKeyPicLink",
-        progressbar: "progressbar"
+        progressbar: "progressbar",
+        processingMessage: "processingMessage"
     },
 
     labels: {
@@ -481,17 +482,19 @@ RD.AlbumUpload = {
         uploadProgressed: function(percentage) {
             RD.debug("Upload progressed to " + percentage + "% for mealImage " + this.localID);
 
-            // error check -- reset progress bar if it somehow gets deleted
-            if (!this.progressBar) {
-                this.uploadStarted();
-            }
+            if (percentage) {    
+                // error check -- reset progress bar if it somehow gets deleted
+                if (this.status !== "uploading") {
+                    this.uploadStarted();
+                }
 
-            // update the progressbar
-            this.progressBar.progressbar("option", "value", percentage * 100);
+                // update the progressbar
+                this.progressBar.progressbar("option", "value", percentage * 100);
 
-            // if percentage is 100%, say processing
-            if (percentage > 0.99) {
-                this.node.find(".processingMessage").html(RD.AlbumUpload.labels.processing_uploaded_file);
+                // if percentage is 100%, say processing
+                if (percentage > 0.99) {
+                    this.node.find("." + RD.AlbumUpload.cssClasses.processingMessage).html(RD.AlbumUpload.labels.processing_uploaded_file);
+                }
             }
 
             // return the item
