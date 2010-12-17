@@ -13,7 +13,7 @@ describe("AlbumUpload", function() {
             $("body").append(testNodes);
             
             spyOn(RD.UploadManager, "create")
-
+            spyOn(RD, "debug");
             
             uploader = RD.AlbumUpload.newUploader({
                 albumContainerID: "sort",
@@ -188,7 +188,6 @@ describe("AlbumUpload", function() {
 
             it("should throw an error if Jaml throws an error", function() {
                 var e = new Error(), fn = function() { image.renderContent("queued"); };
-                spyOn(RD, "debug");
                 spyOn(Jaml, "render").andThrow(e);
                 expect(fn).toThrow(e);
             })
@@ -239,8 +238,6 @@ describe("AlbumUpload", function() {
                     fullImageURL: "bar",
                     id: "bar"
                 }
-
-                spyOn(RD, "debug");
             })
 
             it("should call badServerResponse if it's not passed a valid object", function() {
@@ -633,11 +630,82 @@ describe("AlbumUpload", function() {
             })
         })
 
-        describe("badServerResponse", function() {
+        describe("uploadErrored", function() {
+            var errorDetails;
+            
             beforeEach(function() {
-                spyOn(RD, "debug");
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                }).initFromUpload({
+                    id: "SWFUpload1_0",
+                    name: "bar.jpg"
+                }).uploadStarted();
+                
+                errorDetails = {
+                    isRecoverable: false,
+                    shortDescription: "foo"
+                }
             })
 
+            describe("if the error is recoverable", function() {
+                beforeEach(function() {
+                    errorDetails.isRecoverable = true;
+                })
+
+                it("should change the status to queued", function() {
+                    image.uploadErrored(errorDetails);
+                    expect(image.status).toBe("queued");
+                })       
+
+                it("should not render any content", function() {
+                    spyOn(image, "renderContent");
+                    image.uploadErrored(errorDetails);
+                    expect(image.renderContent).not.toHaveBeenCalled()
+                })
+            })
+            
+            function unrecoverableTests() {
+                 it("should change the status to errored", function() {
+                     image.uploadErrored(errorDetails);
+                     expect(image.status).toBe("errored");
+                 })
+             
+                 it("should attach the image to the errored content", function() {
+                     image.uploadErrored(errorDetails);
+                     expect(errorDetails.image).toBe(image);
+                 })
+             
+                 it("should render the errored content", function() {
+                     spyOn(image, "renderContent").andCallThrough();
+                     image.uploadErrored(errorDetails);
+                     expect(image.renderContent).toHaveBeenCalledWith("errored", errorDetails)
+                 })
+             }
+            
+            describe("if the error is not recoverable", function() {
+                beforeEach(function() {
+                    errorDetails.isRecoverable = false;
+                })
+                
+                unrecoverableTests();
+            })
+            
+            describe("if the retry limit has been passed", function() {
+                beforeEach(function() {
+                    image.retryCount = RD.AlbumUpload.retryLimit + 1;
+                })
+                
+                unrecoverableTests();
+            })
+                        
+            it("return the image", function() {
+                expect(image.uploadCanceled()).toBe(image);
+            })
+        })
+
+
+        describe("badServerResponse", function() {
             it("should call uploadErrored with recoverable: false and a shortDescription", function() {
                 spyOn(image, "uploadErrored");
                 image.badServerResponse();
@@ -650,10 +718,6 @@ describe("AlbumUpload", function() {
         })
 
         describe("badFileUpload", function() {
-            beforeEach(function() {
-                spyOn(RD, "debug");
-            })
-
             it("should call uploadErrored with recoverable: false and a shortDescription", function() {
                 spyOn(image, "uploadErrored");
                 image.badFileUpload();

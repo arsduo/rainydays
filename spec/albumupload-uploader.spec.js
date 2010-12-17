@@ -3,6 +3,7 @@ describe("AlbumUpload", function() {
         var uploader;
         beforeEach(function() {
             uploader = RD.createObject(RD.AlbumUpload.uploaderPrototype);
+            spyOn(RD, "debug");
         })
 
         it("should provide a prototype", function() {
@@ -213,7 +214,6 @@ describe("AlbumUpload", function() {
 					imgMock = RD.createObject(RD.AlbumUpload.imagePrototype);
 					spyOn(RD, "createObject").andReturn(imgMock);
 					spyOn(imgMock, "initialize");
-					spyOn(RD, "debug");
 				})
 
 

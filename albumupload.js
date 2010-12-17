@@ -501,6 +501,40 @@ RD.AlbumUpload = {
             return this;
         },
         
+        /*
+        uploadErrored
+        This is triggered when an upload encounters an error, and either aborts or gets queued again.
+
+        Assumptions:
+        - Jaml has a template called "errored" (failure: throws exception w/ an alert, since the page itself is broken we can't recover)
+
+        Other outcomes / test cases:
+        - errorCount is incremented (or set to 1 if it was null)
+        - if the error is recoverable and it hasn't over-errored, it's set to queued again
+        - if not, the status is set to errored
+        - returns this RD.AlbumUpload
+        */
+
+        uploadErrored: function(errorDetails) {
+        	// add an error count
+        	this.errorCount = (this.errorCount || 0) + 1;
+
+        	if (errorDetails.isRecoverable && this.errorCount <= RD.AlbumUpload.retryLimit) {
+        		RD.debug("Retrying upload.");
+                // if we're retrying it, reset the status
+        		this.status = "queued"; 
+        	}	
+            else {
+            	RD.debug("Error details shortDescription: " + errorDetails.shortDescription);
+            	this.status = "errored";
+            	
+            	errorDetails.image = this;
+            	this.renderContent("errored", errorDetails);
+            }
+            
+        	return this;
+        },
+        
         badServerResponse: function(response) {
         	// used when the server responds successfully, but the content isn't what we expect
         	// notify the console of the error, then render the error view
@@ -518,7 +552,6 @@ RD.AlbumUpload = {
         	return this.uploadErrored({isRecoverable: false, shortDescription: "Problem uploading file!"});	
         },
         
-        uploadErrored: function() {},
         toggleDeletion: function() {},
         showFullImage: function() {}        
         
@@ -620,42 +653,6 @@ RD.AlbumUpload = {
 
     	RD.debug("Loading Jaml done!");
     }
-}
-
-
-/*
-uploadErrored
-This is triggered when an upload encounters an error, and either aborts or gets queued again.
-
-Assumptions:
-- Jaml has a template called "errored" (failure: throws exception w/ an alert, since the page itself is broken we can't recover)
-
-Other outcomes / test cases:
-- errorCount is incremented (or set to 1 if it was null)
-- if the error is recoverable and it hasn't over-errored, it's set to queued again
-- if not, the status is set to errored
-- returns this RD.AlbumUpload
-* /
-
-RD.AlbumUpload.prototype.uploadErrored = function(errorDetails) {
-	errorDetails.mealImage = this;
-	this.status = RD.AlbumUpload.statusMap["errored"];
-	
-	// add an error count
-	if (!this.errorCount)
-		this.errorCount = 1;
-	else
-		this.errorCount++;
-	
-	if (errorDetails.isRecoverable && this.errorCount <= RD.AlbumUpload.retryLimit) {
-		debug("Retrying upload.");
-		this.status = RD.AlbumUpload.statusMap["queued"]; // if we're retrying it
-	}	
-	
-	RD.debug("Error details shortDescription: " + errorDetails.shortDescription);
-	this._replaceWithRender("errored", errorDetails);
-
-	return this;
 }
 
 /*
