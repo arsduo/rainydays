@@ -58,5 +58,14 @@ describe("RD global object", function() {
 				expect(child[property]).toBe(proto[property]);
 			}
 		})
+		
+		it("should use the native Object.create if available, RD-defined if not", function() {
+		    if (Object.create) {
+		        expect(RD.createObject).toBe(Object.create);
+		    }
+		    else {
+		        expect(typeof(RD.createObject)).toBe("function")
+		    }
+		})
 	})
 })

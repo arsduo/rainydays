@@ -4,7 +4,7 @@ RD.UploadManager = {
     create: function(options, handler) {
         var instance;
 
-        instance = Object.create(this.instancePrototype);
+        instance = RD.createObject(this.instancePrototype);
         instance.options = $.extend({}, this.defaultOptions, options, instance.getHandlers());
         instance.swfu = new SWFUpload(instance.options);
         instance.handler = handler;

@@ -31,11 +31,19 @@ var RD = {
         return debugFunction;
     }()),
 
-    createObject: function(object) {
-        var F = function() {};
-        F.prototype = object;
-        return new F();
-    }
+    createObject: (function() {
+        // use native Object.create if available
+        if (typeof(Object.create) === "function") {
+            return Object.create;
+        }
+        else {
+            return function(object) {
+                var F = function() {};
+                F.prototype = object;
+                return new F();
+            }
+        }
+    }())
 }
 
 /*

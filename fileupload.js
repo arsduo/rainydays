@@ -40,7 +40,7 @@ RD.FileUpload = {
     // limit the queue to one file at a time
     options.swfuploadOptions.file_queue_limit = 1;
 
-    var instance = Object.create(this.instancePrototype).init(options);
+    var instance = RD.createObject(this.instancePrototype).init(options);
     // ensure we know what to expect from the server
     instance.fileFieldName = options.fileFieldName || "fullImageURL";
 
