@@ -704,6 +704,51 @@ describe("AlbumUpload", function() {
             })
         })
 
+		describe("uploadCompleted", function() {
+            var completionDetails;
+
+			beforeEach(function() {
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                }).initFromUpload({
+                    id: "SWFUpload1_0",
+                    name: "bar.jpg"
+                }).uploadStarted();
+
+				completionDetails = {
+					id: "foo"
+				}
+            })
+
+			it("should call badServerResponse if the imageDetails aren't a provided object", function() {
+				var result = {};
+				spyOn(image, "badServerResponse").andReturn(result);
+
+				expect(image.uploadCompleted(null)).toBe(result);
+				expect(image.uploadCompleted(2)).toBe(result);
+				
+				expect(image.badServerResponse).toHaveBeenCalled();
+				expect(image.badServerResponse.callCount).toBe(2);
+			})
+			
+			it("should call initFromDatabase with the results", function() {
+				spyOn(image, "initFromDatabase").andReturn(image);
+				image.uploadCompleted(completionDetails);
+				expect(image.initFromDatabase).toHaveBeenCalledWith(completionDetails);
+			})
+			
+			it("should trigger fileUploadCompleted with the image", function() {
+				spyOn(image.node, "trigger");
+				image.uploadCompleted(completionDetails);
+				expect(image.node.trigger).toHaveBeenCalledWith("fileUploadCompleted", {image: image});
+			})
+			
+			it("should return the image", function() {
+				expect(image.uploadCompleted(completionDetails)).toBe(image);
+			})
+			
+		})
 
         describe("badServerResponse", function() {
             it("should call uploadErrored with recoverable: false and a shortDescription", function() {

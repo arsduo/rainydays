@@ -534,6 +534,34 @@ RD.AlbumUpload = {
             
         	return this;
         },
+
+		/*
+		uploadCompleted
+		Fired when the mealImage has finished uploading; triggers initialization from the database.
+
+		Assumptions:
+		- imageDetails is a valid object (failure: turns the meal image to an error)
+
+		Other outcomes / test cases:
+		- returns the same output as initFromDatabase
+		*/
+
+		uploadCompleted: function(imageDetails) {
+			RD.debug("Received results! " + imageDetails);
+			
+			if (!imageDetails || typeof(imageDetails) !== "object") {
+				return this.badServerResponse(imageDetails);
+		  	}
+
+			// re-initialize this node from the image details
+			this.initFromDatabase(imageDetails);
+
+			// trigger an event
+			this.node.trigger("fileUploadCompleted", {image: this});
+
+			return this;
+		},
+
         
         badServerResponse: function(response) {
         	// used when the server responds successfully, but the content isn't what we expect
@@ -552,8 +580,40 @@ RD.AlbumUpload = {
         	return this.uploadErrored({isRecoverable: false, shortDescription: "Problem uploading file!"});	
         },
         
-        toggleDeletion: function() {},
-        showFullImage: function() {}        
+		/*
+		toggleDeletion
+		Sets the image to be deleted or not deleted.
+
+		Assumptions:
+		- mealImage is either in deleted or visible state (failure: returns with on changes)
+
+		Other outcomes / test cases:
+		- if it's not currently deleted, node gains the markedForDeletion class and status is DELETING
+		- otherwise, status is VISIBLE and the class isn't present
+		- executed an arbitrary number of times, the status and class are always in sync
+		*/
+
+		toggleDeletion: function() {
+			// make sure we're at the right states -- this should be filtered
+			if (!(this.status === "visible" || this.status === "deleting")){
+				// this has no effect on other states 
+				return;
+			}
+
+			// gets the dialog object for the meal deletion option
+			if (this.status === RD.AlbumUpload.statusMap["deleting"]) {
+				this.node.removeClass("markedForDeletion");
+				this.status = RD.AlbumUpload.statusMap["visible"];
+				this.deletionFlag.remove();
+			}
+			else {
+				this.node.addClass("markedForDeletion");
+				this.status = RD.AlbumUpload.statusMap["deleting"];
+				this.node.append(this.deletionFlag);
+			}
+		},
+		
+		showFullImage: function() {}        
         
         /*
         becomeKey
@@ -653,66 +713,6 @@ RD.AlbumUpload = {
 
     	RD.debug("Loading Jaml done!");
     }
-}
-
-/*
-uploadCompleted
-Fired when the mealImage has finished uploading; triggers initialization from the database.
-
-Assumptions:
-- imageDetails is a valid object (failure: turns the meal image to an error)
-
-Other outcomes / test cases:
-- returns the same output as initFromDatabase
-* /
-
-RD.AlbumUpload.prototype.uploadCompleted = function(imageDetails) {
-	var result;
-	debug("Received results! " + imageDetails);
-	if (!imageDetails || typeof(imageDetails) != "object") {
-		return this._badServerResponse(imageDetails);
-  }
-  
-	result = this.initFromDatabase(imageDetails);
-	
-	// trigger an event
-	this.node.trigger("fileUploadCompleted", result);
-	
-	// re-initialize this node from the image details
-  return result;
-}
-
-/*
-toggleDeletion
-Sets the image to be deleted or not deleted.
-
-Assumptions:
-- mealImage is either in deleted or visible state (failure: returns with on changes)
-
-Other outcomes / test cases:
-- if it's not currently deleted, node gains the markedForDeletion class and status is DELETING
-- otherwise, status is VISIBLE and the class isn't present
-- executed an arbitrary number of times, the status and class are always in sync
-* /
-
-RD.AlbumUpload.prototype.toggleDeletion = function() {
-	// make sure we're at the right states -- this should be filtered
-	if (!(this.status === RD.AlbumUpload.statusMap["visible"] || this.status === RD.AlbumUpload.statusMap["deleting"])){
-		// this has no effect on other states 
-		return;
-	}
-	 
-  // gets the dialog object for the meal deletion option
-	if (this.status === RD.AlbumUpload.statusMap["deleting"]) {
-	  this.node.removeClass("markedForDeletion");
-		this.status = RD.AlbumUpload.statusMap["visible"];
-		this.deletionFlag.remove();
-	}
-	else {
-	  this.node.addClass("markedForDeletion");
-		this.status = RD.AlbumUpload.statusMap["deleting"];
-		this.node.append(this.deletionFlag);
-	}
 }
 
 /*
