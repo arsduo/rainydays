@@ -105,8 +105,9 @@ describe("AlbumUpload", function() {
                 expect(Jaml.register.callCount).toBe(templateCount);
             })
 
-            /*
-            it("should provide Jaml.register with the info for each template", function() {
+
+			// not yet working
+            xit("should provide Jaml.register with the info for each template", function() {
                 var name, fn;
                 RD.AlbumUpload.registerJamlTemplates();
 
@@ -117,7 +118,6 @@ describe("AlbumUpload", function() {
                     expect(fn).toBe(jamlTemplates[name])
                 }
             })
-            */
         })
     })
 

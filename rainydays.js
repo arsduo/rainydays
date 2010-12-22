@@ -22,7 +22,16 @@ var RD = {
 
         try {
             console.log("Setting debug function.");
-            debugFunction = function() { console.log.apply(console, arguments) };
+            debugFunction = function() {
+				if (console.log.apply) {
+					console.log.apply(console, arguments);
+				}
+				else {
+					// thanks to http://paulirish.com/2009/log-a-lightweight-wrapper-for-consolelog/
+					// for help working around IE's lack of console.log.apply
+					console.log(Array.prototype.slice.call(arguments)); 
+				}
+			}
         }
         catch (ex) {
             debugFunction = function() {};
@@ -148,7 +157,6 @@ RD.Page = (function() {
 			  return text;
 			}
 		},
-
 
 		/* initialization */
 		initialize: function() {
