@@ -20,7 +20,10 @@ describe("RD global object", function() {
 
 		// this avoids any unnecessary output for the console
 		beforeEach(function() {
-			spyOn(console, "log");
+			if (window.console && window.console.log) {
+				// don't need to spy on the function if it doesn't exist
+				spyOn(window.console, "log");
+			}
 		})
 
 		it("should create a debug function", function() {

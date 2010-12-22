@@ -7,7 +7,25 @@ describe("RD.Page", function() {
             count++;
             return "foo" + count;
         }
-        }());
+    }());
+
+		function executeWithEvent(fn) {
+			// we have to stimulate a window.event in order for IE testing to work
+			// since the property is readonly
+			// we use an input node since Gecko browsers don't support click() on non-inputs
+			var node = document.createElement("input");
+			document.getElementsByTagName("body")[0].appendChild(node);
+
+			var onclick = node.onclick;
+
+			node.onclick = fn;
+			
+			// execute our function
+			node.click();
+			
+			// cleanup
+			node.parentNode.removeChild(node);
+		}
 
         it("should exist", function() {
             expect(typeof(RD.Page)).toBe("object");
@@ -348,12 +366,14 @@ describe("RD.Page", function() {
                     text = RD.Page.text, testText = "extra";
                     RD.Page.text = testText;
                     e = {};
-                    window.event = {};
+					// IE doesn't let us set window.event
+                    try { window.event = {}; } catch (exception) {}
                 })
 
                 afterEach(function() {
                     RD.Page.text = text;
-                    window.event = eventHolder;
+					// IE doesn't let us set window.event
+                    try { window.event = eventHolder; } catch (exception) {}
                 })
 
                 // collect all the negative tests, since they're used three times
@@ -369,8 +389,12 @@ describe("RD.Page", function() {
                         })
 
                         it("should set the returnValue of window.event if e is not provided", function() {
-                            RD.Page.alertForDirtyPage();
-                            expect(window.event.returnValue).not.toBeDefined();
+                            var returnValue; 
+							executeWithEvent(function() {
+								RD.Page.alertForDirtyPage();
+								returnValue = window.event.returnValue;
+							})
+							expect(returnValue).not.toBeDefined();
                         })
                     })
 
@@ -401,8 +425,12 @@ describe("RD.Page", function() {
                         })
 
                         it("should set the returnValue of window.event if e is not provided", function() {
-                            RD.Page.alertForDirtyPage();
-                            expect(window.event.returnValue).not.toBeDefined();
+                            var returnValue; 
+							executeWithEvent(function() {
+								RD.Page.alertForDirtyPage();
+								returnValue = window.event.returnValue;
+							})
+							expect(returnValue).not.toBeDefined();
                         })
                     })
                 }
@@ -428,8 +456,12 @@ describe("RD.Page", function() {
                             })
 
                             it("should set the returnValue of window.event if e is not provided", function() {
-                                RD.Page.alertForDirtyPage();
-                                expect(window.event.returnValue).toBe(testText);
+	                            var returnValue; 
+								executeWithEvent(function() {
+									RD.Page.alertForDirtyPage();
+									returnValue = window.event.returnValue;
+								})
+								expect(returnValue).toBe(testText);
                             })
                         })
 
@@ -460,8 +492,12 @@ describe("RD.Page", function() {
                             })
 
                             it("should set the returnValue of window.event if e is not provided", function() {
-                                RD.Page.alertForDirtyPage();
-                                expect(window.event.returnValue).toBe(otherText);
+	                            var returnValue; 
+								executeWithEvent(function() {
+									RD.Page.alertForDirtyPage();
+									returnValue = window.event.returnValue;
+								})
+								expect(returnValue).toBe(otherText);
                             })
                         })
                     })

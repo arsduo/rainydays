@@ -79,7 +79,7 @@ RD.Page = (function() {
 	/************************************************
  	 * PUBLIC CLASS FUNCTIONS                       *
    ************************************************/
-	var pageManger = {
+	var pageManager = {
 		/* manage dirty status */
 		isPageDirty: function(){
 			return dirtyFields.length > 0;
@@ -121,9 +121,9 @@ RD.Page = (function() {
 		// if you want to compose a more elaborate text
 		composeText: null,
 
-    isIntentionalExitActivated: function() {
-      return surpressExitDialog;
-    },
+		isIntentionalExitActivated: function() {
+			return surpressExitDialog;
+		},
 
 		allowIntentionalExit: function() {
 		  surpressExitDialog = true;
@@ -137,7 +137,8 @@ RD.Page = (function() {
 		alertForDirtyPage: function(e) {
 			// if the page is dirty, fires an alert to make sure the user intends to leave
 			if (RD.Page.isPageDirty() && !surpressExitDialog) {
-			  var text = typeof(RD.Page.composeText) === "function" ? RD.Page.composeText(RD.Page.getDirtyFields()) : pageManger.text;
+			  var text = typeof(RD.Page.composeText) === "function" ? RD.Page.composeText(RD.Page.getDirtyFields()) : pageManager.text;
+			
 			  var e = e || window.event;
 			  if (e) { // For IE and Firefox
 			    e.returnValue = text;
@@ -169,7 +170,7 @@ RD.Page = (function() {
      ************************************************/
 
 	// finally, return our public interface
-	return pageManger;
+	return pageManager;
 	// execute immediately, creating our singleton object
 }())
 
