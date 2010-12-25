@@ -11,10 +11,10 @@ describe("AlbumUpload", function() {
             })
             testNodes.append($("<div/>", {id: "sort"}));
             $("body").append(testNodes);
-            
+
             spyOn(RD.UploadManager, "create")
             spyOn(RD, "debug");
-            
+
             uploader = RD.AlbumUpload.newUploader({
                 albumContainerID: "sort",
                 swfuploadOptions: {}
@@ -23,7 +23,7 @@ describe("AlbumUpload", function() {
             // create the raw image
             image = RD.createObject(RD.AlbumUpload.imagePrototype);
         });
-        
+
         afterEach(function() {
             testNodes.remove();
         })
@@ -61,7 +61,7 @@ describe("AlbumUpload", function() {
                 image.initialize(initOptions);
                 expect(image.status).toBe("created");
             })
-            
+
             it("should create the details object", function() {
                 image.initialize(initOptions);
                 expect(image.details).toBeDefined();
@@ -111,7 +111,7 @@ describe("AlbumUpload", function() {
                 image.createNode();
                 expect(image.node.data).toHaveBeenCalledWith(RD.AlbumUpload.imageDataKey, image);
             })
-            
+
             it("should find the data node and set it to dataNode", function() {
                 var result = $("<div/>"), result2 = $("<div/>");
                 // image.node
@@ -122,7 +122,7 @@ describe("AlbumUpload", function() {
                 expect(image.node.find).toHaveBeenCalledWith("." + RD.AlbumUpload.cssClasses.imageData);
                 expect(image.dataNode).toBe(result2);
             })
-            
+
             describe("the sort order node", function() {
                 var input;
 
@@ -130,7 +130,7 @@ describe("AlbumUpload", function() {
                     image.createNode();
                     input = image.dataNode.find("." + RD.AlbumUpload.imageSortList)[0];
                 })
-                
+
                 it("should be an input", function() {
                     expect(input).toBeDefined();
                     expect(input.tagName).toBe("INPUT");
@@ -253,14 +253,14 @@ describe("AlbumUpload", function() {
                         spyOn(image, "badServerResponse");
                         image.initFromDatabase(initFromDBArgs);
                         expect(image.badServerResponse).toHaveBeenCalledWith(initFromDBArgs);
-                    })                    
+                    })
                 }
 
                 for (var i = 0; i < requiredProperties.length; i++) {
                     testRequiredProperty(i);
                 }
             })
-            
+
             it("should copy all the details from the initialization into the details property", function() {
                 var fake = {a: 3}, originalDetails = image.details;
                 spyOn(RD.jQuery, "extend").andReturn(fake);
@@ -268,7 +268,7 @@ describe("AlbumUpload", function() {
                 expect(RD.jQuery.extend).toHaveBeenCalledWith(originalDetails, initFromDBArgs);
                 expect(image.details).toBe(fake);
             })
-            
+
             it("should copy the id to the remoteID property", function() {
                 image.initFromDatabase(initFromDBArgs);
                 expect(image.remoteID).toBe(initFromDBArgs.id);
@@ -316,11 +316,11 @@ describe("AlbumUpload", function() {
             describe("link bindings", function() {
                 // due to scoping with the for loop, we have a lot of nesting here
                 var classes = RD.AlbumUpload.cssClasses, links = {}, fake, ignoredFake;
-                // establish up the classes and associated methods we'll be looking at 
+                // establish up the classes and associated methods we'll be looking at
                 links[classes.deleteLink] = "toggleDeletion";
                 links[classes.magnifyLink] = "showFullImage";
                 links[classes.makeKeyPicLink] = "setKeyPic";
-                
+
                 beforeEach(function() {
                     fake = $("<div/>"), ignoredFake = $("<div/>");
                     spyOn(fake, "bind");
@@ -336,7 +336,7 @@ describe("AlbumUpload", function() {
                                 return (css.match(cssClass)) ? fake : ignoredFake;
                             })
                         })
-                        
+
                         it("should get to the " + cssClass + " link in the node", function() {
                             image.initFromDatabase(initFromDBArgs);
                             expect(image.node.find).toHaveBeenCalledWith("." + cssClass);
@@ -345,7 +345,7 @@ describe("AlbumUpload", function() {
                         it("should bind a click listener to the " + cssClass + " link that triggers the " + method + " function", function() {
                             // setKeyPic is called on the image's uploader
                             var target = (cssClass === classes.makeKeyPicLink ? image.uploader : image);
-                            
+
                             spyOn(target, method);
                             image.initFromDatabase(initFromDBArgs);
                             expect(fake.bind).toHaveBeenCalled();
@@ -366,12 +366,12 @@ describe("AlbumUpload", function() {
                     linkTests(link, links[link]);
                 }
             })
-                        
+
             it("should set the status to visible", function() {
                 image.initFromDatabase(initFromDBArgs);
                 expect(image.status).toBe("visible");
             })
-            
+
             it("should use addData to store the remote ID", function() {
                 initFromDBArgs.id = "foo";
                 spyOn(image, "addData");
@@ -386,7 +386,7 @@ describe("AlbumUpload", function() {
                     image.initFromDatabase(initFromDBArgs);
                     expect(image.uploader.setKeyPic).toHaveBeenCalledWith(image);
                 })
-                
+
                 it("should become the key pic if there's a previous key pic, but this is marked", function() {
                     delete image.uploader.keyPic;
                     initFromDBArgs.isKeyPic = true;
@@ -400,7 +400,7 @@ describe("AlbumUpload", function() {
                     spyOn(image.uploader, "setKeyPic");
                     image.initFromDatabase(initFromDBArgs);
                     expect(image.uploader.setKeyPic).not.toHaveBeenCalled();
-                })                
+                })
             })
 
             it("should return the image", function() {
@@ -415,24 +415,24 @@ describe("AlbumUpload", function() {
                     localID: 2,
                     uploader: uploader
                 })
-                
+
                 uploadArgs = {
                     id: "SWFUpload1_0",
                     name: "bar.jpg"
                 }
             })
-            
-            
+
+
             describe("if the right info isn't provided", function() {
                 beforeEach(function() {
-                    spyOn(image, "badFileUpload");                    
+                    spyOn(image, "badFileUpload");
                 })
-                
+
                 it("should switch to badFileUpload if there are no upload parameters", function() {
                     image.initFromUpload();
                     expect(image.badFileUpload).toHaveBeenCalledWith(undefined);
                 })
-            
+
                 it("should throw an error if there's no ID parameter", function() {
                     delete uploadArgs.id;
                     image.initFromUpload(uploadArgs);
@@ -445,17 +445,17 @@ describe("AlbumUpload", function() {
                     expect(image.badFileUpload).toHaveBeenCalledWith(uploadArgs);
                 })
             })
-            
+
             it("should save the filename on the image", function() {
                 image.initFromUpload(uploadArgs);
                 expect(image.filename).toBe(uploadArgs.name);
-            })            
-            
+            })
+
             it("should save the file object on the image", function() {
                 image.initFromUpload(uploadArgs);
                 expect(image.fileObject).toBe(uploadArgs);
-            })      
-            
+            })
+
             it("should set the status to queued", function() {
                 image.initFromUpload(uploadArgs);
                 expect(image.status).toBe("queued");
@@ -465,14 +465,14 @@ describe("AlbumUpload", function() {
                 spyOn(image, "renderContent");
                 image.initFromUpload(uploadArgs);
                 expect(image.renderContent).toHaveBeenCalledWith("queued");
-            })            
-            
+            })
+
             it("should add the uploading class to the element", function() {
                 image.node.attr("class", "")
                 image.initFromUpload(uploadArgs);
                 expect(image.node.attr("class")).toBe("uploading");
-            })            
-            
+            })
+
             it("should trigger the fileUploadStarted event on the albumContainer with {image: image}", function() {
                 var triggered = false, args, evented = function(data) {
                     triggered = true;
@@ -480,12 +480,12 @@ describe("AlbumUpload", function() {
                 }
                 image.uploader.albumContainer.bind("fileUploadStarted", evented);
                 image.initFromUpload(uploadArgs);
-                
+
                 expect(triggered).toBe(true);
                 expect(!!args[1]).toBe(true);
                 expect(args[1].image).toBe(image)
             })
-            
+
             it("should return the image", function() {
                 expect(image.initFromUpload(uploadArgs)).toBe(image);
             })
@@ -507,7 +507,7 @@ describe("AlbumUpload", function() {
                 image.uploadStarted();
                 expect(image.renderContent).toHaveBeenCalledWith("uploading")
             })
-            
+
             it("should get the progressbar if it doesn't exist", function() {
                 var oldValue = jQuery.ui.progressbar;
                 delete jQuery.ui.progressbar;
@@ -522,27 +522,27 @@ describe("AlbumUpload", function() {
                 image.node.remove("." + cls);
                 var div = $("<div class='" + cls + "'/>");
                 image.node.append(div);
-                
+
                 image.uploadStarted();
                 expect(div.progressbar("value")).toBe(0);
             })
-            
+
             it("should initialize the progressbar on any items with the RD.AlbumUpload.cssClass.progressBar class", function() {
                 // clear out anything existing so we know what the progressbar will be
                 var cls = RD.AlbumUpload.cssClasses.progressBar;
                 image.node.remove("." + cls);
                 var div = $("<div class='" + cls + "'/>");
                 image.node.append(div);
-                
+
                 image.uploadStarted();
                 expect(image.progressBar[0]).toBe(div[0]);
             })
-            
+
             it("should change the status to uploading", function() {
                 image.uploadStarted();
                 expect(image.status).toBe("uploading");
             })
-            
+
             it("return the image", function() {
                 expect(image.uploadStarted()).toBe(image);
             })
@@ -564,17 +564,17 @@ describe("AlbumUpload", function() {
                 image.uploadCanceled();
                 expect(image.renderContent).toHaveBeenCalledWith("canceled")
             })
-            
+
             it("should change the status to canceled", function() {
                 image.uploadCanceled();
                 expect(image.status).toBe("canceled");
             })
-            
+
             it("return the image", function() {
                 expect(image.uploadCanceled()).toBe(image);
             })
         })
- 
+
         describe("uploadProgressed", function() {
             beforeEach(function() {
                 image.initialize({
@@ -592,39 +592,39 @@ describe("AlbumUpload", function() {
                 image.uploadProgressed(null);
                 expect(image.progressBar.progressbar).not.toHaveBeenCalled();
             })
-            
+
             it("should call uploadStarted if it hasn't been called", function() {
                 image.status = "foo";
                 spyOn(image, "uploadStarted");
                 image.uploadProgressed(20);
                 expect(image.uploadStarted).toHaveBeenCalled();
             })
-            
+
             it("should update the progressBar value with argument * 100", function() {
                 var amount = 0.35;
                 spyOn(image.progressBar, "progressbar");
                 image.uploadProgressed(amount);
                 expect(image.progressBar.progressbar).toHaveBeenCalledWith("option", "value", amount * 100);
             })
-            
+
             it("should update any text nodes with the processingMessage class if the amount > 1", function() {
                 var node = $("<div class='" + RD.AlbumUpload.cssClasses.processingMessage + "'/>");
                 image.node.append(node);
                 image.uploadProgressed(1);
                 expect(node.html()).toBe(RD.AlbumUpload.labels.processing_uploaded_file)
             })
-                        
+
             it("should not render any content", function() {
                 spyOn(image, "renderContent");
                 image.uploadProgressed(10);
                 expect(image.renderContent).not.toHaveBeenCalled()
             })
-            
+
             it("should not change the status", function() {
                 image.uploadProgressed(20);
                 expect(image.status).toBe("uploading");
             })
-            
+
             it("should return the image", function() {
                 expect(image.uploadProgressed(20)).toBe(image);
             })
@@ -632,7 +632,7 @@ describe("AlbumUpload", function() {
 
         describe("uploadErrored", function() {
             var errorDetails;
-            
+
             beforeEach(function() {
                 image.initialize({
                     localID: 2,
@@ -641,7 +641,7 @@ describe("AlbumUpload", function() {
                     id: "SWFUpload1_0",
                     name: "bar.jpg"
                 }).uploadStarted();
-                
+
                 errorDetails = {
                     isRecoverable: false,
                     shortDescription: "foo"
@@ -656,7 +656,7 @@ describe("AlbumUpload", function() {
                 it("should change the status to queued", function() {
                     image.uploadErrored(errorDetails);
                     expect(image.status).toBe("queued");
-                })       
+                })
 
                 it("should not render any content", function() {
                     spyOn(image, "renderContent");
@@ -664,41 +664,41 @@ describe("AlbumUpload", function() {
                     expect(image.renderContent).not.toHaveBeenCalled()
                 })
             })
-            
+
             function unrecoverableTests() {
                  it("should change the status to errored", function() {
                      image.uploadErrored(errorDetails);
                      expect(image.status).toBe("errored");
                  })
-             
+
                  it("should attach the image to the errored content", function() {
                      image.uploadErrored(errorDetails);
                      expect(errorDetails.image).toBe(image);
                  })
-             
+
                  it("should render the errored content", function() {
                      spyOn(image, "renderContent").andCallThrough();
                      image.uploadErrored(errorDetails);
                      expect(image.renderContent).toHaveBeenCalledWith("errored", errorDetails)
                  })
              }
-            
+
             describe("if the error is not recoverable", function() {
                 beforeEach(function() {
                     errorDetails.isRecoverable = false;
                 })
-                
+
                 unrecoverableTests();
             })
-            
+
             describe("if the retry limit has been passed", function() {
                 beforeEach(function() {
-                    image.retryCount = RD.AlbumUpload.retryLimit + 1;
+                    image.errorCount = RD.AlbumUpload.retryLimit + 1;
                 })
-                
+
                 unrecoverableTests();
             })
-                        
+
             it("return the image", function() {
                 expect(image.uploadCanceled()).toBe(image);
             })
@@ -727,27 +727,27 @@ describe("AlbumUpload", function() {
 
 				expect(image.uploadCompleted(null)).toBe(result);
 				expect(image.uploadCompleted(2)).toBe(result);
-				
+
 				expect(image.badServerResponse).toHaveBeenCalled();
 				expect(image.badServerResponse.callCount).toBe(2);
 			})
-			
+
 			it("should call initFromDatabase with the results", function() {
 				spyOn(image, "initFromDatabase").andReturn(image);
 				image.uploadCompleted(completionDetails);
 				expect(image.initFromDatabase).toHaveBeenCalledWith(completionDetails);
 			})
-			
+
 			it("should trigger fileUploadCompleted with the image", function() {
 				spyOn(image.node, "trigger");
 				image.uploadCompleted(completionDetails);
 				expect(image.node.trigger).toHaveBeenCalledWith("fileUploadCompleted", {image: image});
 			})
-			
+
 			it("should return the image", function() {
 				expect(image.uploadCompleted(completionDetails)).toBe(image);
 			})
-			
+
 		})
 
         describe("badServerResponse", function() {
@@ -773,14 +773,14 @@ describe("AlbumUpload", function() {
                 expect(typeof(callArgs.shortDescription)).toBe("string");
             })
         })
-        
+
         describe("inputName", function() {
             it("should create an input name value for the given key", function() {
                 var str = "foo";
                 expect(image.inputName(str)).toBe(RD.AlbumUpload.dataPrefix + "[" + image.localID + "][" + str + "]");
             })
         })
-        
+
         describe("inputID", function() {
             it("should get the input name", function() {
                 var str = "foo";
@@ -788,7 +788,7 @@ describe("AlbumUpload", function() {
                 image.inputID(str);
                 expect(image.inputName).toHaveBeenCalledWith(str);
             })
-            
+
             it("should replace [] with _", function() {
                 var str = "foo";
                 spyOn(image, "inputName").andCallThrough();
@@ -802,22 +802,22 @@ describe("AlbumUpload", function() {
                 var result = image.inputID(str);
                 expect(result).not.toMatch(/\_$/);
             })
-            
+
             it("should be global", function() {
                 var str = "foo";
                 var result = image.inputID(str);
                 expect(result).not.toMatch(/(\[|\])/);
             })
-            
+
             it("should work", function() {
                 image.localID = 2;
                 expect(image.inputID("foo")).toBe(RD.AlbumUpload.dataPrefix + "_2_foo");
             })
         })
-        
+
         describe("addData", function() {
             var result, name = "name", value = "value";
-            
+
             beforeEach(function() {
                 spyOn(RD, "jQuery").andCallThrough();
                 image.initialize({
@@ -825,51 +825,51 @@ describe("AlbumUpload", function() {
                     uploader: uploader
                 })
             })
-            
+
             it("should append to the data node", function() {
                 spyOn(image.dataNode, "append");
                 image.addData(name, value);
                 expect(image.dataNode.append).toHaveBeenCalled();
                 var input = image.dataNode.append.mostRecentCall.args[0];
             })
-            
+
             describe("the node appended to dataNode", function() {
                 var input;
 
                 beforeEach(function() {
                     spyOn(image.dataNode, "append");
                     image.addData(name, value);
-                    input = $(image.dataNode.append.mostRecentCall.args[0])[0];                    
+                    input = $(image.dataNode.append.mostRecentCall.args[0])[0];
                 })
-                
+
                 it("should be hidden", function() {
                     expect(input.type).toBe("hidden");
                 })
-                
+
                 it("should have the right name", function() {
                     expect(input.name).toBe(image.inputName(name));
                 })
-                
+
                 it("should have the right ID", function() {
                     expect(input.id).toBe(image.inputID(name));
                 })
-                
+
                 it("should have the value", function() {
                     expect(input.value).toBe(value);
                 })
             })
-            
+
             it("should add that value to image.details", function() {
                 delete image.details[name];
                 image.addData(name, value);
                 expect(image.details[name]).toBe(value);
             })
-            
+
         })
 
         describe("removeData", function() {
             var result, name = "name", value = "value";
-            
+
             beforeEach(function() {
                 spyOn(RD, "jQuery").andCallThrough();
                 image.initialize({
@@ -877,14 +877,14 @@ describe("AlbumUpload", function() {
                     uploader: uploader
                 })
             })
-            
+
             it("should remove the input from the data node", function() {
                 spyOn(image.dataNode, "remove");
                 var name = "foo";
                 image.removeData(name);
                 expect(image.dataNode.remove).toHaveBeenCalledWith("#" + image.inputID(name));
             })
-            
+
             it("should remove the data from details", function() {
                 var name = "foo";
                 image.details.foo = "bar";
@@ -892,5 +892,63 @@ describe("AlbumUpload", function() {
                 expect(image.details.foo).not.toBeDefined();
             })
         })
+
+		describe("support functions", function() {
+			beforeEach(function() {
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                }).uploadStarted()
+            })
+
+			describe("isRetrying", function() {
+				it("should return false if the image status isn't queued", function() {
+					image.status = "test";
+					expect(image.isRetrying()).toBe(false);
+				})
+
+				it("should return false if the image errorCount isn't > 0", function() {
+					image.status = "queued";
+					image.errorCount = 0;
+					expect(image.isRetrying()).toBe(false);
+					delete image.errorCount;
+					expect(image.isRetrying()).toBe(false);
+				})
+
+				it("should return true if the image is queued and the errorCount is > 0", function() {
+					image.status = "queued";
+					image.errorCount = 1;
+					expect(image.isRetrying()).toBe(true);
+				})
+			})
+
+			describe("shouldCancelUpload", function() {
+				var oldLimit;
+				beforeEach(function() {
+					oldLimit = RD.AlbumUpload.retryLimit;
+					RD.AlbumUpload.retryLimit = 2;
+				})
+
+				afterEach(function() {
+					RD.AlbumUpload.retryLimit = oldLimit;
+				})
+
+				it("should return false if there's no errorCount", function() {
+					expect(image.shouldCancelUpload()).toBe(false);
+				})
+
+				it("should return false if the errorCount is less than the retry limit", function() {
+					image.errorCount = 1;
+					expect(image.shouldCancelUpload()).toBe(false);
+
+				})
+
+				it("should return true if the errorCount is greater than the retry limit", function() {
+					image.errorCount = RD.AlbumUpload.retryLimit + 1;
+					expect(image.shouldCancelUpload()).toBe(true);
+				})
+			})
+
+		})
     })
 })

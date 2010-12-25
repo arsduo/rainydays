@@ -390,7 +390,7 @@ describe("RD.Page", function() {
 					})
 
 					it("should set the returnValue of window.event if e is not provided", function() {
-						var returnValue; 
+						var returnValue;
 						executeWithEvent(function() {
 							RD.Page.alertForDirtyPage();
 							returnValue = window.event.returnValue;
@@ -426,7 +426,7 @@ describe("RD.Page", function() {
 					})
 
 					it("should set the returnValue of window.event if e is not provided", function() {
-						var returnValue; 
+						var returnValue;
 						executeWithEvent(function() {
 							RD.Page.alertForDirtyPage();
 							returnValue = window.event.returnValue;
@@ -457,7 +457,7 @@ describe("RD.Page", function() {
 						})
 
 						it("should set the returnValue of window.event if e is not provided", function() {
-							var returnValue; 
+							var returnValue;
 							executeWithEvent(function() {
 								RD.Page.alertForDirtyPage();
 								returnValue = window.event.returnValue;
@@ -493,7 +493,7 @@ describe("RD.Page", function() {
 						})
 
 						it("should set the returnValue of window.event if e is not provided", function() {
-							var returnValue; 
+							var returnValue;
 							executeWithEvent(function() {
 								RD.Page.alertForDirtyPage();
 								returnValue = window.event.returnValue;

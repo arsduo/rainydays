@@ -78,15 +78,15 @@ describe("AlbumUpload", function() {
                     uploader.initialize(args);
                     expect(uploader.uploadManager).toBe(fakeUploadManager);
                 })
-                
+
                 it("should copy all the data from RD.AlbumUpload.sortableOptions to the local sortableOptions", function() {
                     uploader.initialize(args);
                     expect(uploader.sortableOptions).toBeDefined();
                     for (var k in RD.AlbumUpload.sortableOptions) {
                        expect(RD.AlbumUpload.sortableOptions[k]).toBe(uploader.sortableOptions[k])
-                    }                    
+                    }
                 })
-                
+
                 it("should add the items property for the sortable options", function(){
                     uploader.initialize(args);
                     expect(uploader.sortableOptions.items).toBeDefined();
@@ -272,7 +272,7 @@ describe("AlbumUpload", function() {
 
             describe("setKeyPic", function() {
                 var image, triggered;
-                
+
                 beforeEach(function () {
                     image = uploader.newImage();
                     triggered = false;
@@ -280,56 +280,56 @@ describe("AlbumUpload", function() {
                         triggered = true;
                     })
                 })
-                
+
                 it("should do nothing if we're not tracking the key pic", function() {
                     uploader.keyPicStorage = [];
                     expect(uploader.setKeyPic(image)).toBe(false);
                     expect(uploader.keyPic).not.toBeDefined();
                 })
-                
+
                 describe("if we are tracking the key pic", function() {
                     beforeEach(function() {
                        uploader.keyPicStorage = $("<input/>");
                     })
-                    
+
                     it("should do nothing if the key pic is the current image", function() {
                         uploader.keyPic = image;
                         expect(uploader.setKeyPic(image)).toBe(true);
                         expect(triggered).toBe(false);
                     })
-                                        
+
                     it("should proceed if there is no key pic", function() {
                         delete uploader.keyPic;
                         expect(uploader.setKeyPic(image)).toBe(true);
-                        expect(triggered).toBe(true);                        
+                        expect(triggered).toBe(true);
                     })
-                    
+
                     it("should proceed if the image isn't already the key pic", function() {
                         uploader.keyPic = uploader.newImage();
                         expect(uploader.setKeyPic(image)).toBe(true);
-                        expect(triggered).toBe(true);                        
+                        expect(triggered).toBe(true);
                     })
-                    
+
                     it("should remove the key image class from any elements in the album container", function() {
                         var cls = RD.AlbumUpload.cssClasses.keyPic, div = $("<div class='" + cls + "'/>")
                         uploader.albumContainer.append(div);
                         uploader.setKeyPic(image);
                         expect(div.attr("class")).not.toMatch(cls);
                     })
-                    
+
                     it("should add the key image class to the specific image", function() {
                         var cls = RD.AlbumUpload.cssClasses.keyPic;
                         uploader.setKeyPic(image);
                         expect(image.node.attr("class")).toMatch(cls);
                     })
-                    
+
                     it("should store the localID of the new keyPic in the storage node", function() {
                 	    uploader.keyPicStorage.val(image.localID + 1);
                         uploader.setKeyPic(image);
                         expect(uploader.keyPicStorage.val()).toBe(image.localID + "");
-                        
+
                     })
-                                        
+
                     it("should trigger the RD.AlbumUpload.keyPicEvent event with a hash containing the uploader and the image", function() {
                         uploader.setKeyPic(image);
                         var args = uploader.albumContainer.trigger.mostRecentCall.args;
@@ -337,7 +337,7 @@ describe("AlbumUpload", function() {
                         expect(args[1].uploader).toBe(uploader);
                         expect(args[1].image).toBe(image);
                     })
-                    
+
                 })
             })
 		})

@@ -226,7 +226,7 @@ RD.UploadManager = {
 
                 // if it says it's done, cancel it
                 if (upload.shouldCancelUpload())
-                this.swfu.cancelUpload(upload.fileObject.id);
+                	this.swfu.cancelUpload(upload.fileObject.id);
             }
         },
 

@@ -29,7 +29,7 @@ var RD = {
 				else {
 					// thanks to http://paulirish.com/2009/log-a-lightweight-wrapper-for-consolelog/
 					// for help working around IE's lack of console.log.apply
-					console.log(Array.prototype.slice.call(arguments)); 
+					console.log(Array.prototype.slice.call(arguments));
 				}
 			}
         }
@@ -147,7 +147,7 @@ RD.Page = (function() {
 			// if the page is dirty, fires an alert to make sure the user intends to leave
 			if (RD.Page.isPageDirty() && !surpressExitDialog) {
 			  var text = typeof(RD.Page.composeText) === "function" ? RD.Page.composeText(RD.Page.getDirtyFields()) : pageManager.text;
-			
+
 			  var e = e || window.event;
 			  if (e) { // For IE and Firefox
 			    e.returnValue = text;

@@ -12,35 +12,35 @@ Other outcome / test cases:
 - the meal image's node is unique
 - this sets the initial status to created
 
-NOTE: by storing the meal in the array using the last index, we subsequently require that that index in the array 
+NOTE: by storing the meal in the array using the last index, we subsequently require that that index in the array
 always be occupied.  hence, clear replaces it with a null, rather than erasing it
 */
 RD.AlbumUpload = {
-    // properties 
+    // properties
     retryLimit:  1,
     dataPrefix: "images",
     keyPicEvent: "keyPicRegistered",
    	imageDataKey: "albumupload.image",
    	imageSortList: "imagePosition",
- 	
+
    	// this stands in for a deleted image in the array to preserve our local numbering system (array.length)
   	clearedObject: {},
-	
+
     // list of available statuses
     statusMap: {
-        
+
     },
-        
+
     // default sortable options
     sortableOptions: {
         placeholder: "beingSorted inlineBlock",
         tolerance: "pointer",
         cursor: "move",
-    },    
+    },
 
     cssClasses: {
         horizontalImage: "forHorizontalImage",
-        verticalImage: "forVerticalImage",     
+        verticalImage: "forVerticalImage",
         imageNode: "albumUploadBlock",
        	imageData: "imageData",
        	imageContent: "imageContent",
@@ -65,25 +65,25 @@ RD.AlbumUpload = {
         will_be_deleted: "Will be deleted<br/>click the X to undelete",
         upload_canceled: "Upload Canceled"
     },
-    
+
 	initialize: function() {
 		this.registerJamlTemplates();
 	},
-	
+
     newUploader: function(settings) {
       return RD.createObject(this.uploaderPrototype).initialize(settings);
     },
-    
+
     uploaderPrototype: {
         images: [],
-        
+
         initialize: function(settings) {
             // bring jQuery into the local context
             var jQuery = RD.jQuery;
 
 			// make sure we got a settings
-			if (!settings || typeof(settings) !== "object") { 
-				throw("RD.AlbumUpload.newUploader was not passed a settings hash!") 
+			if (!settings || typeof(settings) !== "object") {
+				throw("RD.AlbumUpload.newUploader was not passed a settings hash!")
 			}
 
             // then store the provided settings
@@ -91,28 +91,28 @@ RD.AlbumUpload = {
 
 			// now set up the DOM nodes we use
 			this.setupDOM();
-			
+
 			// connect to the SWFUpload instance
 			if (!settings.swfuploadOptions) {
     			throw("RD.AlbumUpload.newUploader was not passed swfuploadOptions!");
     		}
     		this.uploadManager = RD.UploadManager.create(settings.swfuploadOptions);
-    		
+
     		// set up the sortable options for properties that can't be set up at load time
     		this.sortableOptions = jQuery.extend(RD.AlbumUpload.sortableOptions, {
     		    items: "div." + RD.AlbumUpload.cssClasses.imageNode
     		});
-    		
+
     		// set up the sortable for the first time
     		this.refreshSortable();
-    		
-            return this; 
+
+            return this;
         },
 
 		setupDOM: function() {
 			// initialize all the different DOM nodes we use
 			var settings = this.settings, jQuery = RD.jQuery;
-			
+
 			// albumContainer -- where all the visible action happens
 			// this is required
 			this.albumContainer = jQuery("#" + settings.albumContainerID);
@@ -123,18 +123,18 @@ RD.AlbumUpload = {
 			// get the key image (album cover) value store and visible location if provided
 			this.keyPicStorage = settings.keyPicStorageID ? jQuery("#" + settings.keyPicStorageID) : jQuery();
 			this.keyImageView = settings.keyImageViewID ? jQuery("#" + settings.keyImageViewID) : jQuery();
-			
+
             // placeholder node will either be found or be an empty jQuery array
-            this.placeholder = settings.placeholderID ? jQuery("#" + settings.placeholderID) : jQuery();            
+            this.placeholder = settings.placeholderID ? jQuery("#" + settings.placeholderID) : jQuery();
 		},
-        
+
         newImage: function() {
             var albumUpload = RD.AlbumUpload;
 
             // create and store the new image
             var image = RD.createObject(albumUpload.imagePrototype);
             this.images.push(image);
-            
+
             // remove the placeholder node (no effect if not specified)
             this.placeholderNode.hide();
 
@@ -143,7 +143,7 @@ RD.AlbumUpload = {
 	            localID: this.images.length,
 				uploader: this
 			});
-            
+
     		// notify the sortable we've added a node
             this.refreshSortable();
 
@@ -151,7 +151,7 @@ RD.AlbumUpload = {
 
             return image;
         },
-        
+
         /*
         refreshSortable
         Resets the sortable so it picks up new elements.
@@ -160,14 +160,14 @@ RD.AlbumUpload = {
         - sortable includes any new elements
         - updates the sort order to reflect the order on the page (can be tested by moving elements from the front to the back)
         */
-        
+
         refreshSortable: function() {
         	this.albumContainer.sortable(this.sortableOptions);
         },
-        
-        setKeyPic: function(image) {        	
+
+        setKeyPic: function(image) {
         	var currentKeyPic, keyPicClass, albumUpload = RD.AlbumUpload;
-        	 
+
         	if (this.keyPicStorage.length === 0) {
     		    // if we're not storing an image, no need to go further
     		    return false;
@@ -197,30 +197,30 @@ RD.AlbumUpload = {
     		}
         }
     },
-    
+
     imagePrototype: {
         initialize: function(settings) {
 			this.localID = settings.localID;
 			this.uploader = settings.uploader;
-			
+
 			// create the node
 			this.createNode();
-			
+
 			// set the details array
 			this.details = {};
-			
+
 			// set the status
 			this.status = "created";
-    		
+
 			return this;
 		},
-		
+
 		createNode: function() {
 			// render the outer block for our new image
 			var content = Jaml.render("imageContainer", this);
 
 			// create the jQuery object
-			this.node = RD.jQuery(content);			
+			this.node = RD.jQuery(content);
 
 			// associate the image object with the DOM node for later use
 			this.node.data(RD.AlbumUpload.imageDataKey, this);
@@ -231,7 +231,7 @@ RD.AlbumUpload = {
 			// and append it to our uploader
 			this.uploader.albumContainer.append(this.node);
 		},
-		
+
 		inputName: function(name) {
 		  return RD.AlbumUpload.dataPrefix + "[" + this.localID + "][" + name + "]";
 		},
@@ -239,24 +239,24 @@ RD.AlbumUpload = {
 		inputID: function(name) {
 		  return this.inputName(name).replace(/[\[\]]+/g, "_").replace(/\_$/, "");
 		},
-		
+
 		addData: function(name, value) {
 		    this.dataNode.append(RD.jQuery("<input/>", {
                 type: "hidden",
                 name: this.inputName(name),
                 id: this.inputID(name),
-		        value: value		        
+		        value: value
 		    }));
-		    
+
 		    // store the data on the image object as well
 		    this.details[name] = value;
 		},
-		
+
 		removeData: function(name) {
 		    this.dataNode.remove("#" + this.inputID(name));
 		    delete this.details[name];
 		},
-		
+
 		renderContent: function(templateName, details) {
 		    // replaces all content in the current node with the result of rendering the block
 			if (!details) details = this;
@@ -266,8 +266,8 @@ RD.AlbumUpload = {
 			content = null;
 			try {
 		    	content = Jaml.render(templateName, details);
-			} catch (e) { 
-				RD.debug("ERROR: Jaml encountered an error: " + RD.showSource(e)); 
+			} catch (e) {
+				RD.debug("ERROR: Jaml encountered an error: " + RD.showSource(e));
 				throw(e);
 			}
 
@@ -280,14 +280,14 @@ RD.AlbumUpload = {
 
 		    return this;
 		},
-		
-		/* 
+
+		/*
         initFromDatabase
-        This initializes an existing RD.AlbumUpload image using information provided from the remote database.  
+        This initializes an existing RD.AlbumUpload image using information provided from the remote database.
         This is used both for initial page loads and for completed uploads.
         Assumptions:
         - imageDetails is not null and has thumb/full URLs (failure: triggers and returns badServerResponse)
-        - Jaml template "visible" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
+        - Jaml template "visible" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover)
         - [remote] ID is unique (failure: the duplicate node is removed from the DOM, the original is returned, basic attempt at keeping things sane)
 
         Other external outcomes / test cases:
@@ -303,7 +303,7 @@ RD.AlbumUpload = {
         - removes the inactive class from images
         - status is visible
         - updates the sort order
-        - * if there is no key image, sets the key image (animating if this is from upload) 
+        - * if there is no key image, sets the key image (animating if this is from upload)
         - returns this RD.AlbumUpload
         */
 
@@ -332,7 +332,7 @@ RD.AlbumUpload = {
         	// remove uploading class in case it was from an upload
         	this.node.removeClass(classes.uploading);
 
-        	// render content 
+        	// render content
         	this.renderContent("visible");
 
       	    // initialize links
@@ -340,31 +340,31 @@ RD.AlbumUpload = {
       	    this.node.find("." + classes.deleteLink).bind("click", function() { imageObject.toggleDeletion(); return false; });
       	    this.node.find("." + classes.magnifyLink).bind("click", function() { imageObject.showFullImage(); return false; });
       	    this.node.find("." + classes.makeKeyPicLink).bind("click", function() { imageObject.uploader.setKeyPic(imageObject); return false; });
-        	
+
             // set status
             this.status = "visible";
-            
+
             if (!this.uploader.keyPic || this.details.isKeyPic) {
                 // make it a key image if appropriate:
                 // * there is no key picture (first upload)
                 // * we're loading from the database, and this is the previously-designated key pic
         		this.uploader.setKeyPic(this);
-        	}            	
+        	}
         	// return
 
         	RD.debug("Initialization done -- image has remote ID " + this.id);
 
         	return this;
         },
-        
+
         /*
         initFromUpload
-        This initializes a new RD.AlbumUpload using information provided by the SWF uploader.  
+        This initializes a new RD.AlbumUpload using information provided by the SWF uploader.
 
         Assumptions:
         - uploadDetails is not null and is a valid file object per SWF documentation (failure: triggers and returns _badFileUpload)
         	- see http://demo.swfupload.org/Documentation/#fileobject
-        - Jaml template "queued" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
+        - Jaml template "queued" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover)
         - two images uploaded with the same filename create new nodes
 
         Other outcomes / test cases:
@@ -378,7 +378,7 @@ RD.AlbumUpload = {
         - makes the overall meal images node dirty
         - returns this RD.AlbumUpload
         */
-        
+
         initFromUpload: function(uploadDetails) {
             RD.debug("Initializing meal " + this.localID + " from upload.");
 
@@ -388,7 +388,7 @@ RD.AlbumUpload = {
                 RD.debug("ERROR: Uploading images must exist (" + uploadDetails + ") and have an id (" + (uploadDetails ? uploadDetails.id : "obj is null") + ") and a filename (" + (uploadDetails ? uploadDetails.name : "obj is null") + ")");
                 return this.badFileUpload(uploadDetails); // which prints out the details
             }
-            
+
             // save details
             this.filename = uploadDetails.name;
             this.fileObject = uploadDetails;
@@ -399,7 +399,7 @@ RD.AlbumUpload = {
             // render and insert content
             this.renderContent("queued");
             this.node.addClass("uploading");
-            
+
             // make the meal images node dirty since we've added an image
             this.uploader.albumContainer.trigger("fileUploadStarted", {image: this});
 
@@ -407,13 +407,13 @@ RD.AlbumUpload = {
             RD.debug("Initialization done -- image has filename  " + this.filename);
             return this;
         },
-        
+
         /*
         uploadStarted
         This marks when an upload starts, updating status and visuals.
 
         Assumptions:
-        - Jaml template "uploading" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
+        - Jaml template "uploading" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover)
         - Jaml template "uploading" includes an element with class of progressBar (failure: none outside testing-- we just don't show status bar)
 
         Other outcomes / test cases:
@@ -434,20 +434,20 @@ RD.AlbumUpload = {
             if (jQuery.ui.progressbar) {
                 this.progressBar = this.node.find("." + RD.AlbumUpload.cssClasses.progressBar).progressbar({value: 0});
         	    RD.debug("Found progress bar " + RD.showSource(this.progressBar));
-        	} 
+        	}
 
             // set the status
             this.status = "uploading";
 
             return this;
         },
-        
+
         /*
         uploadCanceled
         This marks when an upload starts, updating status and visuals.
 
         Assumptions:
-        - Jaml template "canceled" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover) 
+        - Jaml template "canceled" exists (failure: throws exception w/ an alert, since the page itself is broken we can't recover)
 
         Other outcomes / test cases:
         - has canceled status
@@ -464,25 +464,25 @@ RD.AlbumUpload = {
 
         	return this;
         },
-        
-        
+
+
         /*
         uploadProgressed
         This is triggered when an upload has made progress, updating status and visuals.
 
         Assumptions:
-        - Nothing external has removed the progressbar element (failure: reruns this.uploadStarted) 
+        - Nothing external has removed the progressbar element (failure: reruns this.uploadStarted)
 
         Other outcomes / test cases:
         - this.progressBar.progressbar("option", "value") is equal to percentage * 100
-        - when we hit 100%, throw up a processing message while the server thinks, 
+        - when we hit 100%, throw up a processing message while the server thinks,
         - returns this RD.AlbumUpload
         */
 
         uploadProgressed: function(percentage) {
             RD.debug("Upload progressed to " + percentage + "% for mealImage " + this.localID);
 
-            if (percentage) {    
+            if (percentage) {
                 // error check -- reset progress bar if it somehow gets deleted
                 if (this.status !== "uploading") {
                     this.uploadStarted();
@@ -500,7 +500,7 @@ RD.AlbumUpload = {
             // return the item
             return this;
         },
-        
+
         /*
         uploadErrored
         This is triggered when an upload encounters an error, and either aborts or gets queued again.
@@ -522,16 +522,16 @@ RD.AlbumUpload = {
         	if (errorDetails.isRecoverable && this.errorCount <= RD.AlbumUpload.retryLimit) {
         		RD.debug("Retrying upload.");
                 // if we're retrying it, reset the status
-        		this.status = "queued"; 
-        	}	
+        		this.status = "queued";
+        	}
             else {
             	RD.debug("Error details shortDescription: " + errorDetails.shortDescription);
             	this.status = "errored";
-            	
+
             	errorDetails.image = this;
             	this.renderContent("errored", errorDetails);
             }
-            
+
         	return this;
         },
 
@@ -548,7 +548,7 @@ RD.AlbumUpload = {
 
 		uploadCompleted: function(imageDetails) {
 			RD.debug("Received results! " + imageDetails);
-			
+
 			if (!imageDetails || typeof(imageDetails) !== "object") {
 				return this.badServerResponse(imageDetails);
 		  	}
@@ -562,7 +562,7 @@ RD.AlbumUpload = {
 			return this;
 		},
 
-        
+
         badServerResponse: function(response) {
         	// used when the server responds successfully, but the content isn't what we expect
         	// notify the console of the error, then render the error view
@@ -570,16 +570,16 @@ RD.AlbumUpload = {
         	RD.debug("Bad server response: " + (response ? RD.showSource(response) : " null!"));
         	return this.uploadErrored({isRecoverable: false, shortDescription: "Invalid server response"});
         },
-        
+
         badFileUpload: function(fileObject) {
         	// used when the SWFUploader adds a file, but that file is missing essential content
         	// I expect this never to fire, but better to be secure than sorry
         	// notify the console of the error, then render the error view
         	// we can't recover, since SWFUpload doesn't requeue on file errors
         	RD.debug("Bad file upload! " + (fileObject ? RD.showSource(fileObject) : "null!"));
-        	return this.uploadErrored({isRecoverable: false, shortDescription: "Problem uploading file!"});	
+        	return this.uploadErrored({isRecoverable: false, shortDescription: "Problem uploading file!"});
         },
-        
+
 		/*
 		toggleDeletion
 		Sets the image to be deleted or not deleted.
@@ -596,7 +596,7 @@ RD.AlbumUpload = {
 		toggleDeletion: function() {
 			// make sure we're at the right states -- this should be filtered
 			if (!(this.status === "visible" || this.status === "deleting")){
-				// this has no effect on other states 
+				// this has no effect on other states
 				return;
 			}
 
@@ -612,24 +612,35 @@ RD.AlbumUpload = {
 				this.node.append(this.deletionFlag);
 			}
 		},
-		
-		showFullImage: function() {}        
-        
-        /*
-        becomeKey
-        Makes this meal image the key image.
 
-        Outcomes:
-        - returns true immediately if the image is already the key pic
-        - RD.AlbumUpload.keyPicStorage has a value === the mealImg's id
-        - RD.AlbumUpload._keyPic === this.localID
-        - afterward, the meal image node has class keyPic
-        - afterward, no other image nodes have class keyPic
-        - unless told not to, a keyPicRegistered event is fired to let any handlers know a keyPic was registered
-        - returns true if it succeeds
-        */
+		showFullImage: function() {},
+
+		/*
+		isRetrying
+		Accessor to see if the image is being reuploaded after an error.
+
+		Outcomes / test cases:
+		- returns true if the meal is queued but has an errorCount
+		*/
+
+		isRetrying: function() {
+			return (this.status === "queued" && this.errorCount > 0);
+		},
+
+		/*
+		shouldCancelUpload
+		Accessor used by the upload manager to see if the image should be retried or canceled
+		because it's been tried too many times.
+
+		Outcomes / test cases:
+		- returns true if the meal has errored more than the retry limit
+		*/
+
+		shouldCancelUpload: function() {
+			return (this.errorCount > RD.AlbumUpload.retryLimit);
+		}
     },
-    
+
 	// JAML TEMPLATES
 	// since these are required in the RD.AlbumUpload class for view work, they're stored here
 	// not really MVC, but this is Javascript
@@ -641,9 +652,9 @@ RD.AlbumUpload = {
                 // provide a safe space for data as well as the visible content that gets replaced
 		        div({cls: albumUpload.cssClasses.imageData, id: albumUpload.cssClasses.imageData + image.localID},
 		            input({
-		                type: "hidden", 
-		                name: sortList + "[]", 
-		                id: sortList + image.localID, 
+		                type: "hidden",
+		                name: sortList + "[]",
+		                id: sortList + image.localID,
 		                value: image.localID,
 		                cls: sortList
 		            })
@@ -651,11 +662,11 @@ RD.AlbumUpload = {
 		        div({cls: albumUpload.cssClasses.imageContent, id: albumUpload.cssClasses.imageContent + image.localID})
 		    );
 		},
-		
+
 		queued: function(image) {
-		    div({cls: "uploadingText"}, RD.AlbumUpload.labels[image.retryCount ? "queued_retry" : "queued_upload"] + "<br/>" + image.filename)
+		    div({cls: "uploadingText"}, RD.AlbumUpload.labels[image.errorCount ? "queued_retry" : "queued_upload"] + "<br/>" + image.filename)
 		},
-		
+
 		uploading: function(image) {
 		    span(
 		        div({cls: "uploadingText"}, RD.AlbumUpload.labels.uploading_file + image.filename),
@@ -667,23 +678,23 @@ RD.AlbumUpload = {
 		errored: function(errorData) {
 		    div({cls: "errorBlock"},
 		        div(span({cls: "description"}, errorData.shortDescription), span(RD.AlbumUpload.labels.error_for + " " + errorData.image.filename)),
-		        div(a({cls: "clearLink", href: "#", onclick:  "RD.AlbumUpload.clear(" + errorData.image.localID + ")"}, RD.AlbumUpload.labels.link_clear))             
+		        div(a({cls: "clearLink", href: "#", onclick:  "RD.AlbumUpload.clear(" + errorData.image.localID + ")"}, RD.AlbumUpload.labels.link_clear))
 		    )
 		},
-		
+
 		magnifyDialog: function(imageURL) {
 		    div(img({src: imageURL, cls: "magnifyDialog"}));
 		},
-		
+
 		canceled: function(image) {
 		    div(
 		        div({cls: "uploadingText"}, RD.AlbumUpload.labels.upload_canceled),
-		        div(a({cls: "clearLink", href: "#", onclick:  "RD.AlbumUpload.clear(" + image.localID + ")"}, RD.AlbumUpload.labels.link_clear))             
+		        div(a({cls: "clearLink", href: "#", onclick:  "RD.AlbumUpload.clear(" + image.localID + ")"}, RD.AlbumUpload.labels.link_clear))
 		    )
 		},
-		
+
 		visible: function(image) {
-		     span({cls: "verticalAligner"}, 
+		     span({cls: "verticalAligner"},
 		        div({cls: "keyPicText"},
 	          	    span({cls: "isKeyPic"}, RD.AlbumUpload.labels.is_album_pic),
 	                a({href: "#", cls: "keyPicLink"}, RD.AlbumUpload.labels.make_album_pic)
@@ -692,7 +703,7 @@ RD.AlbumUpload = {
 		            img({cls: "thumbnail", id: "image" + image.localID, src: image.thumbImageURL}),
 		            span({cls: "deleteText"}, RD.AlbumUpload.labels.will_be_deleted)
 		        ),
-		        div({cls: "actions"}, 
+		        div({cls: "actions"},
 		            a({cls: "magnify", href: "#"}, div("&nbsp;")),
 		            a({cls: "delete", href: "#"}, div("&nbsp;"))
 		        ),
@@ -700,12 +711,12 @@ RD.AlbumUpload = {
 		     )
 		}
 	},
-	
-	registerJamlTemplates: function() { 
+
+	registerJamlTemplates: function() {
         // register each template with Jaml
         var templateName, templateFunction, templates = RD.AlbumUpload.jamlTemplates;
         RD.debug("Loading Jaml...");
-        
+
     	for (templateName in templates) {
     		templateFunction = templates[templateName];
     		Jaml.register(templateName, templateFunction);
@@ -730,7 +741,7 @@ Other outcomes / test cases:
 
 RD.AlbumUpload.prototype.showFullImage = function() {
 	if (dialogObject = this._getDialog()) {
-	    debug("Showing full image dialog");	
+	    debug("Showing full image dialog");
 	    dialogObject.dialog('open');
 	}
 }
@@ -753,46 +764,12 @@ RD.AlbumUpload.prototype.hideFullImage = function() {
 
 /* statusMap ACCESSORS * /
 
-/*
-isRetrying
-Accessor to see if the meal image is being reuploaded after an error.
-
-Outcomes / test cases:
-- returns true if the meal is queued but has an errorCount
-* /
-
-RD.AlbumUpload.prototype.isRetrying = function() {
-	return (this.status === RD.AlbumUpload.statusMap["queued"] && this.errorCount > 0);
-}
-
-/*
-shouldCancelUpload
-Accessor to see if the meal image should be canceled because it's been tried too many times.
-
-Outcomes / test cases:
-- returns true if the meal has errored more than the retry limit
-* /
-
-RD.AlbumUpload.prototype.shouldCancelUpload = function() {
-	return (this.errorCount > RD.AlbumUpload.retryLimit);
-}
 
 
-/*
-Status Accessors
-Accessors to check the state of the meal.
 
-Outcomes / test cases:
-- returns true if the appropriate status is set
-* /
 
-RD.AlbumUpload.prototype.isCreated = function() { return this.status === RD.AlbumUpload.statusMap["created"]; }
-RD.AlbumUpload.prototype.isVisible = function() { return this.status === RD.AlbumUpload.statusMap["visible"]; }
-RD.AlbumUpload.prototype.isErrored = function() { return this.status === RD.AlbumUpload.statusMap["errored"]; }
-RD.AlbumUpload.prototype.isCanceled = function() { return this.status === RD.AlbumUpload.statusMap["canceled"]; }
-RD.AlbumUpload.prototype.isQueued = function() { return this.status === RD.AlbumUpload.statusMap["queued"]; }
-RD.AlbumUpload.prototype.isUploading = function() { return this.status === RD.AlbumUpload.statusMap["uploading"]; }
-RD.AlbumUpload.prototype.isDeleting = function() { return this.status === RD.AlbumUpload.statusMap["deleting"]; }
+RD.AlbumUpload.prototype.
+
 
 /* CLASS FUNCTIONS * /
 
@@ -808,7 +785,7 @@ Other outcomes / test cases:
 - returns null if imagesForMeal does not have a RD.AlbumUpload by that local id
 - returns a RD.AlbumUpload if there's a match
 
-Question: 
+Question:
 - should findByLocalID return undefined if the value is clearedObject?
 * /
 
@@ -833,20 +810,20 @@ RD.AlbumUpload.findByRemoteId = function(id) {
 	// eliminate null and undefined inputs, which will otherwise match to in progress uploads with undefined remote IDs
 	if (id === null || id === undefined)
 		return undefined;
-		
+
 	for (localID in RD.AlbumUpload.images()) {
 		mi = RD.AlbumUpload.images()[localID];
 		if (mi.id === id)
 			return mi;
 	}
-	
+
 	// keep results consistent with findByLocalId, which returns undefined for undefined for bad queries
 	return undefined;
 }
 
 /*
 findByFileObject
-Finds a meal using its SWFUpload file object (specifically, the ID parameter).  This allows us to distinguish between files with the same name.  
+Finds a meal using its SWFUpload file object (specifically, the ID parameter).  This allows us to distinguish between files with the same name.
 Used during uploads, will not find files uploaded previously.
 
 Assumptions:
@@ -863,13 +840,13 @@ Other outcomes / test cases:
 
 RD.AlbumUpload.findByFileObject = function(fileObject, findOptions) {
 	if (fileObject === null || fileObject === undefined)
-		return undefined;		
+		return undefined;
 
 	// set default find options
 	if (!findOptions) findOptions = {};
 	if (!findOptions.includeCanceled) findOptions.includeCanceled = false;
 	if (!findOptions.includeErrored) findOptions.includeErrored = false;
-	
+
 	for (localID in RD.AlbumUpload.images()) {
 		mi = RD.AlbumUpload.images()[localID];
 		if (mi.fileObject && mi.fileObject.id === fileObject.id && (findOptions.includeCanceled || mi.status !== RD.AlbumUpload.statusMap.canceled) && (findOptions.includeErrored || mi.status !== RD.AlbumUpload.statusMap.errored)) {
@@ -898,13 +875,13 @@ Other outcomes / test cases:
 
 RD.AlbumUpload.findByFilename = function(filename, findOptions) {
 	if (filename === null || filename === undefined)
-		return undefined;		
+		return undefined;
 
 	// set default find options
 	if (!findOptions) findOptions = {};
 	if (!findOptions.includeCanceled) findOptions.includeCanceled = false;
 	if (!findOptions.includeErrored) findOptions.includeErrored = false;
-	
+
 	for (localID in RD.AlbumUpload.images()) {
 		mi = RD.AlbumUpload.images()[localID];
 		if (mi.filename === filename && (findOptions.includeCanceled || mi.status !== RD.AlbumUpload.statusMap.canceled) && (findOptions.includeErrored || mi.status !== RD.AlbumUpload.statusMap.errored)) {
@@ -915,10 +892,10 @@ RD.AlbumUpload.findByFilename = function(filename, findOptions) {
 	return undefined;
 }
 
-/* 
+/*
 isAlbumUpload
 Verifies that an object is a meal image.
-Returns true if: 
+Returns true if:
 	- object is a non-null Object
 	- object's constructor RD.AlbumUpload()
 	- has a localID
@@ -976,7 +953,7 @@ RD.AlbumUpload.clear = function(localId) {
 		// an empty hash (rather than null) avoids errors in for/each loops that check parameters
 		RD.AlbumUpload.images()[mi.localID] = RD.AlbumUpload.clearedObject;
 		mi = null;
-		
+
 		// add the placeholder node back if this is the last image and we have a placeholder node
 		if (RD.AlbumUpload._placeholderNode) {
 			var otherActiveImages = false, imageList = RD.AlbumUpload.images();
@@ -1012,7 +989,7 @@ RD.AlbumUpload.doUnfinishedUploadsExist = function() {
       if (mi.status === RD.AlbumUpload.statusMap.uploading || mi.status === RD.AlbumUpload.statusMap.queued)
           return true; // no point in looping more than needed
   }
-  
+
   return result;
 }
 
@@ -1041,7 +1018,7 @@ RD.AlbumUpload.doDeletedItemsExist = function() {
 RD.AlbumUpload.images = function() {
 	if (!RD.AlbumUpload._imagesForMeal)
 		RD.AlbumUpload._imagesForMeal = [];
-	
+
 	return RD.AlbumUpload._imagesForMeal;
 }
 
@@ -1050,10 +1027,10 @@ RD.AlbumUpload.images = function() {
 RD.AlbumUpload.prototype._getDialog = function() {
 	// make sure we're at the right states -- this should be filtered
 	if (!(this.status === RD.AlbumUpload.statusMap["visible"] || this.status === RD.AlbumUpload.statusMap["deleting"])){
-		// this has no effect on images 
+		// this has no effect on images
 		return;
 	}
-	
+
     // gets the dialog object for the meal image
     if (!this._zoomDialog) {
 			debug("Creating dialog for " + this.remoteId + " with url " + this.fullImageURL);
@@ -1062,13 +1039,13 @@ RD.AlbumUpload.prototype._getDialog = function() {
 	    $("#dialogHolder").append(dialogNode);
 	    this._zoomDialog = $(dialogNode);
 
-	    this._zoomDialog.dialog({autoOpen: false, 
+	    this._zoomDialog.dialog({autoOpen: false,
 	                         dialogClass: "previewDialog " + (this.isHorizontal ? "previewDialogHorizontal" : "previewDialogVertical"),
 	                         resizable: false,
 							 						 width: "" // don't overwrite the class width
 	                         });
 	}
-    
+
 	return this._zoomDialog;
 }
 */
