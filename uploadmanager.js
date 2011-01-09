@@ -176,42 +176,42 @@ RD.UploadManager = {
 
             switch (errorCode) {
                 case SWFUpload.UPLOAD_ERROR.HTTP_ERROR:
-                RD.debug("Error Code: HTTP Error, File name: " + file.name + ", Message: " + message);
-                break;
+	                RD.debug("Error Code: HTTP Error, File name: " + file.name + ", Message: " + message);
+	                break;
                 case SWFUpload.UPLOAD_ERROR.UPLOAD_FAILED:
-                RD.debug("Error Code: Upload Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-                break;
+	                RD.debug("Error Code: Upload Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+	                break;
                 case SWFUpload.UPLOAD_ERROR.IO_ERROR:
-                RD.debug("Error Code: IO Error, File name: " + file.name + ", Message: " + message);
-                break;
+	                RD.debug("Error Code: IO Error, File name: " + file.name + ", Message: " + message);
+	                break;
                 case SWFUpload.UPLOAD_ERROR.SECURITY_ERROR:
-                isRecoverable = false;
-                RD.debug("Error Code: Security Error, File name: " + file.name + ", Message: " + message);
-                break;
+	               isRecoverable = false;
+	               RD.debug("Error Code: Security Error, File name: " + file.name + ", Message: " + message);
+	               break;
                 case SWFUpload.UPLOAD_ERROR.UPLOAD_LIMIT_EXCEEDED:
-                isRecoverable = false;
-                RD.debug("Error Code: Upload Limit Exceeded, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-                break;
+	               isRecoverable = false;
+	               RD.debug("Error Code: Upload Limit Exceeded, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+	               break;
                 case SWFUpload.UPLOAD_ERROR.FILE_VALIDATION_FAILED:
-                isRecoverable = false;
-                RD.debug("Error Code: File Validation Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-                break;
+	                isRecoverable = false;
+	                RD.debug("Error Code: File Validation Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+	                break;
                 case SWFUpload.UPLOAD_ERROR.FILE_CANCELLED:
-                // if we have additional images to upload, upload them
-                if (this.handler.doUnfinishedUploadsExist()){
-                    RD.debug("File was canceled, starting any additional uploads.");
-                    // this == SWFU object, not the FileUpload object
-                    this.swfu.startUpload();
-                }
-                isRecoverable = false;
-                break;
+	                // if we have additional images to upload, upload them
+	                if (this.handler.doUnfinishedUploadsExist()){
+	                    RD.debug("File was canceled, starting any additional uploads.");
+	                    // this == SWFU object, not the FileUpload object
+	                    this.swfu.startUpload();
+	                }
+	                isRecoverable = false;
+	                break;
                 case SWFUpload.UPLOAD_ERROR.UPLOAD_STOPPED:
-                isRecoverable = false;
-                break;
+	                isRecoverable = false;
+	                break;
                 default:
-                isRecoverable = true;
-                RD.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-                break;
+	                isRecoverable = true;
+	                RD.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
+                	break;
             }
 
             var upload = this.handler.findByFileObject(file);
