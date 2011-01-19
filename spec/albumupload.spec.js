@@ -50,10 +50,6 @@ describe("AlbumUpload", function() {
             expect(RD.AlbumUpload.labels).toBeDefined();
         })
 
-        it("should provide a placeholder for cleared objects", function() {
-            expect(RD.AlbumUpload.clearedObject).toBeDefined();
-        })
-
         it("should provide the ID/name for the order of images", function() {
             expect(RD.AlbumUpload.imageSortList).toBeDefined();
         })

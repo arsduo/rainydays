@@ -340,6 +340,58 @@ describe("AlbumUpload", function() {
 
                 })
             })
+
+            describe("finders", function() {
+                describe("findByLocalID", function() {
+                    it("should return the image in the provided index", function() {
+                        var result = {};
+                        uploader.images = [1, 2, result];
+                        expect(uploader.findByLocalID(2)).toBe(result);
+                        expect(uploader.findByLocalID(1)).toBe(2);
+                        expect(uploader.findByLocalID(3)).not.toBeDefined()
+                    })
+                })
+
+                describe("findByRemoteID", function() {
+                    it("should find an image with the matching .id property", function() {
+                        var result = {id: 3};
+                        uploader.images = [{id: 2}, result];
+                        expect(uploader.findByRemoteID(3)).toBe(result);
+                    })
+                    
+                    it("should return the first image with the matching id, if there are somehow > 1", function() {
+                        var result = {id: 3};
+                        uploader.images = [{id: 2}, result, {id: 3}];
+                        expect(uploader.findByRemoteID(3)).toBe(result);
+                    })
+
+                    it("should return undefined if there is no match", function() {
+                        var result = {id: 3};
+                        uploader.images = [{id: 2}, result];
+                        expect(uploader.findByRemoteID(4)).not.toBeDefined()
+                    })
+                })
+                
+                describe("findByFileObject", function() {
+                    it("should find an image with the matching .id property", function() {
+                        var result = {id: 3};
+                        uploader.images = [{id: 2}, result];
+                        expect(uploader.findByRemoteID(3)).toBe(result);
+                    })
+                    
+                    it("should return the first image with the matching id, if there are somehow > 1", function() {
+                        var result = {id: 3};
+                        uploader.images = [{id: 2}, result, {id: 3}];
+                        expect(uploader.findByRemoteID(3)).toBe(result);
+                    })
+
+                    it("should return undefined if there is no match", function() {
+                        var result = {id: 3};
+                        uploader.images = [{id: 2}, result];
+                        expect(uploader.findByRemoteID(4)).not.toBeDefined()
+                    })
+                })
+            })
 		})
     })
 })

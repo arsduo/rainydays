@@ -23,9 +23,6 @@ RD.AlbumUpload = {
     imageDataKey: "albumupload.image",
     imageSortList: "imagePosition",
 
-    // this stands in for a deleted image in the array to preserve our local numbering system (array.length)
-    clearedObject: {},
-
     // list of available statuses
     statusMap: {
 
@@ -195,133 +192,138 @@ RD.AlbumUpload = {
 
                 return true;
             }
-        }
-    },
+        },
 
-    /* FINDERS */
+        /* FINDERS */
 
-    /*
-    findByLocalId
-    Finds a image by its local ID.
+        /*
+        findByLocalID
+        Finds a image by its local ID.
 
-    Assumptions:
-    - RD.AlbumUpload.images() exists (failure: re-initialize, which creates an empty array, and hence returns null)
+        Assumptions:
+        - RD.AlbumUpload.images() exists (failure: re-initialize, which creates an empty array, and hence returns null)
 
-    Other outcomes / test cases:
-    - returns null if id is null
-    - returns null if imagesForimage does not have a RD.AlbumUpload by that local id
-    - returns a RD.AlbumUpload if there's a match
+        Other outcomes / test cases:
+        - returns null if id is null
+        - returns null if imagesForimage does not have a RD.AlbumUpload by that local id
+        - returns a RD.AlbumUpload if there's a match
 
-    Question:
-    - should findByLocalID return undefined if the value is clearedObject?
-    */
+        Question:
+        - should findByLocalID return undefined if the value is clearedObject?
+        */
 
-    findByLocalId: function(id) {
-        return RD.AlbumUpload.images()[id];
-    },
+        findByLocalID: function(id) {
+            return this.images[id];
+        },
 
-    /*
-    findByRemoteId
-    Finds a image by its remote (server) ID.
+        /*
+        findByRemoteID
+        Finds a image by its remote (server) ID.
 
-    Assumptions:
-    - RD.AlbumUpload.images() exists (failure: re-initialize, which creates an empty array, and hence returns null)
+        Assumptions:
+        - RD.AlbumUpload.images() exists (failure: re-initialize, which creates an empty array, and hence returns null)
 
-    Other outcomes / test cases:
-    - returns null if id is null
-    - returns null if imagesForimage does not have a RD.AlbumUpload by that remote id
-    - returns a RD.AlbumUpload if there's a match
-    */
+        Other outcomes / test cases:
+        - returns null if id is null
+        - returns null if imagesForimage does not have a RD.AlbumUpload by that remote id
+        - returns a RD.AlbumUpload if there's a match
+        */
 
-    findByRemoteId: function(id) {
-        var images, length, img, result;
+        findByRemoteID: function(id) {
+            var images, length, img, result;
 
-        // eliminate null and undefined inputs, which will otherwise match to in progress uploads with undefined remote IDs
-        if (id === null || id === undefined) {
-            return undefined;
-        }
+            if (id || id === 0) {
+                images = this.images;
+                length = images.length;
 
-        images = this.images;
-        length = images.length;
-        for (var i = 0; i < length && !result; i++) {
-            img = images[i];
-            result = (img.id === id ? img : result);
-        }
-
-        // if we don't find a match, result will be undefined
-        // which keeps things consistent with findByLocalId, which returns undefined for undefined for bad queries
-        return result;
-    },
-
-    /*
-    findByFileObject
-    Finds a image using its SWFUpload file object (specifically, the ID parameter).  This allows us to distinguish between files with the same name.
-    Used during uploads, will not find files uploaded previously.
-
-    Assumptions:
-    - RD.AlbumUpload.images() exists (failure: re-initialize, which creates an empty array, and hence returns null)
-
-    Other outcomes / test cases:
-    - returns null if file object is null
-    - returns null if imagesForimage does not have a RD.AlbumUpload by that file object
-    - will not return canceled images unless findOptions.includeCanceled === true
-    - will not return errored images unless findOptions.includeErrored === true
-    - will not find images created through initFromDatabase
-    - returns a RD.AlbumUpload if there's a match
-    */
-
-    findByFileObject: function(fileObject, findOptions) {
-        if (fileObject === null || fileObject === undefined)
-            return undefined;
-
-        // set default find options
-        if (!findOptions) findOptions = {};
-        if (!findOptions.includeCanceled) findOptions.includeCanceled = false;
-        if (!findOptions.includeErrored) findOptions.includeErrored = false;
-
-        for (localID in RD.AlbumUpload.images()) {
-            mi = RD.AlbumUpload.images()[localID];
-            if (mi.fileObject && mi.fileObject.id === fileObject.id && (findOptions.includeCanceled || mi.status !== RD.AlbumUpload.statusMap.canceled) && (findOptions.includeErrored || mi.status !== RD.AlbumUpload.statusMap.errored)) {
-                return mi;
+                for (var i = 0; i < length && !result; i++) {
+                    img = images[i];
+                    if (img.id === id) {
+                        result = img;
+                    }
+                }
             }
-        }
-        return undefined;
-    },
 
-    /*
-    findByFilename
-    Finds a file by its filename.  Useful to see if a duplicate file has already been uploaded.
-    Used during uploads, will not find files uploaded previously.
+            // if we don't find a match, result will be undefined
+            // which keeps things consistent with findByLocalID
+            return result;
+        },
 
-    Assumptions:
-    - RD.AlbumUpload.images() exists (failure: re-initialize, which creates an empty array, and hence returns null)
+        /*
+        findByFileObject
+        Finds a image using its SWFUpload file object (specifically, the ID parameter).  This allows us to distinguish between files with the same name.
+        Used during uploads, will not find files uploaded previously.
 
-    Other outcomes / test cases:
-    - returns null if filename is null
-    - returns null if imagesForimage does not have a RD.AlbumUpload by that filename
-    - will not return canceled images unless findOptions.includeCanceled === true
-    - will not return errored images unless findOptions.includeErrored === true
-    - will not find images created through initFromDatabase
-    - returns a RD.AlbumUpload if there's a match
-    */
+        Assumptions:
+        - RD.AlbumUpload.images() exists (failure: re-initialize, which creates an empty array, and hence returns null)
 
-    findByFilename: function(filename, findOptions) {
-        if (filename === null || filename === undefined)
-            return undefined;
+        Other outcomes / test cases:
+        - returns null if file object is null
+        - returns null if imagesForimage does not have a RD.AlbumUpload by that file object
+        - will not return canceled images unless findOptions.includeCanceled === true
+        - will not return errored images unless findOptions.includeErrored === true
+        - will not find images created through initFromDatabase
+        - returns a RD.AlbumUpload if there's a match
+        */
 
-        // set default find options
-        if (!findOptions) findOptions = {};
-        if (!findOptions.includeCanceled) findOptions.includeCanceled = false;
-        if (!findOptions.includeErrored) findOptions.includeErrored = false;
-
-        for (localID in RD.AlbumUpload.images()) {
-            mi = RD.AlbumUpload.images()[localID];
-            if (mi.filename === filename && (findOptions.includeCanceled || mi.status !== RD.AlbumUpload.statusMap.canceled) && (findOptions.includeErrored || mi.status !== RD.AlbumUpload.statusMap.errored)) {
-                return mi;
+        findByFileObject: function(fileObject, findOptions) {
+            var i, length, result, img, match;
+            
+            if (fileObject) {
+                findOptions = findOptions || {};
+                length = uploader.length;
+                
+                for (var i = 0; i < length && !result; i++) {
+                    img = uploader.images[i];
+                    // we need to match the object, then filter out errored or canceled uploads
+                    // unless desired
+                    var match = img.fileObject && img.fileObject.id === fileObject.id;
+                    match = match && (findOptions.includeCanceled || mi.status !== RD.AlbumUpload.statusMap.canceled);
+                    match = match && (findOptions.includeErrored || mi.status !== RD.AlbumUpload.statusMap.errored);
+                    if (match) {
+                        result = img;
+                    }
+                }
             }
+            
+            return result;
+        },
+
+        /*
+        findByFilename
+        Finds a file by its filename.  Useful to see if a duplicate file has already been uploaded.
+        Used during uploads, will not find files uploaded previously.
+
+        Assumptions:
+        - RD.AlbumUpload.images() exists (failure: re-initialize, which creates an empty array, and hence returns null)
+
+        Other outcomes / test cases:
+        - returns null if filename is null
+        - returns null if imagesForimage does not have a RD.AlbumUpload by that filename
+        - will not return canceled images unless findOptions.includeCanceled === true
+        - will not return errored images unless findOptions.includeErrored === true
+        - will not find images created through initFromDatabase
+        - returns a RD.AlbumUpload if there's a match
+        */
+
+        findByFilename: function(filename, findOptions) {
+            if (filename === null || filename === undefined)
+                return undefined;
+
+            // set default find options
+            if (!findOptions) findOptions = {};
+            if (!findOptions.includeCanceled) findOptions.includeCanceled = false;
+            if (!findOptions.includeErrored) findOptions.includeErrored = false;
+
+            for (localID in RD.AlbumUpload.images()) {
+                mi = RD.AlbumUpload.images()[localID];
+                if (mi.filename === filename && (findOptions.includeCanceled || mi.status !== RD.AlbumUpload.statusMap.canceled) && (findOptions.includeErrored || mi.status !== RD.AlbumUpload.statusMap.errored)) {
+                    return mi;
+                }
+            }
+            debug("Could not find file!")
+            return undefined;
         }
-        debug("Could not find file!")
-        return undefined;
     },
 
     imagePrototype: {
@@ -896,13 +898,13 @@ Returns true if:
     - object is a non-null Object
     - object's constructor RD.AlbumUpload()
     - has a localID
-    - RD.AlbumUpload.findByLocalId returns the object
+    - RD.AlbumUpload.findByLocalID returns the object
 Returns false if:
     - above is not true
 * /
 
 RD.AlbumUpload.isAlbumUpload = function(object) {
-    if (object && object.constructor === RD.AlbumUpload && object.localID != null && RD.AlbumUpload.findByLocalId(object.localID) === object)
+    if (object && object.constructor === RD.AlbumUpload && object.localID != null && RD.AlbumUpload.findByLocalID(object.localID) === object)
         return true;
     else
         return false;
@@ -914,11 +916,11 @@ Gets the key pic object.
 
 Outcomes:
 - if the previous key image was cleared (e.g. === clearedObject) returns undefined
-- otherwise returns imageImage corresponding to the value of RD.AlbumUpload._keyPic (via findByLocalId, so the same results for invalid/undefined IDs)
+- otherwise returns imageImage corresponding to the value of RD.AlbumUpload._keyPic (via findByLocalID, so the same results for invalid/undefined IDs)
 * /
 
 RD.AlbumUpload.getKeyPic = function() {
-    return RD.AlbumUpload.findByLocalId(RD.AlbumUpload._keyPic);
+    return RD.AlbumUpload.findByLocalID(RD.AlbumUpload._keyPic);
 }
 
 /*
@@ -935,7 +937,7 @@ Outcomes / test cases:
 RD.AlbumUpload.clear = function(localId) {
     // clears the image, removing it from the DOM
     RD.debug("CLEAR called for image with ID " + localId);
-    if (mi = RD.AlbumUpload.findByLocalId(localId)) {
+    if (mi = RD.AlbumUpload.findByLocalID(localId)) {
         RD.debug("\tFound image to clear (" + RD.showSource(mi) + ").");
 
         var keyPic = RD.AlbumUpload.getKeyPic();
