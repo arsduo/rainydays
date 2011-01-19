@@ -391,21 +391,21 @@ describe("RD.Page", function() {
 
 					it("should set the returnValue of the e argument", function() {
 						RD.Page.alertForDirtyPage(e);
-						if (!isChrome) {
-						    expect(e.returnValue).not.toBeDefined();
-					    }
-					    else {
-						    expect(e.returnValue).toBe(true);					        
-					    }
+					    expect(e.returnValue).not.toBeDefined();
 					})
 
 					it("should set the returnValue of window.event if e is not provided", function() {
 						var returnValue;
 						executeWithEvent(function() {
 							RD.Page.alertForDirtyPage();
-							returnValue = window.event.returnValue;
+                            returnValue = window.event.returnValue;
 						})
-						expect(returnValue).not.toBeDefined();
+						if (!isChrome) {
+					        expect(returnValue).not.toBeDefined();
+				        }
+				        else { 
+					        expect(returnValue).toBe(true);
+				        }
 					})
 				})
 
@@ -433,7 +433,7 @@ describe("RD.Page", function() {
 
 					it("should set the returnValue of the e argument", function() {
 						RD.Page.alertForDirtyPage(e)
-						expect(e.returnValue).not.toBeDefined();
+					    expect(e.returnValue).not.toBeDefined();
 					})
 
 					it("should set the returnValue of window.event if e is not provided", function() {
@@ -442,10 +442,17 @@ describe("RD.Page", function() {
 							RD.Page.alertForDirtyPage();
 							returnValue = window.event.returnValue;
 						})
-						expect(returnValue).not.toBeDefined();		
+						if (!isChrome) {
+						    expect(returnValue).not.toBeDefined();		
+					    }
+					    else {
+					        expect(returnValue).toBe(true);
+					    }
+					    
 					})
+				})
 			}
-
+			
 			describe("when there are dirty fields", function() {
 				beforeEach(function() {
 					RD.Page.addDirtyField(makeID());
@@ -463,12 +470,7 @@ describe("RD.Page", function() {
 
 						it("should set the returnValue of the e argument", function() {
 							RD.Page.alertForDirtyPage(e)
-							if (!isChrome) {
-							    expect(e.returnValue).toBe(testText);
-						    }
-						    else {
-							    expect(e.returnValue).toBe(true);						        
-						    }
+						    expect(e.returnValue).toBe(testText);
 						})
 
 						it("should set the returnValue of window.event if e is not provided", function() {
@@ -477,7 +479,12 @@ describe("RD.Page", function() {
 								RD.Page.alertForDirtyPage();
 								returnValue = window.event.returnValue;
 							})
-							expect(returnValue).toBe(testText);
+                            if (!isChrome) {
+							    expect(returnValue).toBe(testText);
+						    }
+						    else {
+						        expect(returnValue).toBe(true);
+						    }
 						})
 					})
 
@@ -504,21 +511,21 @@ describe("RD.Page", function() {
 
 						it("should set the returnValue of the e argument", function() {
 							RD.Page.alertForDirtyPage(e)
-							if (!isChrome) {
-							    expect(e.returnValue).toBe(otherText);
-						    }
-						    else { 
-						        expect(e.returnValue).toBe(true);
-						    }
+						    expect(e.returnValue).toBe(otherText);
 						})
 
 						it("should set the returnValue of window.event if e is not provided", function() {
 							var returnValue;
 							executeWithEvent(function() {
 								RD.Page.alertForDirtyPage();
-								returnValue = window.event.returnValue;
+                                returnValue = window.event.returnValue;
 							})
-							expect(returnValue).toBe(otherText);
+                            if (!isChrome) {
+							    expect(returnValue).toBe(otherText);
+							}
+						    else {
+						        expect(returnValue).toBe(true);
+						    }
 						})
 					})
 				})
