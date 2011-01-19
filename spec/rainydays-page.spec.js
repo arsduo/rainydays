@@ -8,6 +8,10 @@ describe("RD.Page", function() {
 			return "foo" + count;
 		}
 	}());
+	
+	// Chrome handles returnValue uniquely, so sadly we need to test for it
+	var isChrome = /chrome/.test( navigator.userAgent.toLowerCase() );
+    
 
 	function executeWithEvent(fn) {
 		// we have to stimulate a window.event in order for IE testing to work
@@ -373,6 +377,7 @@ describe("RD.Page", function() {
 
 			afterEach(function() {
 				RD.Page.text = text;
+				delete e;
 				// IE doesn't let us set window.event
 				try { window.event = eventHolder; } catch (exception) {}
 			})
@@ -385,8 +390,13 @@ describe("RD.Page", function() {
 					})
 
 					it("should set the returnValue of the e argument", function() {
-						RD.Page.alertForDirtyPage(e)
-						expect(e.returnValue).not.toBeDefined();
+						RD.Page.alertForDirtyPage(e);
+						if (!isChrome) {
+						    expect(e.returnValue).not.toBeDefined();
+					    }
+					    else {
+						    expect(e.returnValue).toBe(true);					        
+					    }
 					})
 
 					it("should set the returnValue of window.event if e is not provided", function() {
@@ -410,10 +420,11 @@ describe("RD.Page", function() {
 						delete RD.Page.composeText;
 					})
 
+
 					it("should not the value from the composeText function", function() {
 						spyOn(RD.Page, "composeText");
-						expect(RD.Page.composeText).not.toHaveBeenCalled();
 						RD.Page.alertForDirtyPage(e);
+						expect(RD.Page.composeText).not.toHaveBeenCalled();
 					})
 
 					it("should return the value of the otherText function", function() {
@@ -431,9 +442,8 @@ describe("RD.Page", function() {
 							RD.Page.alertForDirtyPage();
 							returnValue = window.event.returnValue;
 						})
-						expect(returnValue).not.toBeDefined();
+						expect(returnValue).not.toBeDefined();		
 					})
-				})
 			}
 
 			describe("when there are dirty fields", function() {
@@ -453,7 +463,12 @@ describe("RD.Page", function() {
 
 						it("should set the returnValue of the e argument", function() {
 							RD.Page.alertForDirtyPage(e)
-							expect(e.returnValue).toBe(testText);
+							if (!isChrome) {
+							    expect(e.returnValue).toBe(testText);
+						    }
+						    else {
+							    expect(e.returnValue).toBe(true);						        
+						    }
 						})
 
 						it("should set the returnValue of window.event if e is not provided", function() {
@@ -489,7 +504,12 @@ describe("RD.Page", function() {
 
 						it("should set the returnValue of the e argument", function() {
 							RD.Page.alertForDirtyPage(e)
-							expect(e.returnValue).toBe(otherText);
+							if (!isChrome) {
+							    expect(e.returnValue).toBe(otherText);
+						    }
+						    else { 
+						        expect(e.returnValue).toBe(true);
+						    }
 						})
 
 						it("should set the returnValue of window.event if e is not provided", function() {
