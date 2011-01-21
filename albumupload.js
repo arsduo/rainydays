@@ -277,9 +277,9 @@ RD.AlbumUpload = {
                     img = uploader.images[i];
                     // we need to match the object, then filter out errored or canceled uploads
                     // unless desired
-                    var match = img.fileObject && img.fileObject.id === fileObject.id;
-                    match = match && (findOptions.includeCanceled || mi.status !== RD.AlbumUpload.statusMap.canceled);
-                    match = match && (findOptions.includeErrored || mi.status !== RD.AlbumUpload.statusMap.errored);
+                    match = img.fileObject && img.fileObject.id === fileObject.id;
+                    match = match && (findOptions.includeCanceled || mi.status !== "canceled");
+                    match = match && (findOptions.includeErrored  || mi.status !== "errored");
                     if (match) {
                         result = img;
                     }
