@@ -267,19 +267,19 @@ RD.AlbumUpload = {
         */
 
         findByFileObject: function(fileObject, findOptions) {
-            var i, length, result, img, match;
+            var i, length, result, img, match, images = this.images;
             
-            if (fileObject) {
+            if (fileObject && typeof(fileObject) === "object") {
                 findOptions = findOptions || {};
-                length = uploader.length;
+                length = images.length;
                 
                 for (var i = 0; i < length && !result; i++) {
-                    img = uploader.images[i];
+                    img = images[i];
                     // we need to match the object, then filter out errored or canceled uploads
                     // unless desired
                     match = img.fileObject && img.fileObject.id === fileObject.id;
-                    match = match && (findOptions.includeCanceled || mi.status !== "canceled");
-                    match = match && (findOptions.includeErrored  || mi.status !== "errored");
+                    match = match && (findOptions.includeCanceled || img.status !== "canceled");
+                    match = match && (findOptions.includeErrored  || img.status !== "errored");
                     if (match) {
                         result = img;
                     }
@@ -307,22 +307,26 @@ RD.AlbumUpload = {
         */
 
         findByFilename: function(filename, findOptions) {
-            if (filename === null || filename === undefined)
-                return undefined;
-
-            // set default find options
-            if (!findOptions) findOptions = {};
-            if (!findOptions.includeCanceled) findOptions.includeCanceled = false;
-            if (!findOptions.includeErrored) findOptions.includeErrored = false;
-
-            for (localID in RD.AlbumUpload.images()) {
-                mi = RD.AlbumUpload.images()[localID];
-                if (mi.filename === filename && (findOptions.includeCanceled || mi.status !== RD.AlbumUpload.statusMap.canceled) && (findOptions.includeErrored || mi.status !== RD.AlbumUpload.statusMap.errored)) {
-                    return mi;
+            var i, length, result, img, match, images = this.images;
+            
+            if (filename) {
+                findOptions = findOptions || {};
+                length = images.length;
+                
+                for (var i = 0; i < length && !result; i++) {
+                    img = images[i];
+                    // we need to match the object, then filter out errored or canceled uploads
+                    // unless desired
+                    match = img.filename === filename;
+                    match = match && (findOptions.includeCanceled || img.status !== "canceled");
+                    match = match && (findOptions.includeErrored  || img.status !== "errored");
+                    if (match) {
+                        result = img;
+                    }
                 }
             }
-            debug("Could not find file!")
-            return undefined;
+            
+            return result;
         }
     },
 

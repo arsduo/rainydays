@@ -373,22 +373,100 @@ describe("AlbumUpload", function() {
                 })
 
                 describe("findByFileObject", function() {
-                    it("should find an image with the matching .id property", function() {
-                        var result = {id: 3};
-                        uploader.images = [{id: 2}, result];
-                        expect(uploader.findByRemoteID(3)).toBe(result);
+                    beforeEach(function() {
+                        console.log(uploader);
                     })
 
-                    it("should return the first image with the matching id, if there are somehow > 1", function() {
-                        var result = {id: 3};
-                        uploader.images = [{id: 2}, result, {id: 3}];
-                        expect(uploader.findByRemoteID(3)).toBe(result);
+                    it("should return undefined if there are no images with file objects (e.g. only previous images)", function() {
+                        uploader.images = [{id: 2}, {id: 4}, {id: 3}];
+                        expect(uploader.findByFileObject({id: 2})).not.toBeDefined();
+                    })
+                    
+                    it("should return an object who's file object matches", function() {
+                        var fileObject = {id: 3}, img = {id: 4, fileObject: fileObject};
+                        uploader.images = [{id: 2}, img, {id: 3}];
+                        expect(uploader.findByFileObject(fileObject)).toBe(img);
+                    })
+                    
+                    it("should return the first image with the matching object, if there are somehow > 1", function() {
+                        var fileObject = {id: 3}, img = {id: 4, fileObject: fileObject};
+                        uploader.images = [{id: 2}, img, {id: 3, fileObject: fileObject}];
+                        expect(uploader.findByFileObject(fileObject)).toBe(img);
                     })
 
-                    it("should return undefined if there is no match", function() {
-                        var result = {id: 3};
-                        uploader.images = [{id: 2}, result];
-                        expect(uploader.findByRemoteID(4)).not.toBeDefined()
+                    describe("by default", function() {
+                        it("should not return a matching object if it's canceled", function() {
+                            var fileObject = {id: 3}, img = {id: 4, fileObject: fileObject, status: "canceled"};
+                            uploader.images = [{id: 2}, img, {id: 3}];
+                            expect(uploader.findByFileObject(fileObject)).not.toBeDefined();
+                        })
+                        
+                        it("should not return a matching object if it's errored", function() {
+                            var fileObject = {id: 3}, img = {id: 4, fileObject: fileObject, status: "errored"};
+                            uploader.images = [{id: 2}, img, {id: 3}];
+                            expect(uploader.findByFileObject(fileObject)).not.toBeDefined();
+                        })
+                    })
+
+                    it("should return a matching object even if it's canceled if the includeCanceled option is specified", function() {
+                        var fileObject = {id: 3}, img = {id: 4, fileObject: fileObject, status: "canceled"};
+                        uploader.images = [{id: 2}, img, {id: 3}];
+                        expect(uploader.findByFileObject(fileObject, {includeCanceled: true})).toBe(img);
+                    })
+                    
+                    it("should return a matching object even if it's canceled if the includeErrored option is specified", function() {
+                        var fileObject = {id: 3}, img = {id: 4, fileObject: fileObject, status: "errored"};
+                        uploader.images = [{id: 2}, img, {id: 3}];
+                        expect(uploader.findByFileObject(fileObject, {includeErrored: true})).toBe(img);
+                    })
+                })
+                
+                describe("findByFilename", function() {
+                    beforeEach(function() {
+                        console.log(uploader);
+                    })
+
+                    it("should return undefined if there are no images with file objects (e.g. only previous images)", function() {
+                        uploader.images = [{id: 2}, {id: 4}, {id: 3}];
+                        expect(uploader.findByFilename("abc")).not.toBeDefined();
+                    })
+                    
+                    it("should return an object who's file object matches", function() {
+                        var filename = "abc", img = {id: 4, filename: filename};
+                        uploader.images = [{id: 2}, img, {id: 3}];
+                        expect(uploader.findByFilename(filename)).toBe(img);
+                    })
+                    
+                    it("should return the first image with the matching object, if there are somehow > 1", function() {
+                        var filename = "abc", img = {id: 4, filename: filename};
+                        uploader.images = [{id: 2}, img, {id: 3, filename: filename}];
+                        expect(uploader.findByFilename(filename)).toBe(img);
+                    })
+
+                    describe("by default", function() {
+                        it("should not return a matching object if it's canceled", function() {
+                            var filename = "abc", img = {id: 4, filename: filename, status: "canceled" };
+                            uploader.images = [{id: 2}, img, {id: 3}];
+                            expect(uploader.findByFilename(filename)).not.toBeDefined();
+                        })
+                        
+                        it("should not return a matching object if it's errored", function() {
+                            var filename = "abc", img = {id: 4, filename: filename, status: "errored"};
+                            uploader.images = [{id: 2}, img, {id: 3}];
+                            expect(uploader.findByFilename(filename)).not.toBeDefined();
+                        })
+                    })
+
+                    it("should return a matching object even if it's canceled if the includeCanceled option is specified", function() {
+                        var filename = "abc", img = {id: 4, filename: filename, status: "canceled"};
+                        uploader.images = [{id: 2}, img, {id: 3}];
+                        expect(uploader.findByFilename(filename, {includeCanceled: true})).toBe(img);
+                    })
+                    
+                    it("should return a matching object even if it's canceled if the includeErrored option is specified", function() {
+                        var filename = "abc", img = {id: 4, filename: filename, status: "errored"};
+                        uploader.images = [{id: 2}, img, {id: 3}];
+                        expect(uploader.findByFilename(filename, {includeErrored: true})).toBe(img);
                     })
                 })
             })
