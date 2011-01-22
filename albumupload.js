@@ -327,6 +327,46 @@ RD.AlbumUpload = {
             }
             
             return result;
+        },
+        
+        /*
+        doUnfinishedUploadsExist
+        Check whether unfinished uploads exist to know whether to fire an alert when users exit / save.
+
+        Outcomes / test cases:
+        - if a image is uploading or queued, returns true
+        - if no image matches that (or if there are no images) returns false
+        */
+
+        doUnfinishedUploadsExist: function() {
+            var images = this.images, length = images.length, i, result; 
+            for (i = 0; i < length && !result; i++) {
+                img = images[i];
+                if (img.status === "uploading" || img.status === "queued") {
+                    result = true;
+                }
+            }
+            return !!result;
+        },
+
+        /*
+        doDeletedItemsExist
+        Check whether deleted uploads exist to know whether to fire an alert when users save (since deletion is permanent).
+
+        Outcomes / test cases:
+        - if a image is marked to be deleted, returns true
+        - if no image matches that (or if there are no images) returns false
+        */
+
+        doDeletedItemsExist: function() {
+            var images = this.images, length = images.length, i, result; 
+            for (i = 0; i < length && !result; i++) {
+                img = images[i];
+                if (img.status === "deleted") {
+                    result = true;
+                }
+            }
+            return !!result;
         }
     },
 
@@ -891,140 +931,6 @@ RD.AlbumUpload.prototype.hideFullImage = function() {
     if (dialogObject = this._getDialog())
         dialogObject.dialog("close");
 }
-
-/* CLASS FUNCTIONS * /
-
-
-/*
-isAlbumUpload
-Verifies that an object is a image.
-Returns true if:
-    - object is a non-null Object
-    - object's constructor RD.AlbumUpload()
-    - has a localID
-    - RD.AlbumUpload.findByLocalID returns the object
-Returns false if:
-    - above is not true
-* /
-
-RD.AlbumUpload.isAlbumUpload = function(object) {
-    if (object && object.constructor === RD.AlbumUpload && object.localID != null && RD.AlbumUpload.findByLocalID(object.localID) === object)
-        return true;
-    else
-        return false;
-}
-
-/*
-getKeyPic
-Gets the key pic object.
-
-Outcomes:
-- if the previous key image was cleared (e.g. === clearedObject) returns undefined
-- otherwise returns imageImage corresponding to the value of RD.AlbumUpload._keyPic (via findByLocalID, so the same results for invalid/undefined IDs)
-* /
-
-RD.AlbumUpload.getKeyPic = function() {
-    return RD.AlbumUpload.findByLocalID(RD.AlbumUpload._keyPic);
-}
-
-/*
-clear
-Removes the element from the DOM.
-
-Outcomes / test cases:
-- when passed an invalid image ID, nothing happens
-- it removes the image's node from the DOM
-- it replaces the array entry for that imageImage with clearedObject (does NOT remove it from the array -- see note at top of file)
-- if all images are removed and there's a placeholder, it's returned to the DOM
-* /
-
-RD.AlbumUpload.clear = function(localId) {
-    // clears the image, removing it from the DOM
-    RD.debug("CLEAR called for image with ID " + localId);
-    if (mi = RD.AlbumUpload.findByLocalID(localId)) {
-        RD.debug("\tFound image to clear (" + RD.showSource(mi) + ").");
-
-        var keyPic = RD.AlbumUpload.getKeyPic();
-        if (keyPic && keyPic.localID === mi.localID) {
-            // remove this from being key pic
-            delete RD.AlbumUpload._keyPic;
-            RD.AlbumUpload.keyPicStorage.val("");
-        }
-
-        mi.node.remove();
-        // make it an empty hash but leave it in the array to keep numbering accurate
-        // an empty hash (rather than null) avoids errors in for/each loops that check parameters
-        RD.AlbumUpload.images()[mi.localID] = RD.AlbumUpload.clearedObject;
-        mi = null;
-
-        // add the placeholder node back if this is the last image and we have a placeholder node
-        if (RD.AlbumUpload._placeholderNode) {
-            var otherActiveImages = false, imageList = RD.AlbumUpload.images();
-            for (var i = 0; i < imageList.length && !otherActiveImages; i++) {
-              var testMI = imageList[i];
-              if (RD.AlbumUpload.isAlbumUpload(testMI)) {
-                otherActiveImages = true;
-              }
-            }
-            if (!otherActiveImages) {
-                 RD.AlbumUpload.albumContainer.append(RD.AlbumUpload._placeholderNode)
-          }
-        }
-    }
-    else {
-        RD.debug("Unable to find image to clear.");
-    }
-}
-
-/*
-doUnfinishedUploadsExist
-Check whether unfinished uploads exist to know whether to fire an alert when users exit / save.
-
-Outcomes / test cases:
-- if a image is uploading or queued, returns true
-- if no image matches that (or if there are no images) returns false
-* /
-
-RD.AlbumUpload.doUnfinishedUploadsExist = function() {
-  result = false;
-  for (var index in RD.AlbumUpload.images()) {
-    var mi = RD.AlbumUpload.images()[index];
-      if (mi.status === RD.AlbumUpload.statusMap.uploading || mi.status === RD.AlbumUpload.statusMap.queued)
-          return true; // no point in looping more than needed
-  }
-
-  return result;
-}
-
-/*
-doDeletedItemsExist
-Check whether deleted uploads exist to know whether to fire an alert when users save (since deletion is permanent).
-
-Outcomes / test cases:
-- if a image is marked to be deleted, returns true
-- if no image matches that (or if there are no images) returns false
-* /
-
-
-RD.AlbumUpload.doDeletedItemsExist = function() {
-    result = false;
-    for (var index in RD.AlbumUpload.images()) {
-        var mi = RD.AlbumUpload.images()[index];
-                if (mi.status === RD.AlbumUpload.statusMap["deleting"])
-            return true;
-    }
-
-        return false;
-}
-
-
-RD.AlbumUpload.images = function() {
-    if (!RD.AlbumUpload._imagesForimage)
-        RD.AlbumUpload._imagesForimage = [];
-
-    return RD.AlbumUpload._imagesForimage;
-}
-
 
 
 RD.AlbumUpload.prototype._getDialog = function() {

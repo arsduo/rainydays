@@ -373,10 +373,6 @@ describe("AlbumUpload", function() {
                 })
 
                 describe("findByFileObject", function() {
-                    beforeEach(function() {
-                        console.log(uploader);
-                    })
-
                     it("should return undefined if there are no images with file objects (e.g. only previous images)", function() {
                         uploader.images = [{id: 2}, {id: 4}, {id: 3}];
                         expect(uploader.findByFileObject({id: 2})).not.toBeDefined();
@@ -422,10 +418,6 @@ describe("AlbumUpload", function() {
                 })
                 
                 describe("findByFilename", function() {
-                    beforeEach(function() {
-                        console.log(uploader);
-                    })
-
                     it("should return undefined if there are no images with file objects (e.g. only previous images)", function() {
                         uploader.images = [{id: 2}, {id: 4}, {id: 3}];
                         expect(uploader.findByFilename("abc")).not.toBeDefined();
@@ -468,6 +460,37 @@ describe("AlbumUpload", function() {
                         uploader.images = [{id: 2}, img, {id: 3}];
                         expect(uploader.findByFilename(filename, {includeErrored: true})).toBe(img);
                     })
+                })
+            })
+            
+            describe("status-related methods", function() {
+                describe("doUnfinishedUploadsExist", function() {
+                    it("should return true if at least one an image is in uploading status", function() {
+                        uploader.images = [{id: 2, status: "canceled"}, {id: 4, status: "deleted"}, {id: 3, status: "uploading"}];
+                        expect(uploader.doUnfinishedUploadsExist()).toBe(true);
+                    })
+                    
+                    it("should return true if at least one an image is in queued status", function() {
+                        uploader.images = [{id: 2, status: "canceled"}, {id: 4, status: "deleted"}, {id: 3, status: "queued"}];
+                        expect(uploader.doUnfinishedUploadsExist()).toBe(true);
+                    })
+
+                    it("should return false if at least no image is in queued or uploadingstatus", function() {
+                        uploader.images = [{id: 2, status: "canceled"}, {id: 4, status: "deleted"}, {id: 3, status: "normal"}];
+                        expect(uploader.doUnfinishedUploadsExist()).toBe(false);
+                    })               
+                })
+                
+                describe("doDeletedItemsExist", function() {
+                    it("should return true if at least one an image is in the deleted state", function() {
+                        uploader.images = [{id: 2, status: "canceled"}, {id: 4, status: "deleted"}, {id: 3, status: "uploading"}];
+                        expect(uploader.doDeletedItemsExist()).toBe(true);
+                    })
+                    
+                    it("should return false if at least no image is in queued or uploadingstatus", function() {
+                        uploader.images = [{id: 2, status: "canceled"}, {id: 4, status: "uploading"}, {id: 3, status: "normal"}];
+                        expect(uploader.doDeletedItemsExist()).toBe(false);
+                    })               
                 })
             })
         })
