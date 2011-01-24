@@ -1,0 +1,243 @@
+    /* meal images */
+
+    #uploadButtonHolder {
+        /*float: left;*/
+        vertical-align: top;
+    }
+    
+    #AlbumUploads {
+        /*float: left;*/
+        margin-left: 20px;
+        width: 680px;
+    }
+
+    #AlbumUploads .instructions {
+        margin-left: 10px;
+    }
+
+    #AlbumUploadsPlaceholder {
+        height: 150px;
+        text-align: center;
+    }
+
+    .AlbumUploadBlock {
+        width: 120px;
+        height: 150px;
+        margin: 0 10px;
+        display: table-cell;
+        display: inline-block;
+        *display: inline;
+        zoom: 1;
+    }
+
+    .AlbumUploadBlock .verticalAligner {
+        vertical-align: bottom;
+    }
+
+    .AlbumUploadBlock .deleteText {
+        display: none;
+    }
+
+    #AlbumUploads .beingSorted {
+        border: 4px dashed black;
+        -moz-border-radius: 10px;
+        -webkit-border-radius: 10px;
+        height: 100px;
+        width: 100px;
+        margin: 10px;
+        margin-top: 30px;
+    }
+
+    /* actions */
+
+    .AlbumUploadBlock .actions {
+        margin-top: 3px;
+    }
+
+    .forHorizontalImage div.mealPicText {
+        padding-top: 30px;
+    }
+
+    .forHorizontalImage img.AlbumUpload {
+        height: 90px;
+    }
+    /*
+    .forVerticalImage {
+        margin: 0 43px 0 44px;
+    }
+    */
+
+    .forVerticalImage, .forVerticalImage img.AlbumUpload {
+        width: 90px;
+    }
+
+    .AlbumUploadBlock a, .AlbumUploadBlock a:hover {
+        text-decoration: none;
+    }
+
+    a.magnify {
+        float: left;
+    }
+
+    a.magnify div {
+        width: 19px;
+        height: 20px;
+        background-image: url('/images/magnify_button.png');
+    }
+
+    .inactive a:hover.magnify div, .inactive a:hover.delete div {
+        background-position: 0 0;
+    }
+
+    a:hover.magnify div {
+        background-position: 0 20px;
+    }
+
+    a.delete {
+        float: right;
+    }
+
+    a.delete div {
+        width: 17px;
+        height: 18px;
+        background-image: url('/images/delete_button.png');
+    }
+
+    a:hover.delete div {
+        background-position: 0 18px;
+    }
+
+
+    /* preview */
+
+    .previewDialogVertical {
+        width: 450px;
+        height: 600px;
+    }
+
+    .previewDialogVertical img {
+        width: 425px;
+        height: 575px;
+    }
+
+    .previewDialogHorizontal {
+        height: 600px;
+        width: 800px;
+    }
+
+    .previewDialogHorizontal img {
+        height: 575px;
+        width: 775px;
+    }
+
+    .previewDialog .ui-dialog-titlebar {
+        height: 20px;
+        width: 20px;
+        padding: 0px;
+        position: absolute;
+        right: 3px;
+    }
+
+    .previewDialog .ui-dialog-titlebar-close {
+        right: 0px;
+    }
+
+    /* image deletion */
+
+    .markedForDeletion .image {
+        background-color: red;
+        position: relative;
+    }
+
+    .markedForDeletion .image .deleteText {
+        color: white;
+        display: inline;
+        left: 0;
+        position: absolute;
+        text-align: center;
+        top: 20%;
+        padding: 0 2px;
+    }
+
+    .markedForDeletion .image img.AlbumUpload {
+        opacity: 0.5;
+        filter: alpha(opacity=50);
+    }
+
+    .markedForDeletion .actions a.delete div {
+        background-position: 0 18px;
+    }
+
+    .markedForDeletion .actions a:hover.delete div {
+        background-position: 0 0;
+    }
+
+    /* Key Pic Stuff, not working */
+	.keyPicText {
+		text-align: center;
+	}
+
+	/* link is by default invisible until hovered on, and not displayed if this is the key text */
+    .keyPicText a:hover {
+        color: gray;
+    }
+
+    .keyPicText a {
+        color: white;
+    }
+
+	.keyPicBlock .keyPicText a {
+		display: none;
+	}
+
+	/* text is default invisible unless this is the key pic */
+    .keyPicText .isKeyPic {
+        display: none;
+    }
+
+    .keyPicBlock .keyPicText .isKeyPic {
+        display: inline;
+    }
+    
+    /* in progress */
+    .uploading {
+        vertical-align: top;
+        text-align: center;
+    }
+
+    .uploading .ui-progressbar {
+        height:1em;
+        margin-top:5px;
+    }
+
+    .uploading .uploadingText {
+        padding-top: 40px;
+    }
+
+	.uploading .processingMessage {
+		padding-top: 10px;
+	}
+
+    .errorBlock {
+        padding-top: 30px;
+        text-align: center;
+    }
+
+    .errorBlock .description {
+        font-weight: bold;
+    }
+
+	/* key pic */
+	#leftImagesColumn {
+		width: 70px;
+	}
+
+	#rightImagesColumn {
+		/* width defined by RD.AlbumUploads */
+		vertical-align: top;
+	}
+
+	#uploadButtonHolder {
+		padding-left: 10px;
+	}
+
