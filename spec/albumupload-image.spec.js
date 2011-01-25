@@ -207,7 +207,9 @@ describe("AlbumUpload", function() {
                 expect(image.node.find("." + cssClass).html()).toBe(content);
             })
 
-            it("should replace the node's innards with the content returned by Jaml", function() {
+            
+            it("should replace the node's innards with Jaml content if they exist", function() {
+                expect(true).toBe(false);
                 var fake = {replaceWith: function() {}}, content = {};
                 spyOn(image.node, "find").andReturn(fake);
                 spyOn(Jaml, "render").andReturn(content);
@@ -215,6 +217,17 @@ describe("AlbumUpload", function() {
                 image.renderContent("queued");
                 expect(fake.replaceWith).toHaveBeenCalledWith(content);
             })
+            
+            it("should replace the node's innards with Jaml content if the node is empty", function() {
+                expect(true).toBe(false);
+                var fake = {replaceWith: function() {}}, content = {};
+                spyOn(image.node, "find").andReturn(fake);
+                spyOn(Jaml, "render").andReturn(content);
+                spyOn(fake, "replaceWith");
+                image.renderContent("queued");
+                expect(fake.replaceWith).toHaveBeenCalledWith(content);
+            })
+            
 
             it("should properly render content", function() {
                 // make sure everything does work

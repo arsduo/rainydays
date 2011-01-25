@@ -890,7 +890,6 @@ RD.AlbumUpload = {
         },
 
         visible: function(image) {
-            console.log("making visible! %o", image)
              span({cls: "verticalAligner"},
                 div({cls: "keyPicText"},
                       span({cls: "isKeyPic"}, RD.AlbumUpload.labels.is_album_pic),
