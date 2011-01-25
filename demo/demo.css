@@ -82,7 +82,7 @@
     a.magnify div {
         width: 19px;
         height: 20px;
-        background-image: url('/images/magnify_button.png');
+        background-image: url('magnify_button.png');
     }
 
     .inactive a:hover.magnify div, .inactive a:hover.delete div {
@@ -100,7 +100,7 @@
     a.delete div {
         width: 17px;
         height: 18px;
-        background-image: url('/images/delete_button.png');
+        background-image: url('delete_button.png');
     }
 
     a:hover.delete div {

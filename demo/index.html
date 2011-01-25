@@ -31,8 +31,9 @@
     <script type = "text/javascript" src="../uploadmanager.js"></script>
 
     <script>
+    var uploader;
     $(document).ready(function() {
-        RD.AlbumUpload.newUploader({
+        uploader = RD.AlbumUpload.newUploader({
             albumContainerID: "AlbumUploads",
             sortOrderStorageID: "uploadedPics",
             //          keyPicStorageID: "meal_key_picture_id",
@@ -42,6 +43,7 @@
                 full: "fullImageURL"
             },
             swfuploadOptions: {
+                file_size_limit: "5MB",
                 button_placeholder_id: "uploadButton",
                 flash_url: "http://10.0.1.7/~ahkoppel2/rainydays/demo/swfupload.swf",
                 button_text: "Upload",

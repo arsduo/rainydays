@@ -114,7 +114,7 @@ RD.UploadManager = {
 
         uploadStart: function(file) {
             // tell the file it's uploading
-            RD.debug("uploadStart called");
+            RD.debug("uploadStart called for %o", file);
             var upload = this.handler.findByFileObject(file);
             if (upload) {
                 upload.uploadStarted();
@@ -241,6 +241,10 @@ RD.UploadManager = {
 
             if (this.swfu.getStats().files_queued === 0) {
                 RD.debug("All files uploaded!");
+            }
+            else {
+                // start the next upload
+                this.swfu.startUpload();
             }
 
             return true;

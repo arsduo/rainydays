@@ -439,7 +439,7 @@ RD.AlbumUpload = {
 
             // render the content
             // while checking for missing Jaml templates
-            content = null;
+            var content = null, destination, existingContent;
             try {
                 content = Jaml.render(templateName, details);
             } catch (e) {
@@ -452,7 +452,14 @@ RD.AlbumUpload = {
             }
 
             // we have content, so get rid of everything in there
-            this.node.find("." + RD.AlbumUpload.cssClasses.imageContent + " *").replaceWith(content);
+            destination = this.node.find("." + RD.AlbumUpload.cssClasses.imageContent);
+            existingContent = destination.find("*");
+            if (existingContent.length === 0) {
+                destination.append(content);
+            }
+            else {
+                existingContent.replaceWith(content)
+            }
 
             return this;
         },
@@ -837,7 +844,7 @@ RD.AlbumUpload = {
     jamlTemplates: {
         imageContainer: function(image) {
             var albumUpload = RD.AlbumUpload, sortList = albumUpload.imageSortList;
-            div({cls: albumUpload.cssClasses.imageNode, id: albumUpload.imageIdPrefix + image.localID},
+            div({cls: albumUpload.cssClasses.imageNode, id: albumUpload.cssClasses.imageNode + image.localID},
                 // provide a safe space for data as well as the visible content that gets replaced
                 div({cls: albumUpload.cssClasses.imageData, id: albumUpload.cssClasses.imageData + image.localID},
                     input({
@@ -883,13 +890,14 @@ RD.AlbumUpload = {
         },
 
         visible: function(image) {
+            console.log("making visible! %o", image)
              span({cls: "verticalAligner"},
                 div({cls: "keyPicText"},
                       span({cls: "isKeyPic"}, RD.AlbumUpload.labels.is_album_pic),
                     a({href: "#", cls: "keyPicLink"}, RD.AlbumUpload.labels.make_album_pic)
                 ),
                 div({cls: "image"},
-                    img({cls: "thumbnail", id: "image" + image.localID, src: image.thumbImageURL}),
+                    img({cls: "thumbnail", id: "image" + image.localID, src: image.details.thumbImageURL}),
                     span({cls: "deleteText"}, RD.AlbumUpload.labels.will_be_deleted)
                 ),
                 div({cls: "actions"},
