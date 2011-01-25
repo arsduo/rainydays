@@ -226,7 +226,7 @@ describe("AlbumUpload", function() {
         })
 
         describe("initFromDatabase", function() {
-            var initFromDBArgs, requiredProperties = ["id", "fullImageURL", "thumbImageURL"], i;
+            var initFromDBArgs, requiredProperties = ["fullImageURL", "thumbImageURL"], i;
             beforeEach(function() {
                 image.initialize({
                     localID: 2,
@@ -731,13 +731,34 @@ describe("AlbumUpload", function() {
 				expect(image.badServerResponse).toHaveBeenCalled();
 				expect(image.badServerResponse.callCount).toBe(2);
 			})
-
+			
 			it("should call initFromDatabase with the results", function() {
 				spyOn(image, "initFromDatabase").andReturn(image);
 				image.uploadCompleted(completionDetails);
 				expect(image.initFromDatabase).toHaveBeenCalledWith(completionDetails);
 			})
+			
+			it("should map the server response to local keys if a map is provided", function() {
+			    var responseMap = image.uploader.settings.responseMap = {
+			        foo: "bar",
+			        a: "b"
+			    }
+			    response = {
+			        foo: "2",
+			        a: {}
+			    }
+			    
+			    spyOn(image, "initFromDatabase");
+			    image.uploadCompleted(response);
 
+			    var initArg = image.initFromDatabase.mostRecentCall.args[0];
+                // make sure that the call to initFromDatabase gets the local keys
+                // as specified in the response map
+                for (var key in responseMap) {
+                    expect(initArg[responseMap[key]]).toBe(response[key]);
+                }
+			})
+			
 			it("should trigger fileUploadCompleted with the image", function() {
 				spyOn(image.node, "trigger");
 				image.uploadCompleted(completionDetails);
@@ -947,6 +968,18 @@ describe("AlbumUpload", function() {
 					image.errorCount = RD.AlbumUpload.retryLimit + 1;
 					expect(image.shouldCancelUpload()).toBe(true);
 				})
+			})
+			
+			describe("isUploading", function() {
+			    it("should return true if the status is uploading", function() {
+			        image.status = "uploading";
+			        expect(image.isUploading()).toBe(true);
+			    })
+			    
+			    it("should return true if the status is not uploading", function() {
+			        image.status = "canceled";
+			        expect(image.isUploading()).toBe(false);
+			    })
 			})
 
 		})

@@ -71,7 +71,7 @@ describe("AlbumUpload", function() {
 
                 it("should create an UploadManager to handle interaction with the SWFUpload", function() {
                     uploader.initialize(args);
-                    expect(RD.UploadManager.create).toHaveBeenCalledWith(args.swfuploadOptions);
+                    expect(RD.UploadManager.create).toHaveBeenCalledWith(args.swfuploadOptions, uploader);
                 })
 
                 it("should add the UploadManager as uploader.uploadManager", function() {
@@ -202,12 +202,12 @@ describe("AlbumUpload", function() {
                     uploader.albumContainer = $("<div/>");
                     uploader.keyPicStorage = $();
                     uploader.keyImageView = $();
-                    uploader.placeholderNode = $();
+                    uploader.placeholder = $();
                 });
 
                 uploader.initialize(args);
             })
-            describe("newImage", function() {
+            describe("newUploadObject", function() {
                 var imgMock;
 
                 beforeEach(function() {
@@ -218,30 +218,30 @@ describe("AlbumUpload", function() {
 
 
                 it("should create a new image object from the prototype", function() {
-                    uploader.newImage();
+                    uploader.newUploadObject();
                     expect(RD.createObject).toHaveBeenCalledWith(RD.AlbumUpload.imagePrototype);
                 })
 
                 it("should return that image", function() {
-                    expect(uploader.newImage()).toBe(imgMock);
+                    expect(uploader.newUploadObject()).toBe(imgMock);
                 })
 
                 it("should add that image to the array", function() {
                     spyOn(uploader.images, "push");
-                    uploader.newImage();
+                    uploader.newUploadObject();
                     expect(uploader.images.push).toHaveBeenCalledWith(imgMock);
                 })
 
                 describe("call to image.initialize", function() {
                     it("should happen", function() {
-                        var img = uploader.newImage();
+                        var img = uploader.newUploadObject();
                         expect(img.initialize).toHaveBeenCalled()
                     })
 
                     it("should include localID: number of images in the array", function() {
                         var img, initializeArgs;
                         for (var i = 0; i < 10; i++) {
-                            img = uploader.newImage();
+                            img = uploader.newUploadObject();
                             initializeArgs = img.initialize.mostRecentCall.args[0];
                             expect(initializeArgs.localID).toBe(uploader.images.length)
                             expect(typeof(initializeArgs.localID)).toBe("number");
@@ -249,16 +249,16 @@ describe("AlbumUpload", function() {
                     })
 
                     it("should include uploader: the uploader", function() {
-                        img = uploader.newImage();
+                        img = uploader.newUploadObject();
                         initializeArgs = img.initialize.mostRecentCall.args[0];
                         expect(initializeArgs.uploader).toBe(uploader)
                     })
                 })
 
-                it("should hide the placeholderNode", function() {
-                    spyOn(uploader.placeholderNode, "hide");
-                    uploader.newImage();
-                    expect(uploader.placeholderNode.hide).toHaveBeenCalled();
+                it("should hide the placeholder", function() {
+                    spyOn(uploader.placeholder, "hide");
+                    uploader.newUploadObject();
+                    expect(uploader.placeholder.hide).toHaveBeenCalled();
                 })
             })
 
@@ -274,7 +274,7 @@ describe("AlbumUpload", function() {
                 var image, triggered;
 
                 beforeEach(function () {
-                    image = uploader.newImage();
+                    image = uploader.newUploadObject();
                     triggered = false;
                     spyOn(uploader.albumContainer, "trigger").andCallFake(function() {
                         triggered = true;
@@ -305,7 +305,7 @@ describe("AlbumUpload", function() {
                     })
 
                     it("should proceed if the image isn't already the key pic", function() {
-                        uploader.keyPic = uploader.newImage();
+                        uploader.keyPic = uploader.newUploadObject();
                         expect(uploader.setKeyPic(image)).toBe(true);
                         expect(triggered).toBe(true);
                     })

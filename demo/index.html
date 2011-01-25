@@ -1,59 +1,59 @@
 <html>
 
 <head>
-  <title>Rainydays AlbumUpload demo</title>
-  <link rel="stylesheet" href="demo.css"></link>
+    <title>Rainydays AlbumUpload demo</title>
+    <link rel    = "stylesheet" href="demo.css"></link>
 </head>
 
 <body>
 
-  <div id="uploadButtonHolder">
-          <div id="uploadButton"></div>
-  </div>
+    <div id      = "uploadButtonHolder">
+        <div id  = "uploadButton"></div>
+    </div>
 
-  <div id="AlbumUploads">
-      <div id="AlbumUploadsPlaceholder">
-          (Your images will show up here!)
-      </div>
-  </div>
+    <div id      = "AlbumUploads">
+        <div id  = "AlbumUploadsPlaceholder">
+            (Your images will show up here!)
+        </div>
+    </div>
 
-  <input type="hidden" id="uploadedPics" name="uploadedPics" />
-  
+    <input type  = "hidden" id="uploadedPics" name="uploadedPics" />
 
-  <script type="text/javascript" src="javascript/jquery.dev.js"></script>
-  <script type="text/javascript" src="javascript/jquery-ui.js"></script>
-  <script type="text/javascript" src="javascript/Jaml-all.js"></script>
-  <script type="text/javascript" src="javascript/swfupload.js"></script>
-  <script type="text/javascript" src="javascript/swfobject.js"></script>
 
-  <script type="text/javascript" src="../rainydays.js"></script>
-  <script type="text/javascript" src="../albumupload.js"></script>
-  <script type="text/javascript" src="../uploadmanager.js"></script>
-  
-  <script>
+    <script type = "text/javascript" src="javascript/jquery.dev.js"></script>
+    <script type = "text/javascript" src="javascript/jquery-ui.js"></script>
+    <script type = "text/javascript" src="javascript/Jaml-all.js"></script>
+    <script type = "text/javascript" src="javascript/swfupload.js"></script>
+    <script type = "text/javascript" src="javascript/swfobject.js"></script>
+
+    <script type = "text/javascript" src="../rainydays.js"></script>
+    <script type = "text/javascript" src="../albumupload.js"></script>
+    <script type = "text/javascript" src="../uploadmanager.js"></script>
+
+    <script>
     $(document).ready(function() {
-      try {
-        RD.AlbumUpload.initialize();
         RD.AlbumUpload.newUploader({
-          albumContainerID: "AlbumUploads",
-          sortOrderStorageID: "uploadedPics",
-//          keyPicStorageID: "meal_key_picture_id",
-          placeholderID: "AlbumUploadsPlaceholder",
-          swfuploadOptions: {
-            button_placeholder_id: "uploadButton",
-            flash_url: "http://10.0.1.7/~ahkoppel2/rainydays/demo/swfupload.swf",
-            button_text: "Upload",
-            button_text_top_padding: 5,
-            button_width: 86,
-            button_height: 20,
-            upload_url: "http://10.0.1.7/~ahkoppel2/uploader/upload.php"
-          }
-        });
-        console.log("Done!");
-      } catch (e) { console.log(e) }
+            albumContainerID: "AlbumUploads",
+            sortOrderStorageID: "uploadedPics",
+            //          keyPicStorageID: "meal_key_picture_id",
+            placeholderID: "AlbumUploadsPlaceholder",
+            responseMap: {
+                thumb: "thumbImageURL", 
+                full: "fullImageURL"
+            },
+            swfuploadOptions: {
+                button_placeholder_id: "uploadButton",
+                flash_url: "http://10.0.1.7/~ahkoppel2/rainydays/demo/swfupload.swf",
+                button_text: "Upload",
+                button_text_top_padding: 5,
+                button_width: 86,
+                button_height: 20,
+                upload_url: "http://10.0.1.7/~ahkoppel2/uploader/uploader.php"
+            }
+        })
     })
-	</script>
-	
+    </script>
+
 </body>
 
 </html>

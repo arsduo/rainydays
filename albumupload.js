@@ -64,10 +64,13 @@ RD.AlbumUpload = {
     },
 
     initialize: function() {
-        this.registerJamlTemplates();
+        if (!this.initialized) {
+            this.registerJamlTemplates();
+        }
     },
 
     newUploader: function(settings) {
+      this.initialize();
       return RD.createObject(this.uploaderPrototype).initialize(settings);
     },
 
@@ -93,7 +96,7 @@ RD.AlbumUpload = {
             if (!settings.swfuploadOptions) {
                 throw("RD.AlbumUpload.newUploader was not passed swfuploadOptions!");
             }
-            this.uploadManager = RD.UploadManager.create(settings.swfuploadOptions);
+            this.uploadManager = RD.UploadManager.create(settings.swfuploadOptions, this);
 
             // set up the sortable options for properties that can't be set up at load time
             this.sortableOptions = jQuery.extend(RD.AlbumUpload.sortableOptions, {
@@ -114,7 +117,7 @@ RD.AlbumUpload = {
             // this is required
             this.albumContainer = jQuery("#" + settings.albumContainerID);
             if (this.albumContainer.length === 0) {
-                throw("InitializationError: Could not find AlbumUpload sortOrderStorageID #" + settings.sortOrderStorageID + "!");
+                throw("InitializationError: Could not find AlbumUpload sortOrderStorageID #" + settings.albumContainerID + "!");
             }
 
             // get the key image (album cover) value store and visible location if provided
@@ -125,7 +128,8 @@ RD.AlbumUpload = {
             this.placeholder = settings.placeholderID ? jQuery("#" + settings.placeholderID) : jQuery();
         },
 
-        newImage: function() {
+        // create a new uploaded object per the UploadManager API
+        newUploadObject: function() {
             var albumUpload = RD.AlbumUpload;
 
             // create and store the new image
@@ -133,7 +137,7 @@ RD.AlbumUpload = {
             this.images.push(image);
 
             // remove the placeholder node (no effect if not specified)
-            this.placeholderNode.hide();
+            this.placeholder.hide();
 
             // since we don't remove deleted images from the array, images.length is a good proxy for uniqueness
             image.initialize({
@@ -485,16 +489,18 @@ RD.AlbumUpload = {
             debug("Initializing image " + this.localID + " from database.");
 
             // error check
-            if (!(imageDetails && imageDetails.id && imageDetails.thumbImageURL != null && imageDetails.fullImageURL != null)) {
-                debug("ERROR: Uploading images must have thumbImageURL, and fullImageURL!");
+            if (!(imageDetails && imageDetails.thumbImageURL != null && imageDetails.fullImageURL != null)) {
+                debug("ERROR: Uploading images must have thumbImageURL and fullImageURL!\nGot %o", imageDetails);
                 return this.badServerResponse(imageDetails); // which prints out the details
             }
 
             this.details = jQuery.extend(this.details, imageDetails);
-            this.remoteID = imageDetails.id;
+            if (imageDetails.id) { 
+                this.remoteID = imageDetails.id;
 
-            // add the remote ID to the data node so the server will know
-            this.addData("id", this.remoteID);
+                // add the remote ID to the data node so the server will know
+                this.addData("id", this.remoteID);
+            }
 
             // determine if this is horizontal or vertical
             // if the height and width aren't properly detected by the server, we may be fudged here
@@ -507,11 +513,11 @@ RD.AlbumUpload = {
             // render content
             this.renderContent("visible");
 
-              // initialize links
-              var imageObject = this; // otherwise this gets misinterpreted when the function is applied
-              this.node.find("." + classes.deleteLink).bind("click", function() { imageObject.toggleDeletion(); return false; });
-              this.node.find("." + classes.magnifyLink).bind("click", function() { imageObject.showFullImage(); return false; });
-              this.node.find("." + classes.makeKeyPicLink).bind("click", function() { imageObject.uploader.setKeyPic(imageObject); return false; });
+            // initialize links
+            var imageObject = this; // otherwise this gets misinterpreted when the function is applied
+            this.node.find("." + classes.deleteLink).bind("click", function() { imageObject.toggleDeletion(); return false; });
+            this.node.find("." + classes.magnifyLink).bind("click", function() { imageObject.showFullImage(); return false; });
+            this.node.find("." + classes.makeKeyPicLink).bind("click", function() { imageObject.uploader.setKeyPic(imageObject); return false; });
 
             // set status
             this.status = "visible";
@@ -722,7 +728,15 @@ RD.AlbumUpload = {
 
             if (!imageDetails || typeof(imageDetails) !== "object") {
                 return this.badServerResponse(imageDetails);
-              }
+            }
+            
+            // map responses to the types we need
+            // different servers may return different keys for the thumb and full URLs
+            var responseKey, localKey, responseMap = (this.uploader.settings.responseMap || {});
+            for (responseKey in responseMap) {
+                localKey = responseMap[responseKey];
+                imageDetails[localKey] = imageDetails[responseKey];
+            }
 
             // re-initialize this node from the image details
             this.initFromDatabase(imageDetails);
@@ -796,6 +810,10 @@ RD.AlbumUpload = {
 
         isRetrying: function() {
             return (this.status === "queued" && this.errorCount > 0);
+        },
+        
+        isUploading: function() {
+            return (this.status === "uploading");
         },
 
         /*

@@ -3,14 +3,12 @@ RD.UploadManager = {
 
     create: function(options, handler) {
         var instance;
-
         instance = RD.createObject(this.instancePrototype);
         instance.options = $.extend({}, this.defaultOptions, options, instance.getHandlers());
         instance.swfu = new SWFUpload(instance.options);
         instance.handler = handler;
 
         this.uploaders.push(instance);
-
         return instance;
     },
 
@@ -122,8 +120,9 @@ RD.UploadManager = {
                 upload.uploadStarted();
                 return true;
             }
-            else
-            RD.debug("Unable to find meal image " + file.name);
+            else {
+                RD.debug("Unable to find meal image " + file.name);
+            }
         },
 
         uploadProgress: function(file, bytesLoaded, bytesTotal) {
