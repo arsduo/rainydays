@@ -1,14 +1,26 @@
     /* meal images */
 
     #uploadButtonHolder {
-        /*float: left;*/
-        vertical-align: top;
+      margin-top: 20px;
+      text-align: center;
     }
+    
+    #uploadInstructions {
+      display:inline-block;
+      padding-top:7px;
+      vertical-align:top;
+    }
+    
     
     #AlbumUploads {
         /*float: left;*/
-        margin-left: 20px;
+        margin: 20px auto;
         width: 680px;
+        
+        background: none repeat scroll 0 0 #FFFFEE;
+        border: 2px solid black;
+        border-radius: 18px 18px 18px 18px;
+        min-height: 350px;
     }
 
     #AlbumUploads .instructions {
@@ -16,8 +28,8 @@
     }
 
     #AlbumUploadsPlaceholder {
-        height: 150px;
         text-align: center;
+        margin-top: 80px;
     }
 
     .AlbumUploadBlock {
@@ -30,8 +42,17 @@
         zoom: 1;
     }
 
+    .imageContent {
+      height: 100%;
+    }
+    
+    /*
+    .forHorizontalImage .thumbnail {
+      padding-bottom: 12px;
+    }*/
+
     .AlbumUploadBlock .verticalAligner {
-        vertical-align: bottom;
+        /*vertical-align: bottom;*/
     }
 
     .AlbumUploadBlock .deleteText {
@@ -44,9 +65,28 @@
         -webkit-border-radius: 10px;
         height: 100px;
         width: 100px;
-        margin: 10px;
-        margin-top: 30px;
+        /*margin: 10px;
+        margin-top: 30px;*/
+        position: relative;
+        left: 5px;
     }
+    
+    .inlineBlock {
+      display: inline-block;
+      *display: inline;
+      zoom: 1;
+    }
+    
+    .forHorizontalImage .thumbnail {
+      width: 120px;
+      height: 90px;
+    }
+    
+    .forVerticalImage .thumbnail {
+      height: 120px;
+      width: 90px;
+    }
+    
 
     /* actions */
 
@@ -174,6 +214,8 @@
 
     /* Key Pic Stuff, not working */
 	.keyPicText {
+	  font-family:sans-serif;
+    font-size:12px;
 		text-align: center;
 	}
 
@@ -237,7 +279,9 @@
 		vertical-align: top;
 	}
 
-	#uploadButtonHolder {
-		padding-left: 10px;
-	}
 
+  .clearFloat { 
+    height: 1px;
+    height: 0px;
+    overflow: hidden;
+  }

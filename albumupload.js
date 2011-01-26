@@ -617,7 +617,7 @@ RD.AlbumUpload = {
             // generate the progress bar if jQuery.ui.progressbar available
             if (jQuery.ui.progressbar) {
                 this.progressBar = this.node.find("." + RD.AlbumUpload.cssClasses.progressBar).progressbar({value: 0});
-                RD.debug("Found progress bar " + RD.showSource(this.progressBar));
+                RD.debug("Found progress bar %o", RD.showSource(this.progressBar));
             }
 
             // set the status
@@ -737,12 +737,10 @@ RD.AlbumUpload = {
                 return this.badServerResponse(imageDetails);
             }
             
-            // map responses to the types we need
-            // different servers may return different keys for the thumb and full URLs
-            var responseKey, localKey, responseMap = (this.uploader.settings.responseMap || {});
-            for (responseKey in responseMap) {
-                localKey = responseMap[responseKey];
-                imageDetails[localKey] = imageDetails[responseKey];
+            var processResultsFn = this.uploader.settings.processServerResults;
+            if (typeof(processResultsFn) === "function") {
+                // this should adapt the results to the requirements
+                processResultsFn(imageDetails);
             }
 
             // re-initialize this node from the image details
@@ -846,7 +844,7 @@ RD.AlbumUpload = {
             var albumUpload = RD.AlbumUpload, sortList = albumUpload.imageSortList;
             div({cls: albumUpload.cssClasses.imageNode, id: albumUpload.cssClasses.imageNode + image.localID},
                 // provide a safe space for data as well as the visible content that gets replaced
-                div({cls: albumUpload.cssClasses.imageData, id: albumUpload.cssClasses.imageData + image.localID},
+                span({cls: albumUpload.cssClasses.imageData, id: albumUpload.cssClasses.imageData + image.localID},
                     input({
                         type: "hidden",
                         name: sortList + "[]",
