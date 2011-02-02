@@ -777,6 +777,10 @@ describe("AlbumUpload", function() {
 				image.uploadCompleted(completionDetails);
 				expect(image.node.trigger).toHaveBeenCalledWith("fileUploadCompleted", {image: image});
 			})
+            
+            it("should store the thumb and full images using addData", function() {
+                expect(true).toBe(false);
+            })
 
 			it("should return the image", function() {
 				expect(image.uploadCompleted(completionDetails)).toBe(image);

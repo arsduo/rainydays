@@ -8,19 +8,25 @@
 
 <body>
     
-    <div id="uploadButtonHolder">
-        <span id="uploadButton"></span>
-        <span id="uploadInstructions">Check out Rainydays!<br/>Upload a few pictures.</span>
-    </div>
-
-    <div id="AlbumUploads">
-        <div id="AlbumUploadsPlaceholder">
-            (Your images will show up here!)
+    <form id="demoForm">
+        <div id="uploadButtonHolder">
+            <span id="uploadButton"></span>
+            <span id="uploadInstructions">Check out Rainydays!<br/>Upload a few pictures.</span>
         </div>
+
+        <div id="AlbumUploads">
+            <div id="AlbumUploadsPlaceholder">
+                (Your images will show up here!)
+            </div>
+        </div>
+
+    </form>
+    
+    <div id="outputContainer">
+        <div class="outputTitle">Form output:</div>
+        <div id="output"></div>
     </div>
-
-    <input type="hidden" id="uploadedPics" name="uploadedPics" />
-
+    
     <script type="text/javascript" src="javascript/jquery.dev.js"></script>
     <script type="text/javascript" src="javascript/jquery-ui.js"></script>
     <script type="text/javascript" src="javascript/Jaml-all.js"></script>
@@ -36,7 +42,6 @@
     $(document).ready(function() {
         uploader = RD.AlbumUpload.newUploader({
             albumContainerID: "AlbumUploads",
-            sortOrderStorageID: "uploadedPics",
             // keyPicStorageID: "meal_key_picture_id",
             placeholderID: "AlbumUploadsPlaceholder",
             processServerResults: function(data) {
@@ -61,6 +66,23 @@
                 flash_url: "swfupload.swf",
                 upload_url: "http://10.0.1.7/~ahkoppel2/uploader/uploader.php"
             }
+        })
+        
+        // HOOKING INTO EVENTS
+        // you can hook into sort and upload events
+        // here, we update the example form output
+        var output = $("#output");
+        var updateOutput = function() {
+            output.html(unescape($("#demoForm").serialize()));
+        }
+        uploader.albumContainer.bind("fileUploadCompleted", updateOutput).bind("sortupdate", updateOutput);
+        
+        // you can also hook into the fileUploadCompleted event to store additional data
+        // here we store the size of the original file based on the server's return value
+        // this shows you can access and store any of the values sent by your server 
+        uploader.albumContainer.bind("fileUploadCompleted", function(event, data) {
+            var image = data.image;
+            image.addData("size", image.details.full.size)
         })
     })
     </script>

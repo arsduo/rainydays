@@ -46,7 +46,7 @@ RD.AlbumUpload = {
         deleteLink: "deleteLink",
         magnifyLink: "magnifyLink",
         makeKeyPicLink: "makeKeyPicLink",
-        progressbar: "progressbar",
+        progressbar: "progressBar",
         processingMessage: "processingMessage"
     },
 
@@ -190,7 +190,6 @@ RD.AlbumUpload = {
                     image.node.addClass(keyPicClass);
 
                     // trigger global event unless explicitly told not to, e.g. on page load
-                    //console.log("Triggering event");
                     this.albumContainer.trigger(albumUpload.keyPicEvent, {uploader: this, image: image});
                 }
 
@@ -616,8 +615,8 @@ RD.AlbumUpload = {
 
             // generate the progress bar if jQuery.ui.progressbar available
             if (jQuery.ui.progressbar) {
-                this.progressBar = this.node.find("." + RD.AlbumUpload.cssClasses.progressBar).progressbar({value: 0});
-                RD.debug("Found progress bar %o", RD.showSource(this.progressBar));
+                this.progressBar = this.node.find("." + RD.AlbumUpload.cssClasses.progressbar).progressbar({value: 0});
+                RD.debug("Found progress bar %d %o", this.progressBar.length, this.progressBar);
             }
 
             // set the status
@@ -742,9 +741,13 @@ RD.AlbumUpload = {
                 // this should adapt the results to the requirements
                 processResultsFn(imageDetails);
             }
-
+            
             // re-initialize this node from the image details
             this.initFromDatabase(imageDetails);
+
+            // store the full and thumb images
+            this.addData("fullImageURL", imageDetails.fullImageURL);
+            this.addData("thumbImageURL", imageDetails.thumbImageURL);
 
             // trigger an event
             this.node.trigger("fileUploadCompleted", {image: this});
@@ -865,7 +868,7 @@ RD.AlbumUpload = {
             span(
                 div({cls: "uploadingText"}, RD.AlbumUpload.labels.uploading_file + image.filename),
                 div({cls: "progressBar"}),
-                        div({cls: "processingMessage"})
+                div({cls: "processingMessage"})
             )
         },
 

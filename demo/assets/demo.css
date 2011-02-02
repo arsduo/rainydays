@@ -11,6 +11,11 @@
       vertical-align:top;
     }
     
+    #uploadButton {
+      width: 51px;
+      height: 50px;
+      display: inline-block;
+    }
     
     #AlbumUploads {
         /*float: left;*/
@@ -22,6 +27,7 @@
         border-radius: 18px 18px 18px 18px;
         min-height: 350px;
     }
+
 
     #AlbumUploads .instructions {
         margin-left: 10px;
