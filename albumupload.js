@@ -428,7 +428,7 @@ RD.AlbumUpload = {
         },
 
         removeData: function(name) {
-            this.dataNode.remove("#" + this.inputID(name));
+            this.dataNode.find("#" + this.inputID(name)).remove();
             delete this.details[name];
         },
 
@@ -794,15 +794,17 @@ RD.AlbumUpload = {
             }
 
             // gets the dialog object for the image deletion option
-            if (this.status === RD.AlbumUpload.statusMap["deleting"]) {
+            if (this.status === "deleting") {
                 this.node.removeClass("markedForDeletion");
-                this.status = RD.AlbumUpload.statusMap["visible"];
-                this.deletionFlag.remove();
+                this.status = "visible";
+                this.removeData("deleted");
+                this.node.trigger("imageUndeleted", {image: this});
             }
             else {
                 this.node.addClass("markedForDeletion");
-                this.status = RD.AlbumUpload.statusMap["deleting"];
-                this.node.append(this.deletionFlag);
+                this.status = "deleting";
+                this.addData("deleted", 1);
+                this.node.trigger("imageDeleted", {image: this})
             }
         },
 
@@ -891,18 +893,20 @@ RD.AlbumUpload = {
         },
 
         visible: function(image) {
-             span({cls: "verticalAligner"},
+            var cssClasses = RD.AlbumUpload.cssClasses;
+            
+            span({cls: "verticalAligner"},
                 div({cls: "keyPicText"},
                       span({cls: "isKeyPic"}, RD.AlbumUpload.labels.is_album_pic),
-                    a({href: "#", cls: "keyPicLink"}, RD.AlbumUpload.labels.make_album_pic)
+                    a({href: "#", cls: cssClasses.makeKeyPicLink}, RD.AlbumUpload.labels.make_album_pic)
                 ),
                 div({cls: "image"},
                     img({cls: "thumbnail", id: "image" + image.localID, src: image.details.thumbImageURL}),
                     span({cls: "deleteText"}, RD.AlbumUpload.labels.will_be_deleted)
                 ),
                 div({cls: "actions"},
-                    a({cls: "magnify", href: "#"}, div("&nbsp;")),
-                    a({cls: "delete", href: "#"}, div("&nbsp;"))
+                    a({cls: cssClasses.magnifyLink, href: "#"}, div("&nbsp;")),
+                    a({cls: cssClasses.deleteLink, href: "#"}, div("&nbsp;"))
                 ),
                 div({cls: "clearFloat"}, "&nbsp;")
              )

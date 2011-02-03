@@ -917,6 +917,7 @@ describe("AlbumUpload", function() {
             })
 
             it("should remove the input from the data node", function() {
+                expect(true).toBe("actually do this with DOM nodes to make sure it works")
                 spyOn(image.dataNode, "remove");
                 var name = "foo";
                 image.removeData(name);

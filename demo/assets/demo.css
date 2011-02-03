@@ -1,7 +1,7 @@
     /* meal images */
 
     #uploadButtonHolder {
-      margin-top: 20px;
+      margin: 20px auto;
       text-align: center;
     }
     
@@ -17,28 +17,35 @@
       display: inline-block;
     }
     
+    #demoForm {
+      margin: 20px auto;
+      width: 680px;
+      padding: 20px;
+
+      background: none repeat scroll 0 0 #FFFFEE;
+      border: 2px solid black;
+      border-radius: 18px 18px 18px 18px;
+      min-height: 350px;
+
+    }
+    
     #AlbumUploads {
-        /*float: left;*/
-        margin: 20px auto;
-        width: 680px;
-        
-        background: none repeat scroll 0 0 #FFFFEE;
-        border: 2px solid black;
-        border-radius: 18px 18px 18px 18px;
+        float: left;
+        width: 560px;
         min-height: 350px;
     }
-
 
     #AlbumUploads .instructions {
         margin-left: 10px;
     }
 
     #AlbumUploadsPlaceholder {
-        text-align: center;
-        margin-top: 80px;
+      text-align:center;
+      width:430px;
+      margin-top: 80px;
     }
 
-    .AlbumUploadBlock {
+    .albumUploadBlock {
         width: 120px;
         height: 150px;
         margin: 0 10px;
@@ -57,11 +64,11 @@
       padding-bottom: 12px;
     }*/
 
-    .AlbumUploadBlock .verticalAligner {
+    .albumUploadBlock .verticalAligner {
         /*vertical-align: bottom;*/
     }
 
-    .AlbumUploadBlock .deleteText {
+    .albumUploadBlock .deleteText {
         display: none;
     }
 
@@ -96,7 +103,7 @@
 
     /* actions */
 
-    .AlbumUploadBlock .actions {
+    .albumUploadBlock .actions {
         margin-top: 3px;
     }
 
@@ -117,39 +124,39 @@
         width: 90px;
     }
 
-    .AlbumUploadBlock a, .AlbumUploadBlock a:hover {
+    .albumUploadBlock a, .albumUploadBlock a:hover {
         text-decoration: none;
     }
 
-    a.magnify {
+    a.magnifyLink {
         float: left;
     }
 
-    a.magnify div {
+    a.magnifyLink div {
         width: 19px;
         height: 20px;
         background-image: url('magnify_button.png');
     }
 
-    .inactive a:hover.magnify div, .inactive a:hover.delete div {
+    .inactive a:hover.magnifyLink div, .inactive a:hover.deleteLink div {
         background-position: 0 0;
     }
 
-    a:hover.magnify div {
+    a:hover.magnifyLink div {
         background-position: 0 20px;
     }
 
-    a.delete {
+    a.deleteLink {
         float: right;
     }
 
-    a.delete div {
+    a.deleteLink div {
         width: 17px;
         height: 18px;
         background-image: url('delete_button.png');
     }
 
-    a:hover.delete div {
+    a:hover.deleteLink div {
         background-position: 0 18px;
     }
 
@@ -274,6 +281,50 @@
     .errorBlock .description {
         font-weight: bold;
     }
+    
+    /* deleted images */
+    
+    #deletedImagesHolder {
+      width: 120px;
+      float: left;
+      visibility: hidden;
+    }
+    
+    #deletedImagesHolder.imagesDeleted {
+      visibility: visible;
+    }
+    
+    #deletedImagesHolder .title {
+      text-align: center;
+    }
+    
+    #deletedImages .thumbnail, #deletedImages .imageContent {
+      width: 100px;
+      height: auto;
+    }
+    
+    #deletedImages .imageContent {
+      padding: 10px 0;
+    }
+    
+    #deletedImages .markedForDeletion {
+      background-color: transparent;
+    }
+    
+    #deletedImages .actions, #deletedImages .keyPicText, #deletedImages .deleteText {
+      display: none;
+    }
+    
+    #deletedImages .albumUploadBlock {
+      height: 100px;
+    }
+
+    .ui-effects-transfer {
+      border: 2px solid black;
+      background: red;
+      opacity: 0.5;
+      filter: alpha(opacity=50);
+    }
 
 	/* key pic */
 	#leftImagesColumn {
@@ -290,4 +341,12 @@
     height: 1px;
     height: 0px;
     overflow: hidden;
+  }
+
+  /* form output */
+  
+  #outputContainer {
+    width:800px;
+    margin: 0 auto;
+    font-family: Courier, 'Courier New', fixed;
   }

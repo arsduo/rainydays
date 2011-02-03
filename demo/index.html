@@ -8,25 +8,35 @@
 
 <body>
     
+    <div id="uploadButtonHolder">
+        <span id="uploadButton"></span>
+        <span id="uploadInstructions">Check out Rainydays!<br/>Upload a few pictures.</span>
+    </div>
+    
+    
     <form id="demoForm">
-        <div id="uploadButtonHolder">
-            <span id="uploadButton"></span>
-            <span id="uploadInstructions">Check out Rainydays!<br/>Upload a few pictures.</span>
+        <div id="deletedImagesHolder">
+            <div class="title">
+                Deleted Images
+            </div>
+            
+            <div id="deletedImages"></div>
         </div>
-
+        
         <div id="AlbumUploads">
             <div id="AlbumUploadsPlaceholder">
                 (Your images will show up here!)
             </div>
         </div>
 
+        <div class="clearFloat">&nbsp;</div>
     </form>
-    
+
     <div id="outputContainer">
         <div class="outputTitle">Form output:</div>
         <div id="output"></div>
     </div>
-    
+        
     <script type="text/javascript" src="javascript/jquery.dev.js"></script>
     <script type="text/javascript" src="javascript/jquery-ui.js"></script>
     <script type="text/javascript" src="javascript/Jaml-all.js"></script>
@@ -75,7 +85,7 @@
         var updateOutput = function() {
             output.html(unescape($("#demoForm").serialize()));
         }
-        uploader.albumContainer.bind("fileUploadCompleted", updateOutput).bind("sortupdate", updateOutput);
+        uploader.albumContainer.bind("fileUploadCompleted", updateOutput).bind("sortupdate", updateOutput).bind("imageDeleted", updateOutput).bind("imageUndeleted", updateOutput);
         
         // you can also hook into the fileUploadCompleted event to store additional data
         // here we store the size of the original file based on the server's return value
@@ -83,6 +93,26 @@
         uploader.albumContainer.bind("fileUploadCompleted", function(event, data) {
             var image = data.image;
             image.addData("size", image.details.full.size)
+        })
+        
+        uploader.albumContainer.bind("imageDeleted", function(effect, data) {
+            var img = data.image.node, content = img.find(".imageContent"), deletedArea = $("#deletedImages");
+
+            // show the deleted images area
+            $("#deletedImagesHolder").addClass("imagesDeleted");
+            
+            // add a dummy image
+            var spaceHolder = img.find(".thumbnail").clone();
+            spaceHolder.css("visibility", "hidden");
+            deletedArea.append(spaceHolder);
+            
+            // now transfer to it
+            content.fadeOut();
+            img.effect("transfer", {to: spaceHolder}, "normal", function() {
+                spaceHolder.css("visibility", "visible");
+                spaceHolder.replaceWith(img);
+                content.fadeIn();
+            });
         })
     })
     </script>
