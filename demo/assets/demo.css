@@ -30,7 +30,7 @@
     }
     
     #AlbumUploads {
-        float: left;
+      display: inline-block;
         width: 560px;
         min-height: 350px;
     }
@@ -285,9 +285,11 @@
     /* deleted images */
     
     #deletedImagesHolder {
-      width: 120px;
-      float: left;
+      width: 110px;
+      display: inline-block;
       visibility: hidden;
+      min-height: 350px;
+      vertical-align: top;
     }
     
     #deletedImagesHolder.imagesDeleted {
@@ -304,7 +306,7 @@
     }
     
     #deletedImages .imageContent {
-      padding: 10px 0;
+      padding: 5px 0;
     }
     
     #deletedImages .markedForDeletion {
@@ -324,6 +326,10 @@
       background: red;
       opacity: 0.5;
       filter: alpha(opacity=50);
+    }
+    
+    #AlbumUploads .ui-effects-wrapper {
+      display: inline-block;
     }
 
 	/* key pic */

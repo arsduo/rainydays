@@ -96,25 +96,58 @@
         })
         
         uploader.albumContainer.bind("imageDeleted", function(effect, data) {
-            var img = data.image.node, content = img.find(".imageContent"), deletedArea = $("#deletedImages");
+            var img = data.image.node, deletedArea = $("#deletedImages");
 
             // show the deleted images area
             $("#deletedImagesHolder").addClass("imagesDeleted");
             
-            // add a dummy image
-            var spaceHolder = img.find(".thumbnail").clone();
-            spaceHolder.css("visibility", "hidden");
-            deletedArea.append(spaceHolder);
-            
-            // now transfer to it
-            content.fadeOut();
-            img.effect("transfer", {to: spaceHolder}, "normal", function() {
-                spaceHolder.css("visibility", "visible");
-                spaceHolder.replaceWith(img);
-                content.fadeIn();
-            });
+            transferWithFade(img, deletedArea);
         })
     })
+    
+    var transferWithFade = function(source, destination) {
+        // add a dummy at the destination
+        // for us to transfer to
+        var destinationPlaceHolder = $("<div>", {
+            // keep the class, since this is inline
+            // we want it to be sized as the final source will be
+            class: source.attr("class"),
+            css: {
+                visibility: "hidden"
+            }
+        });
+        destination.append(destinationPlaceHolder);
+
+        // now add an invisible dummy at the source
+        // to supply the transfer outline and later to shrink
+        var sourcePlaceHolder = $("<" + source.attr("tagName") + ">", {
+            css: $.extend({
+                position: "absolute",
+                height: source.height(),
+                width: source.width(),
+                visibility: "hidden",
+                display: source.css("display")
+            }, source.offset())
+        });
+        $("body").append(sourcePlaceHolder);
+
+        // now start the transfer
+        source.fadeOut();
+        sourcePlaceHolder.effect("transfer", {to: destinationPlaceHolder}, "normal", function() {
+            // once the transfer effect is done, replace the destination with the source content
+            // and replace the source with the placeholder, so that we can shrink out the gap
+            sourcePlaceHolder.css("position", "static");
+            source.replaceWith(sourcePlaceHolder);
+            sourcePlaceHolder.animate({width: 0}, function() {
+                sourcePlaceHolder.remove();
+            });
+
+            // put the source in the final location and fade it in
+            //destinationPlaceHolder.css("visibility", "visible");
+            destinationPlaceHolder.replaceWith(source);
+            source.fadeIn();
+        });
+    }
     </script>
 
 </body>
