@@ -932,6 +932,19 @@ describe("AlbumUpload", function() {
             })
         })
 
+        describe("toggleDeletion", function() {
+            it("should have toggleDeletion tests", function() {
+                expect(false).toBe(true);
+            })
+        })
+        
+        describe("showFullImage", function() {
+            it("should have showFullImage tests", function() {
+                expect(false).toBe(true);
+            })
+        })
+        
+
 		describe("support functions", function() {
 			beforeEach(function() {
                 image.initialize({
@@ -1002,4 +1015,5 @@ describe("AlbumUpload", function() {
 
 		})
     })
+    
 })

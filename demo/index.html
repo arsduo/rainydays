@@ -107,6 +107,12 @@
         $("#deletedImagesHolder").bind("imageUndeleted", function() { 
             destructDeletedImage.apply(this, arguments);
         });
+        
+        uploader.albumContainer.bind("showFullImage", function(event, data) {
+            var image = data.image;
+            imgForDialog = $("<img>", {src: image.details.large.url, class: "dialogImage"});
+            imgForDialog.wrap($("<div>")).parent().dialog({dialogClass: "dialogImage", width: "auto", title: "It's your image!"});
+        })
     })
     
     var transferWithFade = function(source, destination, options) {
@@ -148,7 +154,7 @@
             sourcePlaceHolder.insertAfter(source);
             source.detach();
 
-            sourcePlaceHolder.animate({width: 0}, function() {
+            sourcePlaceHolder.animate({width: 0, height: 0}, function() {
                 sourcePlaceHolder.remove();
             });
 
@@ -175,6 +181,12 @@
             });
         }
         
+        var undeleteFn = function() { 
+            removeUndeleteText();
+            scalee.unbind(".delete"); 
+            image.toggleDeletion(); 
+        }
+        
         var hoverOut = function(callback) {
             if (isScaled) {
                 isScaled = false;
@@ -185,31 +197,26 @@
         }
         
         var hoverIn = function() {
+            var growth = 6/5;
+            undeleteText = $("<div>", {
+                class: "undeleteText", 
+                css: {
+                    height: scalee.height() * growth,
+                    width: scalee.width() * growth
+                },
+                offset: scalee.offset(),
+                html: "<div>undelete</div>"
+            });
+            // ideally we want this to be clickable immediately
+            // but in practice it seems to be first usable when the animations are done 
+            $("body").append(undeleteText);
+            undeleteText.click(undeleteFn);
+            
             if (!isScaled) {
-                scalee.effect("scale", {percent: 6/5 * 100}, function() {
+                scalee.effect("scale", {percent: growth * 100}, function() {
                     // wait a few milliseconds -- FF doesn't return the right offset immediately
                     setTimeout(function() {
-                        // wrap this in the undelete link
-                        undeleteText = $("<div>", {
-                            class: "undeleteText", 
-                            css: {
-                                height: scalee.height(),
-                                width: scalee.width()
-                            },
-                            offset: scalee.offset(),
-                            html: "<div>undelete</div>"
-                        });
-
-                        $("body").append(undeleteText);
-                        undeleteText.bind("mouseleave.delete", hoverOut);
-
-                        undeleteText.fadeIn(function() {
-                            undeleteText.click(function() { 
-                                removeUndeleteText();
-                                scalee.unbind(".delete"); 
-                                image.toggleDeletion(); 
-                            })
-                        });
+                        undeleteText.bind("mouseleave.delete", hoverOut).fadeIn();
                         
                     }, 10);
                 })

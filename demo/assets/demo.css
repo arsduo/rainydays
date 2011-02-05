@@ -31,7 +31,8 @@
     
     #AlbumUploads {
       display: inline-block;
-        width: 560px;
+        width: 550px;
+        margin-left: 10px;
         min-height: 350px;
     }
 
@@ -354,6 +355,12 @@
     
     #AlbumUploads .ui-effects-wrapper {
       display: inline-block;
+    }
+    
+    /* zoom */
+    
+    .dialogImage {
+      width: 600px;
     }
 
 	/* key pic */

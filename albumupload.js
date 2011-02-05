@@ -808,7 +808,9 @@ RD.AlbumUpload = {
             }
         },
 
-        showFullImage: function() {},
+        showFullImage: function() {
+            this.node.trigger("showFullImage", {image: this})
+        },
 
         /*
         isRetrying
