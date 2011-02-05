@@ -51,6 +51,7 @@
         margin: 0 10px;
         display: table-cell;
         display: inline-block;
+        vertical-align: top;
         *display: inline;
         zoom: 1;
     }
@@ -332,6 +333,12 @@
     
     #deletedImages .albumUploadBlock {
       height: 100px;
+    }
+
+    .sourcePlaceholder {
+      position: absolute;
+      visibility: hidden;
+      vertical-align: top;
     }
 
     .ui-effects-transfer {

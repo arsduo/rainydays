@@ -128,11 +128,10 @@
         // now add an invisible dummy at the source
         // to supply the transfer outline and later to shrink
         var sourcePlaceHolder = $("<" + source.attr("tagName") + ">", {
+            class: "sourcePlaceHolder",
             css: $.extend({
-                position: "absolute",
                 height: source.height(),
                 width: source.width(),
-                visibility: "hidden",
                 display: source.css("display")
             }, source.offset())
         });
@@ -169,13 +168,18 @@
         // show the deleted images area
         $("#deletedImagesHolder").addClass("imagesDeleted");
         
+        var removeUndeleteText = function() {
+            undeleteText.unbind(".delete");
+            undeleteText.fadeOut({}, function() {
+                undeleteText.remove();
+            });
+        }
+        
         var hoverOut = function(callback) {
             if (isScaled) {
                 isScaled = false;
                 
-                undeleteText.fadeOut({}, function() {
-                    undeleteText.remove();
-                });
+                removeUndeleteText();
                 scalee.effect("scale", {percent: 5/6 * 100}, callback);
             }
         }
@@ -200,10 +204,11 @@
                         undeleteText.bind("mouseleave.delete", hoverOut);
 
                         undeleteText.fadeIn(function() {
-                            undeleteText.click(function() { hoverOut(function() { 
+                            undeleteText.click(function() { 
+                                removeUndeleteText();
                                 scalee.unbind(".delete"); 
                                 image.toggleDeletion(); 
-                            })})
+                            })
                         });
                         
                     }, 10);
