@@ -521,7 +521,7 @@ RD.AlbumUpload = {
 
             // initialize links
             var imageObject = this; // otherwise this gets misinterpreted when the function is applied
-            this.node.find("." + classes.deleteLink).bind("click", function() { imageObject.toggleDeletion(); return false; });
+            this.node.find("." + classes.deleteLink).bind("click", function() { console.log("tog called!"); imageObject.toggleDeletion(); return false; });
             this.node.find("." + classes.magnifyLink).bind("click", function() { imageObject.showFullImage(); return false; });
             this.node.find("." + classes.makeKeyPicLink).bind("click", function() { imageObject.uploader.setKeyPic(imageObject); return false; });
 
@@ -792,7 +792,7 @@ RD.AlbumUpload = {
                 // this has no effect on other states
                 return;
             }
-
+            
             // gets the dialog object for the image deletion option
             if (this.status === "deleting") {
                 this.node.removeClass("markedForDeletion");

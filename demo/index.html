@@ -95,19 +95,26 @@
             image.addData("size", image.details.full.size)
         })
         
-        uploader.albumContainer.bind("imageDeleted", function(effect, data) {
-            var img = data.image.node, deletedArea = $("#deletedImages");
-
-            // show the deleted images area
-            $("#deletedImagesHolder").addClass("imagesDeleted");
-            
-            transferWithFade(img, deletedArea);
+        uploader.albumContainer.bind("imageDeleted", function(event, data) {
+            var image = data.image;
+            transferWithFade(image.node, $("#deletedImages"), {
+                txClassName: "deleteTransfer", 
+                callback: function() { setupDeletedImage(image); }
+            });
         })
+        
+        // the undelete event comes from the deleted section
+        $("#deletedImagesHolder").bind("imageUndeleted", function() { 
+            destructDeletedImage.apply(this, arguments);
+        });
     })
     
-    var transferWithFade = function(source, destination) {
+    var transferWithFade = function(source, destination, options) {
         // add a dummy at the destination
         // for us to transfer to
+        options = options || {};
+        var callback = options.callback;
+        
         var destinationPlaceHolder = $("<div>", {
             // keep the class, since this is inline
             // we want it to be sized as the final source will be
@@ -133,11 +140,15 @@
 
         // now start the transfer
         source.fadeOut();
-        sourcePlaceHolder.effect("transfer", {to: destinationPlaceHolder}, "normal", function() {
+        sourcePlaceHolder.effect("transfer", {to: destinationPlaceHolder, className: options.txClassName}, "normal", function() {
             // once the transfer effect is done, replace the destination with the source content
             // and replace the source with the placeholder, so that we can shrink out the gap
             sourcePlaceHolder.css("position", "static");
-            source.replaceWith(sourcePlaceHolder);
+
+            // replaceWith destroys events, etc. so we have to insert the placeholder and then detach the source
+            sourcePlaceHolder.insertAfter(source);
+            source.detach();
+
             sourcePlaceHolder.animate({width: 0}, function() {
                 sourcePlaceHolder.remove();
             });
@@ -146,6 +157,70 @@
             //destinationPlaceHolder.css("visibility", "visible");
             destinationPlaceHolder.replaceWith(source);
             source.fadeIn();
+            if (typeof(callback) === "function") {
+                callback();
+            }
+        });
+    }
+    
+    function setupDeletedImage(image) {
+        var isScaled = false, onLink = false, scalee = image.node.find(".thumbnail"), undeleteText;
+        
+        // show the deleted images area
+        $("#deletedImagesHolder").addClass("imagesDeleted");
+        
+        var hoverOut = function(callback) {
+            if (isScaled) {
+                isScaled = false;
+                
+                undeleteText.fadeOut({}, function() {
+                    undeleteText.remove() 
+                });
+                scalee.effect("scale", {percent: 5/6 * 100}, callback);
+            }
+        }
+        
+        var hoverIn = function() {
+            var thumbnail = scalee.find(".thumbnail");
+            if (!isScaled) {
+                scalee.effect("scale", {percent: 6/5 * 100}, function() {
+                    // wait a few milliseconds -- FF doesn't return the right offset immediately
+                    setTimeout(function() {
+                        // wrap this in the undelete link
+                        undeleteText = $("<div>", {
+                            class: "undeleteText", 
+                            css: {
+                                height: thumbnail.height(),
+                                width: thumbnail.width()
+                            },
+                            offset: thumbnail.offset(),
+                            html: "<div>undelete</div>"
+                        });
+                    
+                        $("body").append(undeleteText);
+                        undeleteText.bind("mouseleave.delete", hoverOut);
+
+                        undeleteText.fadeIn(function() {
+                            undeleteText.click(function() { hoverOut(function() { 
+                                scalee.unbind(".delete"); 
+                                image.toggleDeletion(); 
+                            })})
+                        });
+                        
+                    }, 10);
+                })
+                isScaled = true;
+            }
+        };
+
+        scalee.bind("mouseenter.delete", hoverIn)
+    }
+    
+    function destructDeletedImage(event, data) {
+        var image = data.image;
+        transferWithFade(image.node, $("#AlbumUploads"), {
+            // erase the fixed height and width set by the scale function 
+            callback: function() { image.node.find(".thumbnail").css({height: "", width: ""})}
         });
     }
     </script>
