@@ -113,6 +113,17 @@
             imgForDialog = $("<img>", {src: image.details.large.url, class: "dialogImage"});
             imgForDialog.wrap($("<div>")).parent().dialog({dialogClass: "dialogImage", width: "auto", title: "It's your image!"});
         })
+
+        uploader.albumContainer.bind("uploadError", function(event, data) {
+            var error = data.error.error;
+            if (error.sizeExceeded) {
+                error.shortDescription = error.shortDescription || "file too large!";
+            }
+            else if (!error.shortDescription) {
+                error.shortDescription = "something else happened."
+            }
+            $("<div>Uh oh!  We encountered an error: " + error.shortDescription + "</div>").dialog()
+        })
     })
     
     var transferWithFade = function(source, destination, options) {

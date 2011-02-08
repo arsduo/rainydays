@@ -370,6 +370,10 @@ RD.AlbumUpload = {
                 }
             }
             return !!result;
+        },
+        
+        queueError: function(errorDetails) {
+            this.albumContainer.trigger("uploadError", {error: errorDetails});
         }
     },
 
@@ -713,6 +717,7 @@ RD.AlbumUpload = {
 
                 errorDetails.image = this;
                 this.renderContent("errored", errorDetails);
+                this.node.trigger("uploadError", {image: this, error: errorDetails});
             }
 
             return this;

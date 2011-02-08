@@ -269,6 +269,10 @@ describe("AlbumUpload", function() {
                     expect(uploader.albumContainer.sortable).toHaveBeenCalledWith(uploader.sortableOptions);
                 })
             })
+            
+            describe("queueError", function() {
+                it("should have tests", function() { expect(true).toBe(false) })
+            })
 
             describe("setKeyPic", function() {
                 var image, triggered;

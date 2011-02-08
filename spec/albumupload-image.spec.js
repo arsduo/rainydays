@@ -694,6 +694,10 @@ describe("AlbumUpload", function() {
                      image.uploadErrored(errorDetails);
                      expect(image.renderContent).toHaveBeenCalledWith("errored", errorDetails)
                  })
+                 
+                 it("should trigger an event", function() {
+                     expect(true).toBe(false);
+                 })
              }
 
             describe("if the error is not recoverable", function() {
@@ -711,7 +715,7 @@ describe("AlbumUpload", function() {
 
                 unrecoverableTests();
             })
-
+            
             it("return the image", function() {
                 expect(image.uploadCanceled()).toBe(image);
             })

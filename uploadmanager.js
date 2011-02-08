@@ -95,14 +95,12 @@ RD.UploadManager = {
                 RD.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
                 break;
             }
-            var upload = this.handler.findByFileObject(file);
-            if (upload) {
-                RD.debug("In fileDialogError, setting uploadError.");
-                upload.uploadErrored({
-                    isRecoverable: isRecoverable,
-                    shortDescription: errorText
-                })
-            }
+            
+            this.handler.queueError({
+                isRecoverable: isRecoverable,
+                shortDescription: errorText,
+                errorCode: errorCode
+            })
         },
 
         fileDialogComplete: function(numFilesSelected, numFilesQueued, totalQueued) {
@@ -162,8 +160,13 @@ RD.UploadManager = {
                     // if we have an error, hand off to the bad server content department
                     results = null;
                 }
-
-                upload.uploadCompleted(results);
+                
+                if (!results.error) {
+                    upload.uploadCompleted(results);
+                }
+                else {
+                    upload.uploadErrored(results);
+                }
                 return true;
             }
         },
@@ -221,6 +224,7 @@ RD.UploadManager = {
                 upload.uploadErrored({
                     shortDescription: errorText,
                     isRecoverable: isRecoverable,
+                    errorCode: errorCode
                 })
 
                 // if it says it's done, cancel it
