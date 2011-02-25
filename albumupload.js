@@ -704,6 +704,7 @@ RD.AlbumUpload = {
 
         uploadErrored: function(errorDetails) {
             // add an error count
+						var that;
             this.errorCount = (this.errorCount || 0) + 1;
 
             if (errorDetails.isRecoverable && this.errorCount <= RD.AlbumUpload.retryLimit) {
@@ -712,12 +713,16 @@ RD.AlbumUpload = {
                 this.status = "queued";
             }
             else {
-                RD.debug("Error details shortDescription: " + errorDetails.shortDescription);
+                RD.debug("Error details shortDescription: " + errorDetails.error);
                 this.status = "errored";
 
                 errorDetails.image = this;
                 this.renderContent("errored", errorDetails);
                 this.node.trigger("uploadError", {image: this, error: errorDetails});
+
+								// bind the clear link to hide this image
+								that = this;
+								this.node.find(".clearLink").click(function() { that.node.hide("fade") });
             }
 
             return this;
@@ -884,7 +889,7 @@ RD.AlbumUpload = {
         errored: function(errorData) {
             div({cls: "errorBlock"},
                 div(span({cls: "description"}, errorData.shortDescription), span(RD.AlbumUpload.labels.error_for + " " + errorData.image.filename)),
-                div(a({cls: "clearLink", href: "#", onclick:  "RD.AlbumUpload.clear(" + errorData.image.localID + ")"}, RD.AlbumUpload.labels.link_clear))
+                div(a({cls: "clearLink", href: "#"}, RD.AlbumUpload.labels.link_clear))
             )
         },
 

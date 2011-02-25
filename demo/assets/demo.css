@@ -1,389 +1,405 @@
-    /* meal images */
+body {
+	font-family: Verdana, Arial, sans-serif;
+	font-size: 12px;
+}
 
-    #uploadButtonHolder {
-      margin: 20px auto;
-      text-align: center;
-    }
-    
-    #uploadInstructions {
-      display:inline-block;
-      padding-top:7px;
-      vertical-align:top;
-    }
-    
-    #uploadButton {
-      width: 51px;
-      height: 50px;
-      display: inline-block;
-    }
-    
-    #demoForm {
-      margin: 20px auto;
-      width: 680px;
-      padding: 20px;
+#details {
+	position: fixed;
+	bottom: 0;
+	text-align: center;
+	width: 100%;
+	padding-bottom: 15px;
+}
 
-      background: none repeat scroll 0 0 #FFFFEE;
-      border: 2px solid black;
-      border-radius: 18px 18px 18px 18px;
-      min-height: 350px;
+/* meal images */
 
-    }
-    
-    #AlbumUploads {
-      display: inline-block;
-        width: 550px;
-        margin-left: 10px;
-        min-height: 350px;
-    }
+#uploadButtonHolder {
+	margin: 20px auto;
+	text-align: center;
+}
 
-    #AlbumUploads .instructions {
-        margin-left: 10px;
-    }
+#uploadInstructions {
+	display:inline-block;
+	padding-top:7px;
+	vertical-align:top;
+}
 
-    #AlbumUploadsPlaceholder {
-      text-align:center;
-      width:430px;
-      margin-top: 80px;
-    }
+#uploadButton {
+	width: 51px;
+	height: 50px;
+	display: inline-block;
+}
 
-    .albumUploadBlock {
-        width: 120px;
-        height: 150px;
-        margin: 0 10px;
-        display: table-cell;
-        display: inline-block;
-        vertical-align: top;
-        *display: inline;
-        zoom: 1;
-    }
+#demoForm {
+	margin: 20px auto;
+	width: 680px;
+	padding: 20px;
 
-    .imageContent {
-      height: 100%;
-    }
-    
-    /*
-    .forHorizontalImage .thumbnail {
-      padding-bottom: 12px;
-    }*/
+	background: none repeat scroll 0 0 #FFFFEE;
+	border: 2px solid black;
+	border-radius: 18px 18px 18px 18px;
+	min-height: 350px;
 
-    .albumUploadBlock .verticalAligner {
-        /*vertical-align: bottom;*/
-    }
+}
 
-    .albumUploadBlock .deleteText {
-        display: none;
-    }
+#AlbumUploads {
+	display: inline-block;
+	width: 550px;
+	margin-left: 10px;
+	min-height: 350px;
+}
 
-    #AlbumUploads .beingSorted {
-        border: 4px dashed black;
-        -moz-border-radius: 10px;
-        -webkit-border-radius: 10px;
-        height: 100px;
-        width: 100px;
-        /*margin: 10px;
-        margin-top: 30px;*/
-        position: relative;
-        left: 5px;
-    }
-    
-    .inlineBlock {
-      display: inline-block;
-      *display: inline;
-      zoom: 1;
-    }
-    
-    .forHorizontalImage .thumbnail {
-      width: 120px;
-      height: 90px;
-    }
-    
-    .forVerticalImage .thumbnail {
-      height: 120px;
-      width: 90px;
-    }
-    
+#AlbumUploads .instructions {
+	margin-left: 10px;
+}
 
-    /* actions */
+#AlbumUploadsPlaceholder {
+	text-align:center;
+	width:430px;
+	margin-top: 80px;
+}
 
-    .albumUploadBlock .actions {
-        margin-top: 3px;
-    }
+.albumUploadBlock {
+	width: 120px;
+	height: 150px;
+	margin: 0 10px;
+	display: table-cell;
+	display: inline-block;
+	vertical-align: top;
+	*display: inline;
+	zoom: 1;
+}
 
-    .forHorizontalImage div.mealPicText {
-        padding-top: 30px;
-    }
+.imageContent {
+	height: 100%;
+}
 
-    .forHorizontalImage img.AlbumUpload {
-        height: 90px;
-    }
-    /*
-    .forVerticalImage {
-        margin: 0 43px 0 44px;
-    }
-    */
+/*
+.forHorizontalImage .thumbnail {
+padding-bottom: 12px;
+}*/
 
-    .forVerticalImage, .forVerticalImage img.AlbumUpload {
-        width: 90px;
-    }
+.albumUploadBlock .verticalAligner {
+	/*vertical-align: bottom;*/
+}
 
-    .albumUploadBlock a, .albumUploadBlock a:hover {
-        text-decoration: none;
-    }
+.albumUploadBlock .deleteText {
+	display: none;
+}
 
-    a.magnifyLink {
-        float: left;
-    }
+#AlbumUploads .beingSorted {
+	border: 4px dashed black;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	height: 100px;
+	width: 100px;
+	/*margin: 10px;
+	margin-top: 30px;*/
+	position: relative;
+	left: 5px;
+}
 
-    a.magnifyLink div {
-        width: 19px;
-        height: 20px;
-        background-image: url('magnify_button.png');
-    }
+.inlineBlock {
+	display: inline-block;
+	*display: inline;
+	zoom: 1;
+}
 
-    .inactive a:hover.magnifyLink div, .inactive a:hover.deleteLink div {
-        background-position: 0 0;
-    }
+.forHorizontalImage .thumbnail {
+	width: 120px;
+	height: 90px;
+}
 
-    a:hover.magnifyLink div {
-        background-position: 0 20px;
-    }
-
-    a.deleteLink {
-        float: right;
-    }
-
-    a.deleteLink div {
-        width: 17px;
-        height: 18px;
-        background-image: url('delete_button.png');
-    }
-
-    a:hover.deleteLink div {
-        background-position: 0 18px;
-    }
+.forVerticalImage .thumbnail {
+	height: 120px;
+	width: 90px;
+}
 
 
-    /* preview */
+/* actions */
 
-    .previewDialogVertical {
-        width: 450px;
-        height: 600px;
-    }
+.albumUploadBlock .actions {
+	margin-top: 3px;
+}
 
-    .previewDialogVertical img {
-        width: 425px;
-        height: 575px;
-    }
+.forHorizontalImage div.mealPicText {
+	padding-top: 30px;
+}
 
-    .previewDialogHorizontal {
-        height: 600px;
-        width: 800px;
-    }
+.forHorizontalImage img.AlbumUpload {
+	height: 90px;
+}
+/*
+.forVerticalImage {
+margin: 0 43px 0 44px;
+}
+*/
 
-    .previewDialogHorizontal img {
-        height: 575px;
-        width: 775px;
-    }
+.forVerticalImage, .forVerticalImage img.AlbumUpload {
+	width: 90px;
+}
 
-    .previewDialog .ui-dialog-titlebar {
-        height: 20px;
-        width: 20px;
-        padding: 0px;
-        position: absolute;
-        right: 3px;
-    }
+.albumUploadBlock a, .albumUploadBlock a:hover {
+	text-decoration: none;
+}
 
-    .previewDialog .ui-dialog-titlebar-close {
-        right: 0px;
-    }
+a.magnifyLink {
+	float: left;
+}
 
-    /* image deletion */
+a.magnifyLink div {
+	width: 19px;
+	height: 20px;
+	background-image: url('magnify_button.png');
+}
 
-    .markedForDeletion .image {
-        position: relative;
-    }
+.inactive a:hover.magnifyLink div, .inactive a:hover.deleteLink div {
+	background-position: 0 0;
+}
 
-    .markedForDeletion .image .deleteText {
-        color: white;
-        display: inline;
-        left: 0;
-        position: absolute;
-        text-align: center;
-        top: 20%;
-        padding: 0 2px;
-    }
+a:hover.magnifyLink div {
+	background-position: 0 20px;
+}
 
-    .markedForDeletion .image img.AlbumUpload {
-        opacity: 0.5;
-        filter: alpha(opacity=50);
-    }
+a.deleteLink {
+	float: right;
+}
 
-    .markedForDeletion .actions a.delete div {
-        background-position: 0 18px;
-    }
+a.deleteLink div {
+	width: 17px;
+	height: 18px;
+	background-image: url('delete_button.png');
+}
 
-    .markedForDeletion .actions a:hover.delete div {
-        background-position: 0 0;
-    }
-    
-    /* undelete hover */
-    .undeleteText {
-      color: white;
-      position: absolute;
-      text-align: center;
-      vertical-align: middle;
-      display: none;
-      z-index: 100;
-    }
-    
-    .undeleteText div {
-      padding-top: 25%;
-    }
-    
-    /* Key Pic Stuff, not working */
-	.keyPicText {
-	  font-family:sans-serif;
-    font-size:12px;
-		text-align: center;
-	}
-
-	/* link is by default invisible until hovered on, and not displayed if this is the key text */
-    .keyPicText a:hover {
-        color: gray;
-    }
-
-    .keyPicText a {
-        color: white;
-    }
-
-	.keyPicBlock .keyPicText a {
-		display: none;
-	}
-
-	/* text is default invisible unless this is the key pic */
-    .keyPicText .isKeyPic {
-        display: none;
-    }
-
-    .keyPicBlock .keyPicText .isKeyPic {
-        display: inline;
-    }
-    
-    /* in progress */
-    .uploading {
-        vertical-align: top;
-        text-align: center;
-    }
-
-    .uploading .ui-progressbar {
-        height:1em;
-        margin-top:5px;
-    }
-
-    .uploading .uploadingText {
-        padding-top: 40px;
-    }
-
-	.uploading .processingMessage {
-		padding-top: 10px;
-	}
-
-    .errorBlock {
-        padding-top: 30px;
-        text-align: center;
-    }
-
-    .errorBlock .description {
-        font-weight: bold;
-    }
-    
-    /* deleted images */
-    
-    #deletedImagesHolder {
-      width: 110px;
-      display: inline-block;
-      visibility: hidden;
-      min-height: 350px;
-      vertical-align: top;
-    }
-    
-    #deletedImagesHolder.imagesDeleted {
-      visibility: visible;
-    }
-    
-    #deletedImagesHolder .title {
-      text-align: center;
-    }
-    
-    #deletedImages .thumbnail, #deletedImages .imageContent {
-      width: 100px;
-      height: auto;
-    }
-    
-    #deletedImages .imageContent {
-      padding: 5px 0;
-    }
-    
-    #deletedImages .markedForDeletion {
-      background-color: transparent;
-    }
-    
-    #deletedImages .actions, #deletedImages .keyPicText, #deletedImages .deleteText {
-      display: none;
-    }
-    
-    #deletedImages .albumUploadBlock {
-      height: 100px;
-    }
-
-    .sourcePlaceholder {
-      position: absolute;
-      visibility: hidden;
-      vertical-align: top;
-    }
-
-    .ui-effects-transfer {
-      border: 2px solid black;
-      background: #CCC;
-      opacity: 0.5;
-      filter: alpha(opacity=50);
-    }
-    
-    .deleteTransfer {
-      background: red;
-    }
-    
-    #AlbumUploads .ui-effects-wrapper {
-      display: inline-block;
-    }
-    
-    /* zoom */
-    
-    .dialogImage {
-      width: 600px;
-    }
-
-	/* key pic */
-	#leftImagesColumn {
-		width: 70px;
-	}
-
-	#rightImagesColumn {
-		/* width defined by RD.AlbumUploads */
-		vertical-align: top;
-	}
+a:hover.deleteLink div {
+	background-position: 0 18px;
+}
 
 
-  .clearFloat { 
-    height: 1px;
-    height: 0px;
-    overflow: hidden;
-  }
+/* preview */
 
-  /* form output */
-  
-  #outputContainer {
-    width:800px;
-    margin: 0 auto;
-    font-family: Courier, 'Courier New', fixed;
-  }
+.previewDialogVertical {
+	width: 450px;
+	height: 600px;
+}
+
+.previewDialogVertical img {
+	width: 425px;
+	height: 575px;
+}
+
+.previewDialogHorizontal {
+	height: 600px;
+	width: 800px;
+}
+
+.previewDialogHorizontal img {
+	height: 575px;
+	width: 775px;
+}
+
+.previewDialog .ui-dialog-titlebar {
+	height: 20px;
+	width: 20px;
+	padding: 0px;
+	position: absolute;
+	right: 3px;
+}
+
+.previewDialog .ui-dialog-titlebar-close {
+	right: 0px;
+}
+
+/* image deletion */
+
+.markedForDeletion .image {
+	position: relative;
+}
+
+.markedForDeletion .image .deleteText {
+	color: white;
+	display: inline;
+	left: 0;
+	position: absolute;
+	text-align: center;
+	top: 20%;
+	padding: 0 2px;
+}
+
+.markedForDeletion .image img.AlbumUpload {
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+}
+
+.markedForDeletion .actions a.delete div {
+	background-position: 0 18px;
+}
+
+.markedForDeletion .actions a:hover.delete div {
+	background-position: 0 0;
+}
+
+/* undelete hover */
+.undeleteText {
+	color: white;
+	position: absolute;
+	text-align: center;
+	vertical-align: middle;
+	display: none;
+	z-index: 100;
+}
+
+.undeleteText div {
+	padding-top: 25%;
+}
+
+/* Key Pic Stuff, not working */
+.keyPicText {
+	font-family:sans-serif;
+	font-size:12px;
+	text-align: center;
+}
+
+/* link is by default invisible until hovered on, and not displayed if this is the key text */
+.keyPicText a:hover {
+	color: gray;
+}
+
+.keyPicText a {
+	color: white;
+}
+
+.keyPicBlock .keyPicText a {
+	display: none;
+}
+
+/* text is default invisible unless this is the key pic */
+.keyPicText .isKeyPic {
+	display: none;
+}
+
+.keyPicBlock .keyPicText .isKeyPic {
+	display: inline;
+}
+
+/* in progress */
+.uploading {
+	vertical-align: top;
+	text-align: center;
+}
+
+.uploading .ui-progressbar {
+	height:1em;
+	margin-top:5px;
+}
+
+.uploading .uploadingText {
+	padding-top: 40px;
+}
+
+.uploading .processingMessage {
+	padding-top: 10px;
+}
+
+.errorBlock {
+	padding-top: 30px;
+	text-align: center;
+}
+
+.errorBlock .description {
+	font-weight: bold;
+}
+
+/* deleted images */
+
+#deletedImagesHolder {
+	width: 110px;
+	display: inline-block;
+	visibility: hidden;
+	min-height: 350px;
+	vertical-align: top;
+}
+
+#deletedImagesHolder.imagesDeleted {
+	visibility: visible;
+}
+
+#deletedImagesHolder .title {
+	text-align: center;
+}
+
+#deletedImages .thumbnail, #deletedImages .imageContent {
+	width: 100px;
+	height: auto;
+}
+
+#deletedImages .imageContent {
+	padding: 5px 0;
+}
+
+#deletedImages .markedForDeletion {
+	background-color: transparent;
+}
+
+#deletedImages .actions, #deletedImages .keyPicText, #deletedImages .deleteText {
+	display: none;
+}
+
+#deletedImages .albumUploadBlock {
+	height: 100px;
+}
+
+.sourcePlaceholder {
+	position: absolute;
+	visibility: hidden;
+	vertical-align: top;
+}
+
+.ui-effects-transfer {
+	border: 2px solid black;
+	background: #CCC;
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+}
+
+.deleteTransfer {
+	background: red;
+}
+
+#AlbumUploads .ui-effects-wrapper {
+	display: inline-block;
+}
+
+/* zoom */
+
+.dialogImage {
+	width: 600px;
+}
+
+/* key pic */
+#leftImagesColumn {
+	width: 70px;
+}
+
+#rightImagesColumn {
+	/* width defined by RD.AlbumUploads */
+	vertical-align: top;
+}
+
+
+.clearFloat { 
+	height: 1px;
+	height: 0px;
+	overflow: hidden;
+}
+
+/* form output */
+
+#outputContainer {
+	width:800px;
+	margin: 0 auto;
+}
+
+#output {
+	font-family: Courier, 'Courier New', fixed;
+}

@@ -679,26 +679,30 @@ describe("AlbumUpload", function() {
             })
 
             function unrecoverableTests() {
-                 it("should change the status to errored", function() {
-                     image.uploadErrored(errorDetails);
-                     expect(image.status).toBe("errored");
-                 })
+								it("should change the status to errored", function() {
+									image.uploadErrored(errorDetails);
+									expect(image.status).toBe("errored");
+								})
 
-                 it("should attach the image to the errored content", function() {
-                     image.uploadErrored(errorDetails);
-                     expect(errorDetails.image).toBe(image);
-                 })
+								it("should attach the image to the errored content", function() {
+									image.uploadErrored(errorDetails);
+									expect(errorDetails.image).toBe(image);
+								})
 
-                 it("should render the errored content", function() {
-                     spyOn(image, "renderContent").andCallThrough();
-                     image.uploadErrored(errorDetails);
-                     expect(image.renderContent).toHaveBeenCalledWith("errored", errorDetails)
-                 })
-                 
-                 it("should trigger an event", function() {
-                     expect(true).toBe(false);
-                 })
-             }
+								it("should render the errored content", function() {
+									spyOn(image, "renderContent").andCallThrough();
+									image.uploadErrored(errorDetails);
+									expect(image.renderContent).toHaveBeenCalledWith("errored", errorDetails)
+								})
+
+								it("should bind a function to the clear link that hides the image", function() {
+									expect(false).toBe(true);
+								})
+
+								it("should trigger an event", function() {
+									expect(true).toBe(false);
+								})
+            }
 
             describe("if the error is not recoverable", function() {
                 beforeEach(function() {
