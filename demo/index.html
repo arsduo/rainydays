@@ -56,6 +56,14 @@
     <script>
     var uploader;
     $(document).ready(function() {
+		var uploaderURL;
+		if (true || document.location.href.match(/alexkoppel.com/)) {
+			uploaderURL = "http://uploader.alexkoppel.com/uploader.php";
+		}
+		else {
+			uploaderURL = "http://10.0.1.7/~ahkoppel2/uploader/uploader.php"
+		}
+		
         uploader = RD.AlbumUpload.newUploader({
             albumContainerID: "AlbumUploads",
             // keyPicStorageID: "meal_key_picture_id",
@@ -80,7 +88,7 @@
                 button_placeholder_id: "uploadButton",
 
                 flash_url: "swfupload.swf",
-                upload_url: "http://10.0.1.7/~ahkoppel2/uploader/uploader.php"
+                upload_url: uploaderURL
             }
         })
         

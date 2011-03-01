@@ -192,42 +192,30 @@ describe("AlbumUpload", function() {
                 expect(fn).toThrow(e);
             })
 
-            it("should get the all the contents of the node's content child", function() {
-                var fake = {replaceWith: function() {}}, content = {};
-                spyOn(image.node, "find").andReturn(fake);
-                spyOn(Jaml, "render").andReturn({});
-                image.renderContent("queued");
-                expect(image.node.find).toHaveBeenCalledWith("." + RD.AlbumUpload.cssClasses.imageContent + " *");
-            })
-
             it("should not change the data child", function() {
                 var content = "2", cssClass = RD.AlbumUpload.cssClasses.imageData;
                 image.node.find("." + cssClass).html(content);
                 image.renderContent("queued");
                 expect(image.node.find("." + cssClass).html()).toBe(content);
             })
-
             
-            it("should replace the node's innards with Jaml content if they exist", function() {
-                expect(true).toBe(false);
-                var fake = {replaceWith: function() {}}, content = {};
-                spyOn(image.node, "find").andReturn(fake);
-                spyOn(Jaml, "render").andReturn(content);
-                spyOn(fake, "replaceWith");
+            it("should replace the content node's innards with Jaml content if they exist", function() {
+                var originalContent = "<span>abcd</span>", newContent = "<div>defg</div>";
+                var contentNode = image.node.find("." + RD.AlbumUpload.cssClasses.imageContent);
+                contentNode.html(originalContent);
+                spyOn(Jaml, "render").andReturn(newContent);
                 image.renderContent("queued");
-                expect(fake.replaceWith).toHaveBeenCalledWith(content);
+                expect(contentNode.html()).toBe(newContent);
             })
             
-            it("should replace the node's innards with Jaml content if the node is empty", function() {
-                expect(true).toBe(false);
-                var fake = {replaceWith: function() {}}, content = {};
-                spyOn(image.node, "find").andReturn(fake);
-                spyOn(Jaml, "render").andReturn(content);
-                spyOn(fake, "replaceWith");
+            it("should replace the content node's innards with Jaml content if the node is empty", function() {
+                var originalContent = "", newContent = "<div>defg</div>";
+                var contentNode = image.node.find("." + RD.AlbumUpload.cssClasses.imageContent);
+                contentNode.html(originalContent);
+                spyOn(Jaml, "render").andReturn(newContent);
                 image.renderContent("queued");
-                expect(fake.replaceWith).toHaveBeenCalledWith(content);
+                expect(contentNode.html()).toBe(newContent);
             })
-            
 
             it("should properly render content", function() {
                 // make sure everything does work
@@ -529,10 +517,10 @@ describe("AlbumUpload", function() {
                 jQuery.ui.progressbar = oldValue;
             })
 
-            it("should initialize the progressbar on any items with the RD.AlbumUpload.cssClass.progressBar class", function() {
+            it("should initialize the progressbar on any items with the RD.AlbumUpload.cssClass.progressbar class", function() {
                 // clear out anything existing so we know what the progressbar will be
-                var cls = RD.AlbumUpload.cssClasses.progressBar;
-                image.node.remove("." + cls);
+                var cls = RD.AlbumUpload.cssClasses.progressbar;
+                image.node.find("." + cls).remove();
                 var div = $("<div class='" + cls + "'/>");
                 image.node.append(div);
 
@@ -540,15 +528,11 @@ describe("AlbumUpload", function() {
                 expect(div.progressbar("value")).toBe(0);
             })
 
-            it("should initialize the progressbar on any items with the RD.AlbumUpload.cssClass.progressBar class", function() {
+            it("should store the progress bar as image.progressBar", function() {
                 // clear out anything existing so we know what the progressbar will be
-                var cls = RD.AlbumUpload.cssClasses.progressBar;
-                image.node.remove("." + cls);
-                var div = $("<div class='" + cls + "'/>");
-                image.node.append(div);
-
+                var cls = RD.AlbumUpload.cssClasses.progressbar;
                 image.uploadStarted();
-                expect(image.progressBar[0]).toBe(div[0]);
+                expect(image.progressBar[0]).toBe(image.node.find("." + cls)[0]);
             })
 
             it("should change the status to uploading", function() {
@@ -679,29 +663,34 @@ describe("AlbumUpload", function() {
             })
 
             function unrecoverableTests() {
-								it("should change the status to errored", function() {
-									image.uploadErrored(errorDetails);
-									expect(image.status).toBe("errored");
-								})
+                it("should change the status to errored", function() {
+                    image.uploadErrored(errorDetails);
+                    expect(image.status).toBe("errored");
+                })
 
-								it("should attach the image to the errored content", function() {
-									image.uploadErrored(errorDetails);
-									expect(errorDetails.image).toBe(image);
-								})
+                it("should attach the image to the errored content", function() {
+                    image.uploadErrored(errorDetails);
+                    expect(errorDetails.image).toBe(image);
+                })
 
-								it("should render the errored content", function() {
-									spyOn(image, "renderContent").andCallThrough();
-									image.uploadErrored(errorDetails);
-									expect(image.renderContent).toHaveBeenCalledWith("errored", errorDetails)
-								})
+                it("should render the errored content", function() {
+                    spyOn(image, "renderContent").andCallThrough();
+                    image.uploadErrored(errorDetails);
+                    expect(image.renderContent).toHaveBeenCalledWith("errored", errorDetails)
+                })
 
-								it("should bind a function to the clear link that hides the image", function() {
-									expect(false).toBe(true);
-								})
+                it("should bind a function to the clear link that hides the image", function() {
+                    spyOn(image.node, "hide");
+                    image.uploadErrored(errorDetails);
+                    image.node.find("." + RD.AlbumUpload.cssClasses.clearLink).click();
+                    expect(image.node.hide).toHaveBeenCalled();
+                })
 
-								it("should trigger an event", function() {
-									expect(true).toBe(false);
-								})
+                it("should trigger an uploadError event with the error details", function() {
+                    spyOn(image.node, "trigger");
+                    image.uploadErrored(errorDetails);
+                    expect(image.node.trigger).toHaveBeenCalledWith("uploadError", {image: image, error: errorDetails});
+                })
             }
 
             describe("if the error is not recoverable", function() {
@@ -725,10 +714,10 @@ describe("AlbumUpload", function() {
             })
         })
 
-		describe("uploadCompleted", function() {
+        describe("uploadCompleted", function() {
             var completionDetails;
 
-			beforeEach(function() {
+            beforeEach(function() {
                 image.initialize({
                     localID: 2,
                     uploader: uploader
@@ -737,64 +726,66 @@ describe("AlbumUpload", function() {
                     name: "bar.jpg"
                 }).uploadStarted();
 
-				completionDetails = {
-					id: "foo"
-				}
-            })
-
-			it("should call badServerResponse if the imageDetails aren't a provided object", function() {
-				var result = {};
-				spyOn(image, "badServerResponse").andReturn(result);
-
-				expect(image.uploadCompleted(null)).toBe(result);
-				expect(image.uploadCompleted(2)).toBe(result);
-
-				expect(image.badServerResponse).toHaveBeenCalled();
-				expect(image.badServerResponse.callCount).toBe(2);
-			})
-			
-			it("should call initFromDatabase with the results", function() {
-				spyOn(image, "initFromDatabase").andReturn(image);
-				image.uploadCompleted(completionDetails);
-				expect(image.initFromDatabase).toHaveBeenCalledWith(completionDetails);
-			})
-			
-			it("should map the server response to local keys if a map is provided", function() {
-			    var responseMap = image.uploader.settings.responseMap = {
-			        foo: "bar",
-			        a: "b"
-			    }
-			    response = {
-			        foo: "2",
-			        a: {}
-			    }
-			    
-			    spyOn(image, "initFromDatabase");
-			    image.uploadCompleted(response);
-
-			    var initArg = image.initFromDatabase.mostRecentCall.args[0];
-                // make sure that the call to initFromDatabase gets the local keys
-                // as specified in the response map
-                for (var key in responseMap) {
-                    expect(initArg[responseMap[key]]).toBe(response[key]);
+                completionDetails = {
+                    id: "foo"
                 }
-			})
-			
-			it("should trigger fileUploadCompleted with the image", function() {
-				spyOn(image.node, "trigger");
-				image.uploadCompleted(completionDetails);
-				expect(image.node.trigger).toHaveBeenCalledWith("fileUploadCompleted", {image: image});
-			})
-            
-            it("should store the thumb and full images using addData", function() {
-                expect(true).toBe(false);
             })
 
-			it("should return the image", function() {
-				expect(image.uploadCompleted(completionDetails)).toBe(image);
-			})
+            it("should call badServerResponse if the imageDetails aren't a provided object", function() {
+                var result = {};
+                spyOn(image, "badServerResponse").andReturn(result);
 
-		})
+                expect(image.uploadCompleted(null)).toBe(result);
+                expect(image.uploadCompleted(2)).toBe(result);
+
+                expect(image.badServerResponse).toHaveBeenCalled();
+                expect(image.badServerResponse.callCount).toBe(2);
+            })
+            
+            it("should call initFromDatabase with the results", function() {
+                spyOn(image, "initFromDatabase").andReturn(image);
+                image.uploadCompleted(completionDetails);
+                expect(image.initFromDatabase).toHaveBeenCalledWith(completionDetails);
+            })
+            
+            it("should call the processServerResults function if provided to remap results", function() {
+                var processServerResults = image.uploader.settings.processServerResults = function(data) {}
+                
+                spyOn(image, "initFromDatabase");
+                spyOn(image.uploader.settings, "processServerResults")
+                image.uploadCompleted(completionDetails);
+                // we don't need to test what happens w/o the function because other methods already do that
+                expect(image.uploader.settings.processServerResults).toHaveBeenCalledWith(completionDetails);
+            })
+            
+            it("should trigger fileUploadCompleted with the image", function() {
+                spyOn(image.node, "trigger");
+                image.uploadCompleted(completionDetails);
+                expect(image.node.trigger).toHaveBeenCalledWith("fileUploadCompleted", {image: image});
+            })
+            
+            it("should store the thumb and full image using addData", function() {
+                var i, hadThumb, hadFull, value;
+                completionDetails.thumbImageURL = "x";
+                completionDetails.fullImageURL = "y"
+                spyOn(image, "addData");
+                image.uploadCompleted(completionDetails);
+                
+                // make sure we stored both of those values
+                for(i = 0; i < image.addData.callCount; i++) {
+                    args = image.addData.argsForCall[i];
+                    hadThumb = hadThumb || (args[1] == completionDetails.thumbImageURL && args[0] === "thumbImageURL");
+                    hadFull = hadFull || (args[1] == completionDetails.fullImageURL && args[0] === "fullImageURL");
+                }
+                
+                expect(hadFull && hadThumb).toBe(true);
+            })
+
+            it("should return the image", function() {
+                expect(image.uploadCompleted(completionDetails)).toBe(image);
+            })
+
+        })
 
         describe("badServerResponse", function() {
             it("should call uploadErrored with recoverable: false and a shortDescription", function() {
@@ -953,75 +944,75 @@ describe("AlbumUpload", function() {
         })
         
 
-		describe("support functions", function() {
-			beforeEach(function() {
+        describe("support functions", function() {
+            beforeEach(function() {
                 image.initialize({
                     localID: 2,
                     uploader: uploader
                 }).uploadStarted()
             })
 
-			describe("isRetrying", function() {
-				it("should return false if the image status isn't queued", function() {
-					image.status = "test";
-					expect(image.isRetrying()).toBe(false);
-				})
+            describe("isRetrying", function() {
+                it("should return false if the image status isn't queued", function() {
+                    image.status = "test";
+                    expect(image.isRetrying()).toBe(false);
+                })
 
-				it("should return false if the image errorCount isn't > 0", function() {
-					image.status = "queued";
-					image.errorCount = 0;
-					expect(image.isRetrying()).toBe(false);
-					delete image.errorCount;
-					expect(image.isRetrying()).toBe(false);
-				})
+                it("should return false if the image errorCount isn't > 0", function() {
+                    image.status = "queued";
+                    image.errorCount = 0;
+                    expect(image.isRetrying()).toBe(false);
+                    delete image.errorCount;
+                    expect(image.isRetrying()).toBe(false);
+                })
 
-				it("should return true if the image is queued and the errorCount is > 0", function() {
-					image.status = "queued";
-					image.errorCount = 1;
-					expect(image.isRetrying()).toBe(true);
-				})
-			})
+                it("should return true if the image is queued and the errorCount is > 0", function() {
+                    image.status = "queued";
+                    image.errorCount = 1;
+                    expect(image.isRetrying()).toBe(true);
+                })
+            })
 
-			describe("shouldCancelUpload", function() {
-				var oldLimit;
-				beforeEach(function() {
-					oldLimit = RD.AlbumUpload.retryLimit;
-					RD.AlbumUpload.retryLimit = 2;
-				})
+            describe("shouldCancelUpload", function() {
+                var oldLimit;
+                beforeEach(function() {
+                    oldLimit = RD.AlbumUpload.retryLimit;
+                    RD.AlbumUpload.retryLimit = 2;
+                })
 
-				afterEach(function() {
-					RD.AlbumUpload.retryLimit = oldLimit;
-				})
+                afterEach(function() {
+                    RD.AlbumUpload.retryLimit = oldLimit;
+                })
 
-				it("should return false if there's no errorCount", function() {
-					expect(image.shouldCancelUpload()).toBe(false);
-				})
+                it("should return false if there's no errorCount", function() {
+                    expect(image.shouldCancelUpload()).toBe(false);
+                })
 
-				it("should return false if the errorCount is less than the retry limit", function() {
-					image.errorCount = 1;
-					expect(image.shouldCancelUpload()).toBe(false);
+                it("should return false if the errorCount is less than the retry limit", function() {
+                    image.errorCount = 1;
+                    expect(image.shouldCancelUpload()).toBe(false);
 
-				})
+                })
 
-				it("should return true if the errorCount is greater than the retry limit", function() {
-					image.errorCount = RD.AlbumUpload.retryLimit + 1;
-					expect(image.shouldCancelUpload()).toBe(true);
-				})
-			})
-			
-			describe("isUploading", function() {
-			    it("should return true if the status is uploading", function() {
-			        image.status = "uploading";
-			        expect(image.isUploading()).toBe(true);
-			    })
-			    
-			    it("should return true if the status is not uploading", function() {
-			        image.status = "canceled";
-			        expect(image.isUploading()).toBe(false);
-			    })
-			})
+                it("should return true if the errorCount is greater than the retry limit", function() {
+                    image.errorCount = RD.AlbumUpload.retryLimit + 1;
+                    expect(image.shouldCancelUpload()).toBe(true);
+                })
+            })
+            
+            describe("isUploading", function() {
+                it("should return true if the status is uploading", function() {
+                    image.status = "uploading";
+                    expect(image.isUploading()).toBe(true);
+                })
+                
+                it("should return true if the status is not uploading", function() {
+                    image.status = "canceled";
+                    expect(image.isUploading()).toBe(false);
+                })
+            })
 
-		})
+        })
     })
     
 })

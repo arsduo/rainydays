@@ -271,7 +271,12 @@ describe("AlbumUpload", function() {
             })
             
             describe("queueError", function() {
-                it("should have tests", function() { expect(true).toBe(false) })
+				it("should trigger the uploadError event on the container, passing the error details as {error: }", function() {
+					spyOn(uploader.albumContainer, "trigger");
+					var details = {};
+					uploader.queueError(details);
+					expect(uploader.albumContainer.trigger).toHaveBeenCalledWith("uploadError", {error: details});
+				})
             })
 
             describe("setKeyPic", function() {

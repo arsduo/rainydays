@@ -47,7 +47,8 @@ RD.AlbumUpload = {
         magnifyLink: "magnifyLink",
         makeKeyPicLink: "makeKeyPicLink",
         progressbar: "progressBar",
-        processingMessage: "processingMessage"
+        processingMessage: "processingMessage",
+        clearLink: "clearLink"
     },
 
     labels: {
@@ -704,7 +705,7 @@ RD.AlbumUpload = {
 
         uploadErrored: function(errorDetails) {
             // add an error count
-						var that;
+                        var that;
             this.errorCount = (this.errorCount || 0) + 1;
 
             if (errorDetails.isRecoverable && this.errorCount <= RD.AlbumUpload.retryLimit) {
@@ -720,9 +721,9 @@ RD.AlbumUpload = {
                 this.renderContent("errored", errorDetails);
                 this.node.trigger("uploadError", {image: this, error: errorDetails});
 
-								// bind the clear link to hide this image
-								that = this;
-								this.node.find(".clearLink").click(function() { that.node.hide("fade") });
+                // bind the clear link to hide this image
+                that = this;
+                this.node.find("." + RD.AlbumUpload.cssClasses.clearLink).click(function() { that.node.hide("fade") });
             }
 
             return this;
