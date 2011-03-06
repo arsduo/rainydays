@@ -916,11 +916,12 @@ describe("AlbumUpload", function() {
             })
 
             it("should remove the input from the data node", function() {
-                expect(true).toBe("actually do this with DOM nodes to make sure it works")
-                spyOn(image.dataNode, "remove");
+                // we know that addData works 
                 var name = "foo";
+                image.addData(name, "bar");
                 image.removeData(name);
-                expect(image.dataNode.remove).toHaveBeenCalledWith("#" + image.inputID(name));
+                // the input shouldn't be there anymore
+                expect(image.dataNode.find("#" + image.inputID(name)).length).toBe(0)
             })
 
             it("should remove the data from details", function() {
@@ -932,14 +933,124 @@ describe("AlbumUpload", function() {
         })
 
         describe("toggleDeletion", function() {
-            it("should have toggleDeletion tests", function() {
-                expect(false).toBe(true);
+            beforeEach(function() {
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                })
             })
+
+            describe("if the image isn't visible or deleted", function() {
+                it("should return without changing the status", function() {
+                    var status = image.status = "foo";
+                    image.toggleDeletion();
+                    expect(image.status).toBe(status);
+                })
+            })
+            
+            describe("if the image is visible", function() {
+                beforeEach(function() {
+                    image.status = "visible";
+                })
+
+                it("should add the markedForDeletion class", function() {
+                    image.toggleDeletion();
+                    expect(image.node.attr("class").match(/markedForDeletion/)).toBeTruthy();
+                })
+                
+                it("should set the status to deleting", function() {
+                    image.toggleDeletion();
+                    expect(image.status).toBe("deleting");
+                })
+
+                it("should add the markedForDeletion class even if already present", function() {
+                    image.node.addClass("markedForDeletion");
+                    image.toggleDeletion();
+                    expect(image.node.attr("class").match(/markedForDeletion/)).toBeTruthy();
+                })
+                
+                it("should set add a deleted flag via the addData mechanism", function() {
+                    spyOn(image, "addData");
+                    image.toggleDeletion();
+                    expect(image.addData).toHaveBeenCalled();
+                    expect(image.addData.mostRecentCall.args[0]).toBe("deleted");
+                })
+                
+                it("should trigger the imageDeleted event with the image", function() {
+                    var triggered = false, args, evented = function(data) {
+                        triggered = true;
+                        args = arguments;
+                    }
+                    image.uploader.albumContainer.bind("imageDeleted", evented);
+                    image.toggleDeletion();
+
+                    expect(triggered).toBe(true);
+                    expect(args && args[1] && args[1].image).toBe(image)
+                })
+            })
+
+            describe("if the image is deleted", function() {
+                beforeEach(function() {
+                    image.status = "visible";
+                    image.toggleDeletion();
+                })
+
+                it("should remove the markedForDeletion class", function() {
+                    image.toggleDeletion();
+                    expect(image.node.attr("class").match(/markedForDeletion/)).toBeFalsy();
+                })
+                
+                it("should remove the markedForDeletion class even if already missing", function() {
+                    image.node.removeClass("markedForDeletion");
+                    image.toggleDeletion();
+                    expect(image.node.attr("class").match(/markedForDeletion/)).toBeFalsy();
+                })
+                
+                it("should set the status to visible", function() {
+                    image.toggleDeletion();
+                    expect(image.status).toBe("visible");
+                })
+                
+                it("should set remove the deleted flag via the addData mechanism", function() {
+                    spyOn(image, "addData");
+                    image.toggleDeletion();
+                    expect(image.addData).not.toHaveBeenCalled();
+                })
+                
+                it("should trigger the imageUndeleted event with the image", function() {
+                    var triggered = false, args, evented = function(data) {
+                        triggered = true;
+                        args = arguments;
+                    }
+                    image.uploader.albumContainer.bind("imageUndeleted", evented);
+                    image.toggleDeletion();
+
+                    expect(triggered).toBe(true);
+                    expect(args && args[1] && args[1].image).toBe(image)
+                })
+            })
+
+
         })
         
         describe("showFullImage", function() {
-            it("should have showFullImage tests", function() {
-                expect(false).toBe(true);
+            beforeEach(function() {
+                image.initialize({
+                    localID: 2,
+                    uploader: uploader
+                })
+            })
+            
+            it("should trigger the showFullImage event with the image", function() {
+                var triggered = false, args, evented = function(data) {
+                    triggered = true;
+                    args = arguments;
+                }
+                image.uploader.albumContainer.bind("showFullImage", evented);
+                image.showFullImage();
+
+                expect(triggered).toBe(true);
+                expect(args && args[1] && args[1].image).toBe(image)
             })
         })
         

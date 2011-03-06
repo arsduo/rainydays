@@ -801,7 +801,7 @@ RD.AlbumUpload = {
             // make sure we're at the right states -- this should be filtered
             if (!(this.status === "visible" || this.status === "deleting")){
                 // this has no effect on other states
-                return;
+                return false;
             }
             
             // gets the dialog object for the image deletion option
@@ -820,7 +820,7 @@ RD.AlbumUpload = {
         },
 
         showFullImage: function() {
-            this.node.trigger("showFullImage", {image: this})
+            this.node.trigger("showFullImage", {image: this});
         },
 
         /*
